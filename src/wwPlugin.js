@@ -82,8 +82,8 @@ export default {
     async signIn({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            this.instance.auth.signIn({ email, password });
-            return await this.user();
+            await this.instance.auth.signIn({ email, password });
+            return await this.fetchUser();
         } catch (err) {
             this.signOut();
             throw err;
@@ -92,7 +92,8 @@ export default {
     async signUp({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            return await this.instance.auth.signUp({ email, password });
+            const { user } = await this.instance.auth.signUp({ email, password });
+            return user;
         } catch (err) {
             this.signOut();
             throw err;
@@ -104,10 +105,10 @@ export default {
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         this.instance.auth.signOut();
     },
-    async user() {
+    async fetchUser() {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const { user } = await this.instance.auth.user();
+            const user = this.instance.auth.user();
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
             return user;

@@ -49,7 +49,7 @@ export default {
         },
         {
             name: 'Fetch User',
-            code: 'user',
+            code: 'fetchUser',
             isAsync: true,
         },
         // {
