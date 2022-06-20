@@ -18,7 +18,7 @@ export default {
     \================================================================================================*/
     async onLoad(settings) {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
-        this.fetchUser()
+        this.fetchUser();
     },
     /*=============================================m_ÔÔ_m=============================================\
         Auth API
@@ -30,10 +30,13 @@ export default {
         const response = await this.instance.auth.api.listUsers();
         return response.data.map(user => ({
             ...user,
+            enabled: true,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at,
             name: user.user_metadata && user.user_metadata.name,
         }));
     },
-    async adminCreateUser(data, isInvitation) {
+    async adminCreateUser(data) {
         try {
             const response = await this.instance.auth.api.createUser(data);
             return response.data;
@@ -113,6 +116,7 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
             const user = this.instance.auth.user();
+            if (!user) throw new Error('No user authenticated.');
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
             return user;
