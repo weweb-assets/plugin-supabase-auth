@@ -38,7 +38,14 @@ export default {
     },
     async adminCreateUser(data) {
         try {
-            const response = await this.instance.auth.api.createUser(data);
+            const response = await this.instance.auth.api.createUser({
+                email: data.email,
+                email_confirm: true,
+                password: data.password,
+                phone: data.userAttributes.phone,
+                phone_confirm: true,
+                user_metadata: { name: data.name },
+            });
             return response.data;
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
@@ -47,7 +54,24 @@ export default {
     },
     async adminUpdateUser(user, data) {
         try {
-            const response = await this.instance.auth.api.updateUser(user, data);
+            const response = await this.instance.auth.api.updateUserById(user.id, {
+                email: data.email,
+                email_confirm: true,
+                phone: data.userAttributes.phone,
+                phone_confirm: true,
+                user_metadata: { name: data.name },
+            });
+            return response.data;
+        } catch (err) {
+            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
+            throw err;
+        }
+    },
+    async adminUpdateUserPassword(user, password) {
+        try {
+            const response = await this.instance.auth.api.updateUserById(user.id, {
+                password: data.password,
+            });
             return response.data;
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
@@ -56,11 +80,31 @@ export default {
     },
     async adminDeleteUser(user) {
         try {
-            await this.instance.auth.api.deleteUser(user);
+            await this.instance.auth.api.deleteUser(user.id);
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
         }
+    },
+    /* Roles */
+    async adminGetRoles() {
+        const { data } = await this.instance.from(this.settings.privateData.roleTable).select();
+        return data;
+    },
+    async adminCreateRole(name) {
+        const { data } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        return data;
+    },
+    async adminUpdateRole(roleId, name) {
+        const { data } = await this.instance
+            .from(this.settings.privateData.roleTable)
+            .update({ name })
+            .match({ id: roleId });
+        return data;
+    },
+    async adminDeleteRole(roleId) {
+        const { data } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        return data;
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\

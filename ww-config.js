@@ -7,7 +7,21 @@ export default {
                 edit: () => import('./src/components/Configuration/SettingsEdit.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
-                    return !!settings.publicData.projectUrl && !!settings.publicData.apiKey && !!settings.privateData.apiKey;
+                    return (
+                        !!settings.publicData.projectUrl &&
+                        !!settings.publicData.apiKey &&
+                        !!settings.privateData.apiKey
+                    );
+                },
+            },
+            {
+                label: 'Roles table',
+                icon: 'data',
+                edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
+                summary: () => import('./src/components/RoleTable/SettingsSummary.vue'),
+                getIsValid(settings) {
+                    const { roleTable } = settings.privateData;
+                    return !!roleTable;
                 },
             },
             {
