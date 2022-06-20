@@ -60,12 +60,12 @@ export default {
     async load(projectUrl, publicApiKey, privateApiKey) {
         try {
             /* wwFront:start */
-            if (!projectUrl || !privateApiKey) return;
-            this.instance = createClient(projectUrl, privateApiKey);
-            /* wwFront:end */
-            /* wwEditor:start */
             if (!projectUrl || !publicApiKey) return;
             this.instance = createClient(projectUrl, publicApiKey);
+            /* wwFront:end */
+            /* wwEditor:start */
+            if (!projectUrl || !privateApiKey) return;
+            this.instance = createClient(projectUrl, privateApiKey);
             await this.fetchDoc(projectUrl, publicApiKey);
             /* wwEditor:end */
         } catch (err) {
