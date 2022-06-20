@@ -32,7 +32,7 @@ export default {
             code: 'signUp',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/SignUp.vue'),
+            edit: () => import('./src/components/Functions/SignUp.vue'),
             /* wwEditor:end */
         },
         {
@@ -40,7 +40,7 @@ export default {
             code: 'signIn',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/SignIn.vue'),
+            edit: () => import('./src/components/Functions/SignIn.vue'),
             /* wwEditor:end */
         },
         {
