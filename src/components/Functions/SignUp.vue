@@ -17,6 +17,14 @@
         placeholder="Enter a password"
         @update:modelValue="setPassword"
     />
+    <wwEditorInputRow
+        label="Name"
+        type="query"
+        :model-value="name"
+        bindable
+        placeholder="Enter a password"
+        @update:modelValue="setName"
+    />
 </template>
 
 <script>
@@ -33,6 +41,9 @@ export default {
         password() {
             return this.args.password;
         },
+        name() {
+            return this.args.name;
+        },
     },
     methods: {
         setEmail(email) {
@@ -40,6 +51,9 @@ export default {
         },
         setPassword(password) {
             this.$emit('update:args', { ...this.args, password });
+        },
+        setName(name) {
+            this.$emit('update:args', { ...this.args, name });
         },
     },
 };

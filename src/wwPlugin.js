@@ -27,7 +27,10 @@ export default {
     userAttributes: [{ label: 'Phone', key: 'phone' }],
     async adminGetUsers() {
         const response = await this.instance.auth.api.listUsers();
-        return response.data;
+        return response.data.map(user => ({
+            ...user,
+            name: user.user_metadata && user.user_metadata.name,
+        }));
     },
     async adminCreateUser(data, isInvitation) {
         try {
@@ -89,10 +92,10 @@ export default {
             throw err;
         }
     },
-    async signUp({ email, password }) {
+    async signUp({ email, password, name }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const { user } = await this.instance.auth.signUp({ email, password });
+            const { user } = await this.instance.auth.signUp({ email, password }, { data: { name } });
             return user;
         } catch (err) {
             this.signOut();
