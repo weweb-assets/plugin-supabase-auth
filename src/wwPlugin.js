@@ -107,7 +107,7 @@ export default {
     async user() {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const user = await this.instance.auth.user();
+            const { user } = await this.instance.auth.user();
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
             return user;
