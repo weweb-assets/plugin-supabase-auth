@@ -3,6 +3,8 @@ import './components/Configuration/SettingsEdit.vue';
 import './components/Configuration/SettingsSummary.vue';
 import './components/Redirections/SettingsEdit.vue';
 import './components/Redirections/SettingsSummary.vue';
+import './components/RoleTable/SettingsEdit.vue';
+import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
 import './components/Functions/SignIn.vue';
 /* wwEditor:end */

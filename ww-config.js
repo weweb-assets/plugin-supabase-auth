@@ -15,16 +15,6 @@ export default {
                 },
             },
             {
-                label: 'Roles table',
-                icon: 'data',
-                edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
-                summary: () => import('./src/components/RoleTable/SettingsSummary.vue'),
-                getIsValid(settings) {
-                    const { roleTable } = settings.privateData;
-                    return !!roleTable;
-                },
-            },
-            {
                 label: 'Define redirections (URLs)',
                 icon: 'open-out',
                 edit: () => import('./src/components/Redirections/SettingsEdit.vue'),
@@ -32,6 +22,16 @@ export default {
                 getIsValid(settings) {
                     const { afterNotSignInPageId } = settings.publicData;
                     return !!afterNotSignInPageId;
+                },
+            },
+            {
+                label: 'Roles table',
+                icon: 'data',
+                edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
+                summary: () => import('./src/components/RoleTable/SettingsSummary.vue'),
+                getIsValid(settings) {
+                    const { roleTable } = settings.privateData;
+                    return !!roleTable;
                 },
             },
         ],
