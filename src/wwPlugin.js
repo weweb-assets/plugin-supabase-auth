@@ -77,6 +77,43 @@ export default {
             /* wwEditor:end */
         }
     },
+    async signIn({ email, password }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        try {
+            this.instance.signIn({ email, password });
+            return await this.user();
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signUp({ email, password }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        try {
+            return await this.instance.signUp({ email, password });
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    signOut() {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        wwLib.wwVariable.updateValue(`${this.id}-user`, null);
+        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
+        this.instance.signOut();
+    },
+    async user() {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        try {
+            const user = await this.instance.auth.user();
+            wwLib.wwVariable.updateValue(`${this.id}-user`, user);
+            wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
+            return user;
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
         this.doc = await getDoc(projectUrl, apiKey);

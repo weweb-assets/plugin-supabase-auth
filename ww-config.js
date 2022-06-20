@@ -27,31 +27,31 @@ export default {
         { name: 'isAuthenticated', value: 'isAuthenticated', type: 'boolean', defaultValue: false },
     ],
     actions: [
-        // {
-        //     name: 'Sign Up',
-        //     code: 'signUp',
-        //     isAsync: true,
-        //     /* wwEditor:start */
-        //     edit: () => import('./src/components/SignUp.vue'),
-        //     /* wwEditor:end */
-        // },
-        // {
-        //     name: 'Login',
-        //     code: 'signIn',
-        //     isAsync: true,
-        //     /* wwEditor:start */
-        //     edit: () => import('./src/components/SignIn.vue'),
-        //     /* wwEditor:end */
-        // },
-        // {
-        //     name: 'Logout',
-        //     code: 'signOut',
-        // },
-        // {
-        //     name: 'Fetch User',
-        //     code: 'getUser',
-        //     isAsync: true,
-        // },
+        {
+            name: 'Sign Up',
+            code: 'signUp',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/SignUp.vue'),
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login',
+            code: 'signIn',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/SignIn.vue'),
+            /* wwEditor:end */
+        },
+        {
+            name: 'Logout',
+            code: 'signOut',
+        },
+        {
+            name: 'Fetch User',
+            code: 'user',
+            isAsync: true,
+        },
         // {
         //     name: 'Update User Profile',
         //     code: 'updateUserProfile',
