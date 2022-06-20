@@ -50,7 +50,6 @@ export default {
         {
             name: 'Fetch User',
             code: 'fetchUser',
-            isAsync: true,
         },
         // {
         //     name: 'Update User Profile',

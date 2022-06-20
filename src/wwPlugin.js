@@ -18,6 +18,7 @@ export default {
     \================================================================================================*/
     async onLoad(settings) {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        this.fetchUser()
     },
     /*=============================================m_ÔÔ_m=============================================\
         Auth API
@@ -108,7 +109,7 @@ export default {
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         this.instance.auth.signOut();
     },
-    async fetchUser() {
+    fetchUser() {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
             const user = this.instance.auth.user();
