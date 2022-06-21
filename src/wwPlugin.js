@@ -7,6 +7,10 @@ import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
 import './components/Functions/SignIn.vue';
+import './components/Functions/UpdateUserProfile.vue';
+import './components/Functions/ChangePassword.vue';
+import './components/Functions/ConfirmPassword.vue';
+import './components/Functions/ForgotPassword.vue';
 /* wwEditor:end */
 import { createClient } from '@supabase/supabase-js';
 
@@ -40,13 +44,19 @@ export default {
     },
     async adminCreateUser(data) {
         try {
+            const attributes = data.attributes.reduce(
+                (obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }),
+                {}
+            );
+            const phone = attributes.phone;
+            delete attributes.phone;
             const response = await this.instance.auth.api.createUser({
                 email: data.email,
                 email_confirm: true,
                 password: data.password,
-                phone: data.userAttributes.phone,
-                phone_confirm: true,
-                user_metadata: { name: data.name },
+                phone,
+                phone_confirm: !!phone,
+                user_metadata: { ...attributes, name: data.name },
             });
             return response.data;
         } catch (err) {
@@ -56,12 +66,18 @@ export default {
     },
     async adminUpdateUser(user, data) {
         try {
+            const attributes = data.attributes.reduce(
+                (obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }),
+                {}
+            );
+            const phone = attributes.phone;
+            delete attributes.phone;
             const response = await this.instance.auth.api.updateUserById(user.id, {
                 email: data.email,
                 email_confirm: true,
-                phone: data.userAttributes.phone,
-                phone_confirm: true,
-                user_metadata: { name: data.name },
+                phone,
+                phone_confirm: !!phone,
+                user_metadata: { ...attributes, name: data.name },
             });
             return response.data;
         } catch (err) {
@@ -72,7 +88,7 @@ export default {
     async adminUpdateUserPassword(user, password) {
         try {
             const response = await this.instance.auth.api.updateUserById(user.id, {
-                password: data.password,
+                password: password,
             });
             return response.data;
         } catch (err) {
@@ -173,6 +189,38 @@ export default {
             throw err;
         }
     },
+    async updateUserProfile({ email, name, attributes }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+
+        attributes = data.attributes.reduce((obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }), {});
+        const phone = attributes.phone;
+        delete attributes.phone;
+
+        const { data: result, error } = await this.instance.auth.update({
+            email,
+            phone,
+            user_metadata: { ...attributes, name },
+        });
+        if (error) throw error;
+        return result;
+    },
+    async updateUserPassword({ oldPassword, newPassword }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+
+        await this.signIn({ email: this.user.email, password: oldPassword });
+
+        const { data: result, error } = await this.instance.auth.update({ password: newPassword });
+        if (error) throw error;
+        return result;
+    },
+    async resetPasswordForEmail({ email }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+
+        const { data: result, error } = await this.instance.auth.api.resetPasswordForEmail(email);
+        if (error) throw error;
+        return result;
+    },
+    async confirmPassword() {},
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
         this.doc = await getDoc(projectUrl, apiKey);
