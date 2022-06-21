@@ -27,7 +27,7 @@
     </wwEditorFormRow>
     <div class="flex items-center">
         <wwEditorInputSwitch v-model="isKeyVisible" />
-        <span class="airtable-settings-edit__radio-label body-2">Show private api key</span>
+        <span class="ml-2 body-2">Show private api key</span>
     </div>
 </template>
 
