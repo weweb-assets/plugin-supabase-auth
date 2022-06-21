@@ -1,12 +1,21 @@
 <template>
-    <wwEditorInputRow
-        label="Project URL"
-        required
-        type="query"
-        placeholder="https://your-project.supabase.co"
-        :model-value="settings.publicData.projectUrl"
-        @update:modelValue="changeProjectUrl"
-    />
+    <wwEditorFormRow required label="Project URL">
+        <template #append-label>
+            <a
+                class="ww-editor-link ml-2"
+                href="https://supabase.com/docs/guides/with-expo#get-the-api-keys"
+                target="_blank"
+            >
+                Find it here
+            </a>
+        </template>
+        <wwEditorInputRow
+            type="query"
+            placeholder="https://your-project.supabase.co"
+            :model-value="settings.publicData.projectUrl"
+            @update:modelValue="changeProjectUrl"
+        />
+    </wwEditorFormRow>
     <wwEditorInputRow
         label="Public API key"
         required
