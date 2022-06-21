@@ -28,7 +28,7 @@
         </div>
         <button type="button" class="ww-editor-button -small -primary ml-2 mt-3" @click="fetchTables">refresh</button>
     </div>
-    <div v-if="settings.privateData.userRoleTable && !isRoleTableValid" class="body-2 text-error mb-2">
+    <div v-if="settings.privateData.userRoleTable && !isUserRoleTableValid" class="body-2 text-error mb-2">
         Table must have column "id", "roleId" and "userId".
     </div>
     <wwLoader :loading="isLoading" />
