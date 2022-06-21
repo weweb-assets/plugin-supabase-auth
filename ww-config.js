@@ -25,13 +25,12 @@ export default {
                 },
             },
             {
-                label: 'Roles table',
+                label: 'Roles tables',
                 icon: 'data',
                 edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
                 summary: () => import('./src/components/RoleTable/SettingsSummary.vue'),
-                getIsValid(settings) {
-                    const { roleTable } = settings.privateData;
-                    return !!roleTable;
+                getIsValid() {
+                    return true;
                 },
             },
         ],

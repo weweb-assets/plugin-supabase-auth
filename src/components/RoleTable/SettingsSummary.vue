@@ -1,7 +1,11 @@
 <template>
-    <div class="flex items-center body-2">
+    <div class="flex items-center body-2 mb-2">
         <wwEditorIcon name="data" class="mr-2" />
         <div class="text-ellipsis">{{ settings.privateData.roleTable }}</div>
+    </div>
+    <div class="flex items-center body-2">
+        <wwEditorIcon name="data" class="mr-2" />
+        <div class="text-ellipsis">{{ settings.privateData.userRoleTable }}</div>
     </div>
 </template>
 
