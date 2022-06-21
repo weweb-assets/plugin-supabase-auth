@@ -15,14 +15,20 @@
         :model-value="settings.publicData.apiKey"
         @update:modelValue="changePublicApiKey"
     />
-     <wwEditorInputRow
-        label="Private API key"
-        required
-        type="query"
-        placeholder="ey********"
-        :model-value="settings.privateData.apiKey"
-        @update:modelValue="changePrivateApiKey"
-    />
+    <wwEditorFormRow required label="Private API key">
+        <wwEditorInputText
+            type="text"
+            placeholder="ey********"
+            :model-value="settings.privateData.apiKey"
+            :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
+            large
+            @update:modelValue="changePrivateApiKey"
+        />
+    </wwEditorFormRow>
+    <div class="flex items-center">
+        <wwEditorInputSwitch v-model="isKeyVisible" />
+        <span class="airtable-settings-edit__radio-label body-2">Show private api key</span>
+    </div>
 </template>
 
 <script>
@@ -32,6 +38,11 @@ export default {
         settings: { type: Object, required: true },
     },
     emits: ['update:settings'],
+    data() {
+        return {
+            isKeyVisible: false,
+        };
+    },
     methods: {
         changeProjectUrl(projectUrl) {
             this.$emit('update:settings', {
@@ -55,8 +66,11 @@ export default {
             this.loadInstance();
         },
         loadInstance() {
-            if (!this.settings.publicData.projectUrl || !this.settings.publicData.apiKey || !this.settings.privateData.apiKey) return;
-            this.plugin.load(this.settings.publicData.projectUrl, this.settings.publicData.apiKey, this.settings.privateData.apiKey);
+            this.plugin.load(
+                this.settings.publicData.projectUrl,
+                this.settings.publicData.apiKey,
+                this.settings.privateData.apiKey
+            );
         },
     },
 };

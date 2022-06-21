@@ -123,6 +123,7 @@ export default {
             this.instance = createClient(projectUrl, privateApiKey);
             await this.fetchDoc(projectUrl, publicApiKey);
             /* wwEditor:end */
+            if (!this.instance) throw new Error('Invalid Supabase configuration.');
         } catch (err) {
             this.instance = null;
             this.doc = null;
