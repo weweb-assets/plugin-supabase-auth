@@ -150,19 +150,19 @@ export default {
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
-        const { data } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
-        return data;
+        const { data: [result] } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        return result;
     },
     async adminUpdateRole(roleId, name) {
-        const { data } = await this.instance
+        const { data: [result] } = await this.instance
             .from(this.settings.privateData.roleTable)
             .update({ name })
             .match({ id: roleId });
-        return data;
+        return result;
     },
     async adminDeleteRole(roleId) {
-        const { data } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
-        return data;
+        const { data: [result] } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        return result;
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
