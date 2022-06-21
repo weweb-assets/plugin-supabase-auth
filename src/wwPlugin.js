@@ -141,8 +141,9 @@ export default {
     /* Roles */
     async adminGetRoles() {
         if (!this.settings.privateData.roleTable) return [];
-        const { data } = await this.instance.from(this.settings.privateData.roleTable).select();
-        return data;
+        const { data, error } = await this.instance.from(this.settings.privateData.roleTable).select();
+        if (error) throw error;
+        return data.map(role => ({ ...role, createdAt: role.created_at }));
     },
     async adminCreateRole(name) {
         if (!this.settings.privateData.roleTable) {
@@ -150,18 +151,21 @@ export default {
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
-        const { data: [result] } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        const {
+            data: [result],
+        } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
         return result;
     },
     async adminUpdateRole(roleId, name) {
-        const { data: [result] } = await this.instance
-            .from(this.settings.privateData.roleTable)
-            .update({ name })
-            .match({ id: roleId });
+        const {
+            data: [result],
+        } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
         return result;
     },
     async adminDeleteRole(roleId) {
-        const { data: [result] } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        const {
+            data: [result],
+        } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
         return result;
     },
     /* wwEditor:end */
