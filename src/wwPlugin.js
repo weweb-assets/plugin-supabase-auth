@@ -113,6 +113,23 @@ export default {
             throw err;
         }
     },
+    async adminUpdateUserRoles(user, roles) {
+        try {
+            if (!this.settings.privateData.roleTable) {
+                const text = 'No valid User Role table defined in Supabase plugin configuration.';
+                wwLib.wwNotification.open({ text, color: 'red' });
+                throw new Error(text);
+            }
+            for (const role of roles) {
+                await this.instance
+                    .from(this.settings.privateData.userRoleTable)
+                    .upsert({ id: role.id, roleId: role.id, userId: user.id });
+            }
+        } catch (err) {
+            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
+            throw err;
+        }
+    },
     async adminDeleteUser(user) {
         try {
             await this.instance.auth.api.deleteUser(user.id);
@@ -123,10 +140,16 @@ export default {
     },
     /* Roles */
     async adminGetRoles() {
+        if (!this.settings.privateData.roleTable) return [];
         const { data } = await this.instance.from(this.settings.privateData.roleTable).select();
         return data;
     },
     async adminCreateRole(name) {
+        if (!this.settings.privateData.roleTable) {
+            const text = 'No valid Role table defined in Supabase plugin configuration.';
+            wwLib.wwNotification.open({ text, color: 'red' });
+            throw new Error(text);
+        }
         const { data } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
         return data;
     },
