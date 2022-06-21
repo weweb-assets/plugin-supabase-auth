@@ -66,11 +66,11 @@ export default {
             code: 'fetchUser',
         },
         {
-            name: 'Update User Profile',
-            code: 'updateUserProfile',
+            name: 'Update User Metadata',
+            code: 'updateUserMeta',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/UpdateUserProfile.vue'),
+            edit: () => import('./src/components/Functions/UpdateUserMeta.vue'),
             getIsValid({ email }) {
                 return !!email;
             },

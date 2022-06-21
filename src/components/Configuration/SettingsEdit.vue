@@ -45,16 +45,20 @@ export default {
     },
     mounted() {
         const isSettingsValid =
-            this.settings.publicData.projectUrl &&
-            this.settings.publicData.apiKey &&
-            this.settings.privateData.apiKey;
+            this.settings.publicData.projectUrl && this.settings.publicData.apiKey && this.settings.privateData.apiKey;
         const isOtherPluginSettingsValid =
             wwLib.wwPlugins.supabase &&
             wwLib.wwPlugins.supabase.settings.publicData.projectUrl &&
             wwLib.wwPlugins.supabase.settings.publicData.apiKey;
         if (!isSettingsValid && isOtherPluginSettingsValid) {
-            this.changeProjectUrl(wwLib.wwPlugins.supabase.settings.publicData.projectUrl)
-            this.changePublicApiKey(wwLib.wwPlugins.supabase.settings.publicData.apiKey)
+            this.$emit('update:settings', {
+                ...this.settings,
+                publicData: {
+                    ...this.settings.publicData,
+                    apiKey: wwLib.wwPlugins.supabase.settings.publicData.apiKey,
+                    projectUrl: wwLib.wwPlugins.supabase.settings.publicData.projectUrl,
+                },
+            });
         }
     },
     methods: {

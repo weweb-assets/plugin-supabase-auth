@@ -7,7 +7,7 @@ import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
 import './components/Functions/SignIn.vue';
-import './components/Functions/UpdateUserProfile.vue';
+import './components/Functions/UpdateUserMeta.vue';
 import './components/Functions/ChangePassword.vue';
 import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
@@ -31,7 +31,22 @@ export default {
     \================================================================================================*/
     /* wwEditor:start */
     /* Users */
-    userAttributes: [{ label: 'Phone', key: 'phone' }],
+    userAttributes: [
+        { label: 'Name', key: 'name' },
+        { label: 'Picture', key: 'picture' },
+        { label: 'Given name', key: 'gisven_name' },
+        { label: 'Family name', key: 'family_name' },
+        { label: 'Middle name', key: 'middle_name' },
+        { label: 'Nickname', key: 'nickname' },
+        { label: 'Profile URL', key: 'profile' },
+        { label: 'Website URL', key: 'website' },
+        { label: 'Gender', key: 'gender' },
+        { label: 'Birthdate', key: 'birthdate' },
+        { label: 'Zoneinfo', key: 'zoneinfo' },
+        { label: 'Locale', key: 'locale' },
+        { label: 'Address', key: 'address' },
+        { label: 'Phone', key: 'phone' },
+    ],
     async adminGetUsers() {
         const response = await this.instance.auth.api.listUsers();
         return response.data.map(user => ({
@@ -50,6 +65,7 @@ export default {
             );
             const phone = attributes.phone;
             delete attributes.phone;
+
             const response = await this.instance.auth.api.createUser({
                 email: data.email,
                 email_confirm: true,
@@ -72,6 +88,7 @@ export default {
             );
             const phone = attributes.phone;
             delete attributes.phone;
+
             const response = await this.instance.auth.api.updateUserById(user.id, {
                 email: data.email,
                 email_confirm: true,
@@ -189,18 +206,15 @@ export default {
             throw err;
         }
     },
-    async updateUserProfile({ email, name, attributes }) {
+    async updateUserMeta({ email, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
 
-        attributes = data.attributes.reduce((obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }), {});
-        const phone = attributes.phone;
-        delete attributes.phone;
+        const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.Name]: item.Value }), {});
 
-        const { data: result, error } = await this.instance.auth.update({
-            email,
-            phone,
-            user_metadata: { ...attributes, name },
-        });
+        const phone = user_metadata.phone;
+        delete user_metadata.phone;
+
+        const { data: result, error } = await this.instance.auth.update({ email, phone, user_metadata });
         if (error) throw error;
         return result;
     },

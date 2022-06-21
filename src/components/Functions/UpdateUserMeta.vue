@@ -9,26 +9,18 @@
         @update:modelValue="setEmail"
     />
     <wwEditorInputRow
-        label="Name"
-        type="query"
-        :model-value="name"
-        bindable
-        placeholder="Enter a name"
-        @update:modelValue="setName"
-    />
-    <wwEditorInputRow
-        label="Custom attributes"
+        label="Metadata"
         type="array"
-        :model-value="attributes"
+        :model-value="metadata"
         bindable
-        @update:modelValue="setAttributes"
-        @add-item="setAttributes([...(attributes || []), { type: 'string' }])"
+        @update:modelValue="setMetadata"
+        @add-item="setMetadata([...(metadata || []), { type: 'string' }])"
     >
         <template #default="{ item, setItem }">
             <wwEditorInputRow
                 :model-value="item.key"
                 type="select"
-                :options="userAttributesOptions"
+                :options="userMetadataOptions"
                 small
                 placeholder="Select an attribute"
                 @update:model-value="setItem({ ...item, key: $event })"
@@ -56,13 +48,10 @@ export default {
         email() {
             return this.args.email;
         },
-        name() {
-            return this.args.name;
+        metadata() {
+            return this.args.metadata || [];
         },
-        attributes() {
-            return this.args.attributes || [];
-        },
-        userAttributesOptions() {
+        userMetadataOptions() {
             return this.plugin.userAttributes.map(attribute => ({
                 label: attribute.label,
                 value: attribute.key,
@@ -73,11 +62,8 @@ export default {
         setEmail(email) {
             this.$emit('update:args', { ...this.args, email });
         },
-        setName(name) {
-            this.$emit('update:args', { ...this.args, name });
-        },
-        setAttributes(attributes) {
-            this.$emit('update:args', { ...this.args, attributes });
+        setMetadata(metadata) {
+            this.$emit('update:args', { ...this.args, metadata });
         },
     },
 };
