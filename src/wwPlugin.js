@@ -113,14 +113,15 @@ export default {
         Supabase API
     \================================================================================================*/
     async load(projectUrl, publicApiKey, privateApiKey) {
+        const options = { cookieOptions: {} };
         try {
             /* wwFront:start */
             if (!projectUrl || !publicApiKey) return;
-            this.instance = createClient(projectUrl, publicApiKey);
+            this.instance = createClient(projectUrl, publicApiKey, options);
             /* wwFront:end */
             /* wwEditor:start */
             if (!projectUrl || !privateApiKey) return;
-            this.instance = createClient(projectUrl, privateApiKey);
+            this.instance = createClient(projectUrl, privateApiKey, options);
             await this.fetchDoc(projectUrl, publicApiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase configuration.');
