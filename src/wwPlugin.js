@@ -71,7 +71,7 @@ export default {
     async adminCreateUser(data) {
         try {
             const attributes = data.attributes.reduce(
-                (obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }),
+                (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
                 {}
             );
             const phone = attributes.phone;
@@ -101,7 +101,7 @@ export default {
     async adminUpdateUser(user, data) {
         try {
             const attributes = data.attributes.reduce(
-                (obj, attribute) => ({ ...obj, [attribute.Name]: attribute.Value }),
+                (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
                 {}
             );
             const phone = attributes.phone;
@@ -264,7 +264,7 @@ export default {
     async updateUserMeta({ email, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
 
-        const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.Name]: item.Value }), {});
+        const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
         const phone = user_metadata.phone;
         delete user_metadata.phone;
