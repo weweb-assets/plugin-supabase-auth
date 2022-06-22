@@ -258,7 +258,7 @@ export default {
                   await this.instance
                       .from(this.settings.privateData.userRoleTable)
                       .select('role:roleId(*)')
-                      .eq('userId', wwLib.wwPlugins.supabaseAuth.user.id)
+                      .eq('userId', userId)
               ).data.map(({ role }) => role)
             : [];
         return roles;
