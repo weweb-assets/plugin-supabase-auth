@@ -53,10 +53,10 @@ export default {
         return await Promise.all(
             response.data.map(async user => ({
                 ...user,
+                ...user.user_metadata,
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
-                name: user.user_metadata && user.user_metadata.name,
                 roles: this.settings.privateData.userRoleTable
                     ? (
                           await this.instance
@@ -87,10 +87,10 @@ export default {
             });
             return {
                 ...response.data,
+                ...response.data.user_metadata,
                 enabled: true,
                 createdAt: response.data.created_at,
                 updatedAt: response.data.updated_at,
-                name: response.data.user_metadata && response.data.user_metadata.name,
                 roles: [],
             };
         } catch (err) {
@@ -116,10 +116,10 @@ export default {
             });
             return {
                 ...response.data,
+                ...response.data.user_metadata,
                 enabled: true,
                 createdAt: response.data.created_at,
                 updatedAt: response.data.updated_at,
-                name: response.data.user_metadata && response.data.user_metadata.name,
             };
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
