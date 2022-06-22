@@ -244,7 +244,8 @@ export default {
             const user = this.instance.auth.user();
             if (!user) throw new Error('No user authenticated.');
             user.roles = this.settings.privateData.userRoleTable
-                ? await this.instance.from(this.settings.privateData.userRoleTable).select().eq('userId', user.id).data
+                ? (await this.instance.from(this.settings.privateData.userRoleTable).select().eq('userId', user.id))
+                      .data
                 : [];
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
