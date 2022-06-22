@@ -148,7 +148,8 @@ export default {
     },
     async adminDeleteUser(user) {
         try {
-            await this.instance.auth.api.deleteUser(user.id);
+            const { error } = await this.instance.auth.api.deleteUser(user.id);
+            if (error) throw error;
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
@@ -179,7 +180,8 @@ export default {
         return { ...role, createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
-        await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        const { error } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        if (error) throw error;
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -271,7 +273,7 @@ export default {
         const phone = user_metadata.phone;
         delete user_metadata.phone;
 
-        const { data: result, error } = await this.instance.auth.update({ email, phone, user_metadata });
+        const { data: result, error } = await this.instance.auth.update({ email, phone, data: user_metadata });
         if (error) throw error;
         return result;
     },
