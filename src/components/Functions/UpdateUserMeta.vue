@@ -14,7 +14,7 @@
         :model-value="metadata"
         bindable
         @update:modelValue="setMetadata"
-        @add-item="setMetadata([...(metadata || []), { type: 'string' }])"
+        @add-item="setMetadata([...(metadata || []), {}])"
     >
         <template #default="{ item, setItem }">
             <wwEditorInputRow

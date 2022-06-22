@@ -49,11 +49,19 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login',
-            code: 'signIn',
+            name: 'Login with email',
+            code: 'signInEmail',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/SignIn.vue'),
+            edit: () => import('./src/components/Functions/SignInEmail.vue'),
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with magic link',
+            code: 'signInMagicLink',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInMagicLink.vue'),
             /* wwEditor:end */
         },
         {

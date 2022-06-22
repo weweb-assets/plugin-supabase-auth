@@ -6,7 +6,8 @@ import './components/Redirections/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
-import './components/Functions/SignIn.vue';
+import './components/Functions/SignInEmail.vue';
+import './components/Functions/SignInMagicLink.vue';
 import './components/Functions/SignInProvider.vue';
 import './components/Functions/UpdateUserMeta.vue';
 import './components/Functions/ChangePassword.vue';
@@ -46,10 +47,10 @@ export default {
         { label: 'Zoneinfo', key: 'zoneinfo' },
         { label: 'Locale', key: 'locale' },
         { label: 'Address', key: 'address' },
-        { label: 'Phone', key: 'phone' },
     ],
     async adminGetUsers() {
         const response = await this.instance.auth.api.listUsers();
+        if (response.error) throw response.error;
         return await Promise.all(
             response.data.map(async user => ({
                 ...user,
@@ -67,17 +68,14 @@ export default {
                 (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
                 {}
             );
-            const phone = attributes.phone;
-            delete attributes.phone;
 
             const response = await this.instance.auth.api.createUser({
                 email: data.email,
                 email_confirm: true,
                 password: data.password,
-                phone,
-                phone_confirm: !!phone,
                 user_metadata: { ...attributes, name: data.name },
             });
+            if (response.error) throw response.error;
             return {
                 ...response.data,
                 ...response.data.user_metadata,
@@ -97,16 +95,13 @@ export default {
                 (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
                 {}
             );
-            const phone = attributes.phone;
-            delete attributes.phone;
 
             const response = await this.instance.auth.api.updateUserById(user.id, {
                 email: data.email,
                 email_confirm: true,
-                phone,
-                phone_confirm: !!phone,
                 user_metadata: { ...attributes, name: data.name },
             });
+            if (response.error) throw response.error;
             return {
                 ...response.data,
                 ...response.data.user_metadata,
@@ -121,9 +116,10 @@ export default {
     },
     async adminUpdateUserPassword(user, password) {
         try {
-            await this.instance.auth.api.updateUserById(user.id, {
+            const { error } = await this.instance.auth.api.updateUserById(user.id, {
                 password: password,
             });
+            if (error) throw error;
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
@@ -137,9 +133,10 @@ export default {
                 throw new Error(text);
             }
             for (const role of roles) {
-                await this.instance
+                const { error } = await this.instance
                     .from(this.settings.privateData.userRoleTable)
                     .upsert({ id: role.id, roleId: role.id, userId: user.id });
+                if (error) throw error;
             }
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
@@ -170,13 +167,17 @@ export default {
         }
         const {
             data: [role],
+            error,
         } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        if (error) throw error;
         return { ...role, createdAt: role.created_at };
     },
     async adminUpdateRole(roleId, name) {
         const {
             data: [role],
+            error,
         } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
+        if (error) throw error;
         return { ...role, createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
@@ -209,12 +210,22 @@ export default {
             /* wwEditor:end */
         }
     },
-    async signIn({ email, password }) {
+    async signInEmail({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
             const { error } = await this.instance.auth.signIn({ email, password });
-            if (error) return error;
+            if (error) throw error;
             return await this.fetchUser();
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInMagicLink({ email }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        try {
+            const { error } = await this.instance.auth.signIn({ email });
+            if (error) throw error;
         } catch (err) {
             this.signOut();
             throw err;
@@ -222,12 +233,16 @@ export default {
     },
     async signInProvider({ provider }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
-        return await this.instance.auth.signIn({ provider });
+        const { error } = await this.instance.auth.signIn({ provider });
+        if (error) throw error;
     },
-    async signUp({ email, password, name }) {
+    async signUp({ email, password, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const { user } = await this.instance.auth.signUp({ email, password }, { data: { name } });
+            const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
+
+            const { user, error } = await this.instance.auth.signUp({ email, password }, { data: user_metadata });
+            if (error) throw error;
             return user;
         } catch (err) {
             this.signOut();
@@ -271,15 +286,13 @@ export default {
 
         const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const phone = user_metadata.phone;
-        delete user_metadata.phone;
-
-        const { data: result, error } = await this.instance.auth.update({ email, phone, data: user_metadata });
+        const { data: result, error } = await this.instance.auth.update({ email, data: user_metadata });
         if (error) throw error;
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.user) throw new Error('User not authenticated.');
 
         await this.signIn({ email: this.user.email, password: oldPassword });
 
@@ -290,11 +303,12 @@ export default {
     async resetPasswordForEmail({ email }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
 
-        const { data: result, error } = await this.instance.auth.api.resetPasswordForEmail(email);
+        const { error } = await this.instance.auth.api.resetPasswordForEmail(email);
         if (error) throw error;
-        return result;
     },
-    async confirmPassword() {},
+    async confirmPassword() {
+        // TODO
+    },
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
         this.doc = await getDoc(projectUrl, apiKey);

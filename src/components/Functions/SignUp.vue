@@ -18,13 +18,32 @@
         @update:modelValue="setPassword"
     />
     <wwEditorInputRow
-        label="Name"
-        type="query"
-        :model-value="name"
+        label="Metadata"
+        type="array"
+        :model-value="metadata"
         bindable
-        placeholder="Enter a password"
-        @update:modelValue="setName"
-    />
+        @update:modelValue="setMetadata"
+        @add-item="setMetadata([...(metadata || []), {}])"
+    >
+        <template #default="{ item, setItem }">
+            <wwEditorInputRow
+                :model-value="item.key"
+                type="select"
+                :options="userMetadataOptions"
+                small
+                placeholder="Select an attribute"
+                @update:model-value="setItem({ ...item, key: $event })"
+            />
+            <wwEditorInputRow
+                :model-value="item.value"
+                type="query"
+                small
+                bindable
+                placeholder="Enter a value"
+                @update:model-value="setItem({ ...item, value: $event })"
+            />
+        </template>
+    </wwEditorInputRow>
 </template>
 
 <script>
@@ -41,8 +60,14 @@ export default {
         password() {
             return this.args.password;
         },
-        name() {
-            return this.args.name;
+        metadata() {
+            return this.args.metadata || [];
+        },
+        userMetadataOptions() {
+            return this.plugin.userAttributes.map(attribute => ({
+                label: attribute.label,
+                value: attribute.key,
+            }));
         },
     },
     methods: {
@@ -52,8 +77,8 @@ export default {
         setPassword(password) {
             this.$emit('update:args', { ...this.args, password });
         },
-        setName(name) {
-            this.$emit('update:args', { ...this.args, name });
+        setMetadata(metadata) {
+            this.$emit('update:args', { ...this.args, metadata });
         },
     },
 };
