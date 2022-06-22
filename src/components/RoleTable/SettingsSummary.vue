@@ -1,12 +1,16 @@
 <template>
-    <div class="flex items-center body-2 mb-2">
-        <wwEditorIcon name="data" class="mr-2" />
-        <div class="text-ellipsis">{{ settings.privateData.roleTable }}</div>
-    </div>
-    <div class="flex items-center body-2">
-        <wwEditorIcon name="data" class="mr-2" />
-        <div class="text-ellipsis">{{ settings.privateData.userRoleTable }}</div>
-    </div>
+    <wwEditorFormRow label="Role table">
+        <div class="flex items-center body-2 mb-2">
+            <wwEditorIcon name="data" class="mr-2" />
+            <div class="text-ellipsis">{{ settings.privateData.roleTable }}</div>
+        </div>
+    </wwEditorFormRow>
+    <wwEditorFormRow label="User Role table">
+        <div class="flex items-center body-2">
+            <wwEditorIcon name="data" class="mr-2" />
+            <div class="text-ellipsis">{{ settings.privateData.userRoleTable }}</div>
+        </div>
+    </wwEditorFormRow>
 </template>
 
 <script>
