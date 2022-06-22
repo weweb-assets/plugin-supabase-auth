@@ -240,13 +240,11 @@ export default {
     async fetchUser() {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const user = {
-                ...this.instance.auth.user(),
-                roles: this.settings.privateData.userRoleTable
-                    ? await this.instance.from(this.settings.privateData.userRoleTable).eq('userId', user.id).data
-                    : [],
-            };
+            const user = this.instance.auth.user();
             if (!user) throw new Error('No user authenticated.');
+            user.roles = this.settings.privateData.userRoleTable
+                ? await this.instance.from(this.settings.privateData.userRoleTable).eq('userId', user.id).data
+                : [];
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
             return user;
