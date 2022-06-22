@@ -177,19 +177,19 @@ export default {
         const {
             data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
-        return { ...role, createdAt: role.createdAt };
+        return { ...role, createdAt: role.created_at };
     },
     async adminUpdateRole(roleId, name) {
         const {
             data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
-        return { ...role, createdAt: role.createdAt };
+        return { ...role, createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
         const {
             data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
-        return { ...role, createdAt: role.createdAt };
+        return { ...role, createdAt: role.created_at };
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
