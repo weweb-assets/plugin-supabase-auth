@@ -112,7 +112,7 @@ export default {
     },
     async adminUpdateUserRoles(user, roles) {
         if (!this.settings.privateData.roleTable) {
-            const text = 'No valid User Role table defined in Supabase plugin configuration.';
+            const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
@@ -136,7 +136,7 @@ export default {
     },
     async adminCreateRole(name) {
         if (!this.settings.privateData.roleTable) {
-            const text = 'No valid Role table defined in Supabase plugin configuration.';
+            const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
@@ -161,7 +161,7 @@ export default {
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
-        Supabase API
+        Supabase Auth API
     \================================================================================================*/
     async load(projectUrl, publicApiKey, privateApiKey) {
         const options = { cookieOptions: {} };
@@ -175,18 +175,18 @@ export default {
             this.instance = createClient(projectUrl, privateApiKey, options);
             await this.fetchDoc(projectUrl, publicApiKey);
             /* wwEditor:end */
-            if (!this.instance) throw new Error('Invalid Supabase configuration.');
+            if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         } catch (err) {
             this.instance = null;
             this.doc = null;
             wwLib.wwLog.error(err);
             /* wwEditor:start */
-            wwLib.wwNotification.open({ text: 'Invalid Supabase configuration.', color: 'red' });
+            wwLib.wwNotification.open({ text: 'Invalid Supabase Auth configuration.', color: 'red' });
             /* wwEditor:end */
         }
     },
     async signInEmail({ email, password }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const { error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
@@ -197,7 +197,7 @@ export default {
         }
     },
     async signInMagicLink({ email }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const { error } = await this.instance.auth.signIn({ email });
             if (error) throw new Error(error.message, { cause: error });
@@ -207,12 +207,12 @@ export default {
         }
     },
     async signInProvider({ provider }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         const { error } = await this.instance.auth.signIn({ provider });
         if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
@@ -225,13 +225,13 @@ export default {
         }
     },
     signOut() {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         this.instance.auth.signOut();
     },
     async fetchUser() {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const user = this.instance.auth.user();
             if (!user) throw new Error('No user authenticated.');
@@ -245,7 +245,7 @@ export default {
         }
     },
     async getUserRoles(userId) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.privateData.userRoleTable
             ? (
                   await this.instance
@@ -257,7 +257,7 @@ export default {
         return roles;
     },
     async updateUserMeta({ email, metadata }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
 
         const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
@@ -266,7 +266,7 @@ export default {
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
         await this.signIn({ email: this.user.email, password: oldPassword });
@@ -276,7 +276,7 @@ export default {
         return result;
     },
     async resetPasswordForEmail({ email }) {
-        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
 
         const { error } = await this.instance.auth.api.resetPasswordForEmail(email);
         if (error) throw new Error(error.message, { cause: error });
