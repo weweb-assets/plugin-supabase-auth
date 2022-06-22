@@ -57,8 +57,12 @@ export default {
                 updatedAt: user.updated_at,
                 name: user.user_metadata && user.user_metadata.name,
                 roles: this.settings.privateData.userRoleTable
-                    ? await this.instance.from(this.settings.privateData.userRoleTable).select().eq('userId', user.id)
-                          .data
+                    ? (
+                          await this.instance
+                              .from(this.settings.privateData.userRoleTable)
+                              .select()
+                              .eq('userId', user.id)
+                      ).data
                     : [],
             }))
         );
