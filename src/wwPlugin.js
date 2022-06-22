@@ -24,7 +24,7 @@ export default {
     \================================================================================================*/
     async onLoad(settings) {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
-        this.fetchUser();
+        await this.fetchUser();
     },
     /*=============================================m_ÔÔ_m=============================================\
         Auth API
@@ -49,13 +49,18 @@ export default {
     ],
     async adminGetUsers() {
         const response = await this.instance.auth.api.listUsers();
-        return response.data.map(user => ({
-            ...user,
-            enabled: true,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at,
-            name: user.user_metadata && user.user_metadata.name,
-        }));
+        return await Promise.all(
+            response.data.map(async user => ({
+                ...user,
+                enabled: true,
+                createdAt: user.created_at,
+                updatedAt: user.updated_at,
+                name: user.user_metadata && user.user_metadata.name,
+                roles: this.settings.privateData.userRoleTable
+                    ? await this.instance.from(this.settings.privateData.userRoleTable).eq('userId', user.id).data
+                    : [],
+            }))
+        );
     },
     async adminCreateUser(data) {
         try {
@@ -74,7 +79,14 @@ export default {
                 phone_confirm: !!phone,
                 user_metadata: { ...attributes, name: data.name },
             });
-            return response.data;
+            return {
+                ...response.data,
+                enabled: true,
+                createdAt: response.data.created_at,
+                updatedAt: response.data.updated_at,
+                name: response.data.user_metadata && response.data.user_metadata.name,
+                roles: [],
+            };
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
@@ -96,7 +108,13 @@ export default {
                 phone_confirm: !!phone,
                 user_metadata: { ...attributes, name: data.name },
             });
-            return response.data;
+            return {
+                ...response.data,
+                enabled: true,
+                createdAt: response.data.created_at,
+                updatedAt: response.data.updated_at,
+                name: response.data.user_metadata && response.data.user_metadata.name,
+            };
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
@@ -104,10 +122,9 @@ export default {
     },
     async adminUpdateUserPassword(user, password) {
         try {
-            const response = await this.instance.auth.api.updateUserById(user.id, {
+            await this.instance.auth.api.updateUserById(user.id, {
                 password: password,
             });
-            return response.data;
         } catch (err) {
             if (err.response && err.response.data.message) throw new Error(err.response.data.message);
             throw err;
@@ -141,9 +158,9 @@ export default {
     /* Roles */
     async adminGetRoles() {
         if (!this.settings.privateData.roleTable) return [];
-        const { data, error } = await this.instance.from(this.settings.privateData.roleTable).select();
+        const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).select();
         if (error) throw error;
-        return data.map(role => ({ ...role, createdAt: role.created_at }));
+        return roles.map(role => ({ ...role, createdAt: role.created_at }));
     },
     async adminCreateRole(name) {
         if (!this.settings.privateData.roleTable) {
@@ -152,21 +169,21 @@ export default {
             throw new Error(text);
         }
         const {
-            data: [result],
+            data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
-        return result;
+        return { ...role, createdAt: role.createdAt };
     },
     async adminUpdateRole(roleId, name) {
         const {
-            data: [result],
+            data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
-        return result;
+        return { ...role, createdAt: role.createdAt };
     },
     async adminDeleteRole(roleId) {
         const {
-            data: [result],
+            data: [role],
         } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
-        return result;
+        return { ...role, createdAt: role.createdAt };
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -220,10 +237,15 @@ export default {
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         this.instance.auth.signOut();
     },
-    fetchUser() {
+    async fetchUser() {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
-            const user = this.instance.auth.user();
+            const user = {
+                ...this.instance.auth.user(),
+                roles: this.settings.privateData.userRoleTable
+                    ? await this.instance.from(this.settings.privateData.userRoleTable).eq('userId', user.id).data
+                    : [],
+            };
             if (!user) throw new Error('No user authenticated.');
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
