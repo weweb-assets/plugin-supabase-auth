@@ -21,8 +21,23 @@ export default {
     data() {
         return {
             providers: [
+                { label: 'Apple', value: 'apple', icon: 'apple' },
+                { label: 'Azure', value: 'azure', icon: 'azure' },
+                { label: 'Bitbucket', value: 'bitbucket', icon: 'bitbucket' },
+                { label: 'Discord', value: 'discord', icon: 'discord' },
+                { label: 'Facebook', value: 'facebook', icon: 'facebook' },
+                { label: 'GitHub', value: 'gitHub', icon: 'gitHub' },
+                { label: 'GitLab', value: 'gitLab', icon: 'gitLab' },
                 { label: 'Google', value: 'google', icon: 'google' },
-                { label: 'Google', value: 'google', icon: 'google' },
+                { label: 'Keycloak', value: 'keycloak', icon: 'keycloak' },
+                { label: 'Linkedin', value: 'linkedin', icon: 'linkedin' },
+                { label: 'Notion', value: 'notion', icon: 'notion' },
+                { label: 'Twitch', value: 'twitch', icon: 'twitch' },
+                { label: 'Twitter', value: 'twitter', icon: 'twitter' },
+                { label: 'Slack', value: 'slack', icon: 'slack' },
+                { label: 'Spotify', value: 'spotify', icon: 'spotify' },
+                { label: 'WorkOS', value: 'workos', icon: 'workos' },
+                { label: 'Zoom', value: 'zoom', icon: 'zoom' },
             ],
         };
     },
