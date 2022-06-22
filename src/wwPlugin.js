@@ -25,7 +25,12 @@ export default {
         Plugin API
     \================================================================================================*/
     async onLoad(settings) {
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        /* wwFront:start */
+        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
+        /* wwFront:end */
+        /* wwEditor:start */
+        await this.load(settings.publicData.projectUrl, settings.privateData.apiKey);
+        /* wwEditor:end */
         await this.fetchUser();
     },
     /*=============================================m_ÔÔ_m=============================================\
@@ -160,17 +165,12 @@ export default {
     /*=============================================m_ÔÔ_m=============================================\
         Supabase Auth API
     \================================================================================================*/
-    async load(projectUrl, publicApiKey, privateApiKey) {
-        const options = { cookieOptions: {} };
+    async load(projectUrl, apiKey) {
         try {
-            /* wwFront:start */
-            if (!projectUrl || !publicApiKey) return;
-            this.instance = createClient(projectUrl, publicApiKey, options);
-            /* wwFront:end */
+            if (!projectUrl || !apiKey) return;
+            this.instance = createClient(projectUrl, apiKey);
             /* wwEditor:start */
-            if (!projectUrl || !privateApiKey) return;
-            this.instance = createClient(projectUrl, privateApiKey, options);
-            await this.fetchDoc(projectUrl, publicApiKey);
+            await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         } catch (err) {
