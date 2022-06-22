@@ -9,6 +9,14 @@
         placeholder="Select a provider"
         @update:modelValue="setProvider"
     />
+    <a
+        v-if="provider"
+        class="ww-editor-link ml-2"
+        :href="`https://supabase.com/docs/guides/auth/auth-${provider}`"
+        target="_blank"
+    >
+        See documentation
+    </a>
 </template>
 
 <script>
