@@ -287,7 +287,7 @@ export default {
         if (!access_token) throw new Error('No access token provided.');
         if (type !== 'recovery') throw new Error('Access token type must be recovery.');
 
-        const { error } = await supabase.auth.api.updateUser(access_token, { password: newPassword });
+        const { error } = await this.instance.auth.api.updateUser(access_token, { password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:start */
