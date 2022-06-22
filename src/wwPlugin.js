@@ -306,8 +306,14 @@ export default {
         const { error } = await this.instance.auth.api.resetPasswordForEmail(email);
         if (error) throw error;
     },
-    async confirmPassword() {
-        // TODO
+    async confirmPassword({ newPassword }) {
+        const router = wwLib.manager ? wwLib.getEditorRouter() : wwLib.getFrontRouter();
+        const { access_token, type } = router.currentRoute.value.query;
+        if (!access_token) throw new Error('No access token provided.');
+        if (type !== 'recovery') throw new Error('Access token type must be recovery.');
+
+        const { error } = await supabase.auth.api.updateUser(access_token, { password: newPassword });
+        if (error) throw error;
     },
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
