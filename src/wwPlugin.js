@@ -140,20 +140,17 @@ export default {
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
-        const {
-            data: [role],
-            error,
-        } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
         if (error) throw new Error(error.message, { cause: error });
-        return { ...role, createdAt: role.created_at };
+        return { ...roles[0], createdAt: role.created_at };
     },
     async adminUpdateRole(roleId, name) {
-        const {
-            data: [role],
-            error,
-        } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
+        const { data: roles, error } = await this.instance
+            .from(this.settings.privateData.roleTable)
+            .update({ name })
+            .match({ id: roleId });
         if (error) throw new Error(error.message, { cause: error });
-        return { ...role, createdAt: role.created_at };
+        return { ...roles[0], createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
         const { error } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
