@@ -142,7 +142,7 @@ export default {
         }
         const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: role.created_at };
+        return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminUpdateRole(roleId, name) {
         const { data: roles, error } = await this.instance
@@ -150,7 +150,7 @@ export default {
             .update({ name })
             .match({ id: roleId });
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: role.created_at };
+        return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminDeleteRole(roleId) {
         const { error } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
