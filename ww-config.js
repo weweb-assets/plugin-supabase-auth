@@ -57,6 +57,14 @@ export default {
             /* wwEditor:end */
         },
         {
+            name: 'Login with provider',
+            code: 'signInProvider',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInProvider.vue'),
+            /* wwEditor:end */
+        },
+        {
             name: 'Logout',
             code: 'signOut',
         },

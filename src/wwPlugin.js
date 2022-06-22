@@ -7,6 +7,7 @@ import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
 import './components/Functions/SignIn.vue';
+import './components/Functions/SignInProvider.vue';
 import './components/Functions/UpdateUserMeta.vue';
 import './components/Functions/ChangePassword.vue';
 import './components/Functions/ConfirmPassword.vue';
@@ -225,6 +226,10 @@ export default {
             this.signOut();
             throw err;
         }
+    },
+    async signInProvider({ provider }) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        return await this.instance.auth.signIn({ provider });
     },
     async signUp({ email, password, name }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
