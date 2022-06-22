@@ -186,10 +186,7 @@ export default {
         return { ...role, createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
-        const {
-            data: [role],
-        } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
-        return { ...role, createdAt: role.created_at };
+        await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
