@@ -50,7 +50,7 @@ export default {
     ],
     async adminGetUsers() {
         const response = await this.instance.auth.api.listUsers();
-        if (response.error) throw response.error;
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
             response.data.map(async user => ({
                 ...user,
@@ -63,100 +63,75 @@ export default {
         );
     },
     async adminCreateUser(data) {
-        try {
-            const attributes = data.attributes.reduce(
-                (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
-                {}
-            );
+        const attributes = data.attributes.reduce(
+            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
+            {}
+        );
 
-            const response = await this.instance.auth.api.createUser({
-                email: data.email,
-                email_confirm: true,
-                password: data.password,
-                user_metadata: { ...attributes, name: data.name },
-            });
-            if (response.error) throw response.error;
-            return {
-                ...response.data,
-                ...response.data.user_metadata,
-                enabled: true,
-                createdAt: response.data.created_at,
-                updatedAt: response.data.updated_at,
-                roles: [],
-            };
-        } catch (err) {
-            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
-            throw err;
-        }
+        const response = await this.instance.auth.api.createUser({
+            email: data.email,
+            email_confirm: true,
+            password: data.password,
+            user_metadata: { ...attributes, name: data.name },
+        });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        return {
+            ...response.data,
+            ...response.data.user_metadata,
+            enabled: true,
+            createdAt: response.data.created_at,
+            updatedAt: response.data.updated_at,
+            roles: [],
+        };
     },
     async adminUpdateUser(user, data) {
-        try {
-            const attributes = data.attributes.reduce(
-                (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
-                {}
-            );
+        const attributes = data.attributes.reduce(
+            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
+            {}
+        );
 
-            const response = await this.instance.auth.api.updateUserById(user.id, {
-                email: data.email,
-                email_confirm: true,
-                user_metadata: { ...attributes, name: data.name },
-            });
-            if (response.error) throw response.error;
-            return {
-                ...response.data,
-                ...response.data.user_metadata,
-                enabled: true,
-                createdAt: response.data.created_at,
-                updatedAt: response.data.updated_at,
-            };
-        } catch (err) {
-            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
-            throw err;
-        }
+        const response = await this.instance.auth.api.updateUserById(user.id, {
+            email: data.email,
+            email_confirm: true,
+            user_metadata: { ...attributes, name: data.name },
+        });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        return {
+            ...response.data,
+            ...response.data.user_metadata,
+            enabled: true,
+            createdAt: response.data.created_at,
+            updatedAt: response.data.updated_at,
+        };
     },
     async adminUpdateUserPassword(user, password) {
-        try {
-            const { error } = await this.instance.auth.api.updateUserById(user.id, {
-                password: password,
-            });
-            if (error) throw error;
-        } catch (err) {
-            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
-            throw err;
-        }
+        const { error } = await this.instance.auth.api.updateUserById(user.id, {
+            password: password,
+        });
+        if (error) throw new Error(error.message, { cause: error });
     },
     async adminUpdateUserRoles(user, roles) {
-        try {
-            if (!this.settings.privateData.roleTable) {
-                const text = 'No valid User Role table defined in Supabase plugin configuration.';
-                wwLib.wwNotification.open({ text, color: 'red' });
-                throw new Error(text);
-            }
-            for (const role of roles) {
-                const { error } = await this.instance
-                    .from(this.settings.privateData.userRoleTable)
-                    .upsert({ id: role.id, roleId: role.id, userId: user.id });
-                if (error) throw error;
-            }
-        } catch (err) {
-            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
-            throw err;
+        if (!this.settings.privateData.roleTable) {
+            const text = 'No valid User Role table defined in Supabase plugin configuration.';
+            wwLib.wwNotification.open({ text, color: 'red' });
+            throw new Error(text);
+        }
+        for (const role of roles) {
+            const { error } = await this.instance
+                .from(this.settings.privateData.userRoleTable)
+                .upsert({ id: role.id, roleId: role.id, userId: user.id });
+            if (error) throw new Error(error.message, { cause: error });
         }
     },
     async adminDeleteUser(user) {
-        try {
-            const { error } = await this.instance.auth.api.deleteUser(user.id);
-            if (error) throw error;
-        } catch (err) {
-            if (err.response && err.response.data.message) throw new Error(err.response.data.message);
-            throw err;
-        }
+        const { error } = await this.instance.auth.api.deleteUser(user.id);
+        if (error) throw new Error(error.message, { cause: error });
     },
     /* Roles */
     async adminGetRoles() {
         if (!this.settings.privateData.roleTable) return [];
         const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).select();
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
         return roles.map(role => ({ ...role, createdAt: role.created_at }));
     },
     async adminCreateRole(name) {
@@ -169,7 +144,7 @@ export default {
             data: [role],
             error,
         } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
         return { ...role, createdAt: role.created_at };
     },
     async adminUpdateRole(roleId, name) {
@@ -177,12 +152,12 @@ export default {
             data: [role],
             error,
         } = await this.instance.from(this.settings.privateData.roleTable).update({ name }).match({ id: roleId });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
         return { ...role, createdAt: role.created_at };
     },
     async adminDeleteRole(roleId) {
         const { error } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -214,7 +189,7 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
             const { error } = await this.instance.auth.signIn({ email, password });
-            if (error) throw error;
+            if (error) throw new Error(error.message, { cause: error });
             return await this.fetchUser();
         } catch (err) {
             this.signOut();
@@ -225,7 +200,7 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         try {
             const { error } = await this.instance.auth.signIn({ email });
-            if (error) throw error;
+            if (error) throw new Error(error.message, { cause: error });
         } catch (err) {
             this.signOut();
             throw err;
@@ -234,7 +209,7 @@ export default {
     async signInProvider({ provider }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
         const { error } = await this.instance.auth.signIn({ provider });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
@@ -242,7 +217,7 @@ export default {
             const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
             const { user, error } = await this.instance.auth.signUp({ email, password }, { data: user_metadata });
-            if (error) throw error;
+            if (error) throw new Error(error.message, { cause: error });
             return user;
         } catch (err) {
             this.signOut();
@@ -287,7 +262,7 @@ export default {
         const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
         const { data: result, error } = await this.instance.auth.update({ email, data: user_metadata });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
@@ -297,14 +272,14 @@ export default {
         await this.signIn({ email: this.user.email, password: oldPassword });
 
         const { data: result, error } = await this.instance.auth.update({ password: newPassword });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
         return result;
     },
     async resetPasswordForEmail({ email }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
 
         const { error } = await this.instance.auth.api.resetPasswordForEmail(email);
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
         const router = wwLib.manager ? wwLib.getEditorRouter() : wwLib.getFrontRouter();
@@ -313,7 +288,7 @@ export default {
         if (type !== 'recovery') throw new Error('Access token type must be recovery.');
 
         const { error } = await supabase.auth.api.updateUser(access_token, { password: newPassword });
-        if (error) throw error;
+        if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
