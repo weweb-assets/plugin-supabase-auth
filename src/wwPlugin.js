@@ -57,14 +57,7 @@ export default {
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
-                roles: this.settings.privateData.userRoleTable
-                    ? (
-                          await this.instance
-                              .from(this.settings.privateData.userRoleTable)
-                              .select()
-                              .eq('userId', user.id)
-                      ).data
-                    : [],
+                roles: await this.getUserRoles(user.id),
             }))
         );
     },
@@ -249,10 +242,7 @@ export default {
         try {
             const user = this.instance.auth.user();
             if (!user) throw new Error('No user authenticated.');
-            user.roles = this.settings.privateData.userRoleTable
-                ? (await this.instance.from(this.settings.privateData.userRoleTable).select().eq('userId', user.id))
-                      .data
-                : [];
+            user.roles = await this.getUserRoles(user.id);
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
             wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
             return user;
@@ -260,6 +250,18 @@ export default {
             this.signOut();
             throw err;
         }
+    },
+    async getUserRoles(userId) {
+        if (!this.instance) throw new Error('Invalid Supabase configuration.');
+        const roles = this.settings.privateData.userRoleTable
+            ? (
+                  await this.instance
+                      .from(this.settings.privateData.userRoleTable)
+                      .select('role:roleId(*)')
+                      .eq('userId', wwLib.wwPlugins.supabaseAuth.user.id)
+              ).data.map(({ role }) => role)
+            : [];
+        return roles;
     },
     async updateUserMeta({ email, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase configuration.');
