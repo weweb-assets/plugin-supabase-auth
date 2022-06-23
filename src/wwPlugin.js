@@ -116,14 +116,14 @@ export default {
         if (error) throw new Error(error.message, { cause: error });
     },
     async adminUpdateUserRoles(user, roles) {
-        if (!this.settings.privateData.roleTable) {
+        if (!this.settings.publicData.roleTable) {
             const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
         for (const role of roles) {
             const { error } = await this.instance
-                .from(this.settings.privateData.userRoleTable)
+                .from(this.settings.publicData.userRoleTable)
                 .upsert({ id: role.id, roleId: role.id, userId: user.id });
             if (error) throw new Error(error.message, { cause: error });
         }
@@ -134,31 +134,31 @@ export default {
     },
     /* Roles */
     async adminGetRoles() {
-        if (!this.settings.privateData.roleTable) return [];
-        const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).select();
+        if (!this.settings.publicData.roleTable) return [];
+        const { data: roles, error } = await this.instance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
         return roles.map(role => ({ ...role, createdAt: role.created_at }));
     },
     async adminCreateRole(name) {
-        if (!this.settings.privateData.roleTable) {
+        if (!this.settings.publicData.roleTable) {
             const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
-        const { data: roles, error } = await this.instance.from(this.settings.privateData.roleTable).insert([{ name }]);
+        const { data: roles, error } = await this.instance.from(this.settings.publicData.roleTable).insert([{ name }]);
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminUpdateRole(roleId, name) {
         const { data: roles, error } = await this.instance
-            .from(this.settings.privateData.roleTable)
+            .from(this.settings.publicData.roleTable)
             .update({ name })
             .match({ id: roleId });
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminDeleteRole(roleId) {
-        const { error } = await this.instance.from(this.settings.privateData.roleTable).delete().match({ id: roleId });
+        const { error } = await this.instance.from(this.settings.publicData.roleTable).delete().match({ id: roleId });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:end */
@@ -243,10 +243,10 @@ export default {
     },
     async getUserRoles(userId) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        const roles = this.settings.privateData.userRoleTable
+        const roles = this.settings.publicData.userRoleTable
             ? (
                   await this.instance
-                      .from(this.settings.privateData.userRoleTable)
+                      .from(this.settings.publicData.userRoleTable)
                       .select('role:roleId(*)')
                       .eq('userId', userId)
               ).data.map(({ role }) => role)

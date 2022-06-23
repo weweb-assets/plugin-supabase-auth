@@ -5,14 +5,14 @@
                 label="Role table"
                 type="select"
                 placeholder="Select a table"
-                :model-value="settings.privateData.roleTable"
+                :model-value="settings.publicData.roleTable"
                 :options="tablesOptions"
                 @update:modelValue="changePrivateSettings('roleTable', $event)"
             />
         </div>
         <button type="button" class="ww-editor-button -small -primary ml-2 mt-3" @click="fetchTables">refresh</button>
     </div>
-    <div v-if="settings.privateData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
+    <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
         Table must have columns "id" and "name".
     </div>
     <div class="flex items-center">
@@ -21,14 +21,14 @@
                 label="User Role table"
                 type="select"
                 placeholder="Select a table"
-                :model-value="settings.privateData.userRoleTable"
+                :model-value="settings.publicData.userRoleTable"
                 :options="tablesOptions"
                 @update:modelValue="changePrivateSettings('userRoleTable', $event)"
             />
         </div>
         <button type="button" class="ww-editor-button -small -primary ml-2 mt-3" @click="fetchTables">refresh</button>
     </div>
-    <div v-if="settings.privateData.userRoleTable && !isUserRoleTableValid" class="body-2 text-error mb-2">
+    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-error mb-2">
         Table must have column "id", "roleId" and "userId".
     </div>
     <wwLoader :loading="isLoading" />
@@ -55,13 +55,13 @@ export default {
             }));
         },
         isRoleTableValid() {
-            const table = this.definitions[this.settings.privateData.roleTable];
+            const table = this.definitions[this.settings.publicData.roleTable];
             if (!table) return false;
             const properties = Object.keys(table.properties);
             return properties.includes('id') && properties.includes('name');
         },
         isUserRoleTableValid() {
-            const table = this.definitions[this.settings.privateData.userRoleTable];
+            const table = this.definitions[this.settings.publicData.userRoleTable];
             if (!table) return false;
             const properties = Object.keys(table.properties);
             return properties.includes('id') && properties.includes('roleId') && properties.includes('userId');
@@ -85,7 +85,7 @@ export default {
         changePrivateSettings(key, value) {
             this.$emit('update:settings', {
                 ...this.settings,
-                privateData: { ...this.settings.privateData, [key]: value },
+                publicData: { ...this.settings.publicData, [key]: value },
             });
         },
     },
