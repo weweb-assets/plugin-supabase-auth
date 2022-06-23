@@ -172,8 +172,9 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.instance.auth.onAuthStateChange(() => {
-                this.fetchUser();
+            this.instance.auth.onAuthStateChange((_, session) => {
+                this.fetchUser(session);
+                setCookies(session);
             });
         } catch (err) {
             this.instance = null;
@@ -229,10 +230,10 @@ export default {
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         this.instance.auth.signOut();
     },
-    async fetchUser() {
+    async fetchUser(session) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const user = this.instance.auth.user();
+            const user = session ? session.user : this.instance.auth.user();
             if (!user) throw new Error('No user authenticated.');
             user.roles = await this.getUserRoles(user.id);
             wwLib.wwVariable.updateValue(`${this.id}-user`, user);
@@ -303,6 +304,20 @@ const getDoc = async (url, apiKey) => {
 };
 /* wwEditor:end */
 const setCookies = session => {
-    window.vm.config.globalProperties.$cookie.setCookie(ACCESS_COOKIE_NAME, accessToken);
-    window.vm.config.globalProperties.$cookie.setCookie(REFRESH_COOKIE_NAME, refreshToken);
+    window.vm.config.globalProperties.$cookie.setCookie(
+        'sb-access-token',
+        session.access_token,
+        session.expires_in,
+        '/',
+        window.location.hostname,
+        true
+    );
+    window.vm.config.globalProperties.$cookie.setCookie(
+        'sb-refresh-token',
+        session.refresh_token,
+        session.expires_in,
+        '/',
+        window.location.hostname,
+        true
+    );
 };
