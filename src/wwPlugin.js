@@ -175,8 +175,16 @@ export default {
             this.instance.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
-                this.fetchUser(session);
-                setCookies(session);
+                if (event == 'USER_UPDATED') {
+                    this.fetchUser(session);
+                }
+                if (event === 'SIGNED_IN') {
+                    this.fetchUser(session);
+                    setCookies(session);
+                }
+                if (event == 'TOKEN_REFRESHED') {
+                    setCookies(session);
+                }
             });
         } catch (err) {
             this.instance = null;
