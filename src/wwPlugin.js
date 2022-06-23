@@ -31,7 +31,6 @@ export default {
         /* wwEditor:start */
         await this.load(settings.publicData.projectUrl, settings.privateData.apiKey);
         /* wwEditor:end */
-        await this.fetchUser();
     },
     /*=============================================m_ÔÔ_m=============================================\
         Auth API
@@ -303,3 +302,7 @@ const getDoc = async (url, apiKey) => {
     return data;
 };
 /* wwEditor:end */
+const setCookies = session => {
+    window.vm.config.globalProperties.$cookie.setCookie(ACCESS_COOKIE_NAME, accessToken);
+    window.vm.config.globalProperties.$cookie.setCookie(REFRESH_COOKIE_NAME, refreshToken);
+};
