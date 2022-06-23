@@ -172,7 +172,9 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.instance.auth.onAuthStateChange((_, session) => {
+            this.instance.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') return;
+                if (event == 'USER_DELETED') return this.signOut();
                 this.fetchUser(session);
                 setCookies(session);
             });
@@ -228,6 +230,8 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token');
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token');
         this.instance.auth.signOut();
     },
     async fetchUser(session) {
