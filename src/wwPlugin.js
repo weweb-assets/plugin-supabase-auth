@@ -168,7 +168,7 @@ export default {
     async load(projectUrl, apiKey) {
         try {
             if (!projectUrl || !apiKey) return;
-            this.instance = createClient(projectUrl, apiKey, { cookieOptions: { domain: window.location.origin } });
+            this.instance = createClient(projectUrl, apiKey, { cookieOptions: { domain: window.location.hostname } });
             /* wwEditor:start */
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
