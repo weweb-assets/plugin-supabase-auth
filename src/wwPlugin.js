@@ -173,6 +173,7 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+            this.instance.auth.onAuthStateChange(this.fetchUser);
         } catch (err) {
             this.instance = null;
             this.doc = null;
