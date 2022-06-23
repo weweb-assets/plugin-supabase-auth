@@ -165,10 +165,10 @@ export default {
     /*=============================================m_ÔÔ_m=============================================\
         Supabase Auth API
     \================================================================================================*/
-    async load(projectUrl, apiKey, options) {
+    async load(projectUrl, apiKey) {
         try {
             if (!projectUrl || !apiKey) return;
-            this.instance = createClient(projectUrl, apiKey, options);
+            this.instance = createClient(projectUrl, apiKey);
             /* wwEditor:start */
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
