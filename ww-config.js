@@ -62,6 +62,9 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInMagicLink.vue'),
+            getIsValid({ email, redirectPage }) {
+                return !!email && !!redirectPage;
+            },
             /* wwEditor:end */
         },
         {
@@ -70,6 +73,9 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInProvider.vue'),
+            getIsValid({ provider, redirectPage }) {
+                return !!provider && !!redirectPage;
+            },
             /* wwEditor:end */
         },
         {

@@ -11,12 +11,24 @@
     />
     <a
         v-if="provider"
-        class="ww-editor-link ml-2"
+        class="ww-editor-link my-2"
         :href="`https://supabase.com/docs/guides/auth/auth-${provider}`"
         target="_blank"
     >
         See documentation
     </a>
+    <wwEditorInputRow
+        required
+        type="select"
+        label="Redirect to"
+        :options="pagesOptions"
+        :actions="pageActions"
+        :model-value="redirectPage"
+        placeholder="Select a page"
+        bindable
+        @update:modelValue="setRedirectPage"
+        @action="onAction"
+    />
 </template>
 
 <script>
@@ -47,16 +59,40 @@ export default {
                 { label: 'WorkOS', value: 'workos', icon: 'workos' },
                 { label: 'Zoom', value: 'zoom', icon: 'zoom' },
             ],
+            pageActions: [{ icon: 'add', label: 'Create page', onAction: this.createPage }],
         };
     },
     computed: {
         provider() {
             return this.args.provider;
         },
+        redirectPage() {
+            return this.args.redirectPage;
+        },
+        pagesOptions() {
+            return wwLib.wwWebsiteData
+                .getPages()
+                .filter(page => !page.cmsDataSetPath)
+                .map(page => ({ label: page.name, value: page.id }));
+        },
     },
     methods: {
         setProvider(provider) {
             this.$emit('update:args', { ...this.args, provider });
+        },
+        setRedirectPage(redirectPage) {
+            this.$emit('update:args', { ...this.args, redirectPage });
+        },
+        createPage() {
+            // eslint-disable-next-line vue/custom-event-name-casing
+            wwLib.$emit('wwTopBar:open', 'WEBSITE_PAGES');
+            // eslint-disable-next-line vue/custom-event-name-casing
+            wwLib.$emit('wwTopBar:pages:setPage', undefined);
+            // eslint-disable-next-line vue/custom-event-name-casing
+            this.$nextTick(() => wwLib.$emit('wwTopBar:pages:setMenu', 'ww-page-create'));
+        },
+        onAction(action) {
+            action.onAction && action.onAction();
         },
     },
 };
