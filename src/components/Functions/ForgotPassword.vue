@@ -10,6 +10,7 @@
     />
     <wwEditorInputRow
         required
+        type="select"
         label="Redirect to"
         :options="pagesOptions"
         :actions="pageActions"
