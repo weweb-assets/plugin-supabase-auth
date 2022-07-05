@@ -304,8 +304,7 @@ export default {
         if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
-        const router = wwLib.manager ? wwLib.getEditorRouter() : wwLib.getFrontRouter();
-        const { access_token, type } = router.currentRoute.value.query;
+        const { access_token } = this.instance.auth.currentSession || {};
         if (!access_token) throw new Error('No access token provided.');
         if (type !== 'recovery') throw new Error('Access token type must be recovery.');
 
