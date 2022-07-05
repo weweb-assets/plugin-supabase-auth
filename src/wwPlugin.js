@@ -120,6 +120,13 @@ export default {
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
+        for (const role of user.roles || []) {
+            const { error } = await this.instance
+                .from(this.settings.publicData.userRoleTable)
+                .delete()
+                .match({ roleId: role.id, userId: user.id });
+            if (error) throw new Error(error.message, { cause: error });
+        }
         for (const role of roles) {
             const { error } = await this.instance
                 .from(this.settings.publicData.userRoleTable)
