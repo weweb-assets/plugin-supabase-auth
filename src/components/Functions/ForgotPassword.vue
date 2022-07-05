@@ -8,7 +8,7 @@
         placeholder="Enter a email"
         @update:modelValue="setEmail"
     />
-    <wwEditorInputTextSelect
+    <wwEditorInputRow
         required
         label="Redirect to"
         :options="pagesOptions"

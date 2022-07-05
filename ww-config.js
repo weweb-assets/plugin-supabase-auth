@@ -108,8 +108,8 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/ForgotPassword.vue'),
-            getIsValid({ email }) {
-                return email;
+            getIsValid({ email, redirectPage }) {
+                return !!email && !!redirectPage;
             },
             /* wwEditor:end */
         },
