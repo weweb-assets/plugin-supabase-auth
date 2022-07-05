@@ -213,19 +213,27 @@ export default {
             throw err;
         }
     },
-    async signInMagicLink({ email }) {
+    async signInMagicLink({ email, redirectPage }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { error } = await this.instance.auth.signIn({ email });
+            const websiteId = wwLib.wwWebsiteData.getInfo().id;
+            const redirectTo = wwLib.manager
+                ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+            const { error } = await this.instance.auth.signIn({ email }, { redirectTo });
             if (error) throw new Error(error.message, { cause: error });
         } catch (err) {
             this.signOut();
             throw err;
         }
     },
-    async signInProvider({ provider }) {
+    async signInProvider({ provider, redirectPage }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        const { error } = await this.instance.auth.signIn({ provider });
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const { error } = await this.instance.auth.signIn({ provider }, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata }) {
