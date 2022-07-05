@@ -294,10 +294,13 @@ export default {
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
-    async resetPasswordForEmail({ email }) {
+    async resetPasswordForEmail({ email, redirectPage }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-
-        const { error } = await this.instance.auth.api.resetPasswordForEmail(email);
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const { error } = await this.instance.auth.api.resetPasswordForEmail(email, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
