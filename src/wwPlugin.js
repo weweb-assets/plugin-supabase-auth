@@ -315,7 +315,6 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         const { access_token } = this.instance.auth.currentSession || {};
         if (!access_token) throw new Error('No access token provided.');
-        if (type !== 'recovery') throw new Error('Access token type must be recovery.');
 
         const { error } = await this.instance.auth.api.updateUser(access_token, { password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
