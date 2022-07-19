@@ -236,12 +236,19 @@ export default {
         const { error } = await this.instance.auth.signIn({ provider }, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
-    async signUp({ email, password, metadata }) {
+    async signUp({ email, password, metadata, redirectPage }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
+            const websiteId = wwLib.wwWebsiteData.getInfo().id;
+            const redirectTo = wwLib.manager
+                ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
 
-            const { user, error } = await this.instance.auth.signUp({ email, password }, { data: user_metadata });
+            const { user, error } = await this.instance.auth.signUp(
+                { email, password },
+                { data: user_metadata, redirectTo }
+            );
             if (error) throw new Error(error.message, { cause: error });
             return user;
         } catch (err) {
