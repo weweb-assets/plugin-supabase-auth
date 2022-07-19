@@ -239,7 +239,7 @@ export default {
     async signUp({ email, password, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
+            const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
             const { user, error } = await this.instance.auth.signUp({ email, password }, { data: user_metadata });
             if (error) throw new Error(error.message, { cause: error });
@@ -286,7 +286,7 @@ export default {
     async updateUserMeta({ email, metadata }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
 
-        const user_metadata = metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
+        const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
         const { data: result, error } = await this.instance.auth.update({ email, data: user_metadata });
         if (error) throw new Error(error.message, { cause: error });
