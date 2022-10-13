@@ -175,10 +175,13 @@ export default {
         try {
             if (!projectUrl || !apiKey) return;
             this.instance = createClient(projectUrl, apiKey);
+            // The same instance mist be shared between supabase and supabase auth
+            if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.instance = this.instance;
             /* wwEditor:start */
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+            this.fetchUser(this.instance.auth.session());
             this.instance.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
@@ -205,8 +208,12 @@ export default {
     async signInEmail({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { error } = await this.instance.auth.signIn({ email, password });
+            const { session, error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
+            console.log(session.access_token);
+            this.instance.auth.setAuth(session.access_token);
+            this.instance.auth.refreshSession();
+            console.log(this.instance.auth);
             return await this.fetchUser();
         } catch (err) {
             this.signOut();
