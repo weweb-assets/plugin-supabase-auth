@@ -268,14 +268,8 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-            path: '/',
-            domain: window.location.hostname,
-        });
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-            path: '/',
-            domain: window.location.hostname,
-        });
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token');
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token');
         this.instance.auth.signOut();
     },
     async fetchUser(session) {
@@ -356,15 +350,11 @@ const getDoc = async (url, apiKey) => {
 const setCookies = session => {
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
         expire: session.expires_in,
-        path: '/',
-        domain: window.location.hostname,
         secure: true,
         sameSite: 'Lax',
     });
     window.vm.config.globalProperties.$cookie.setCookie('sb-refresh-token', session.refresh_token, {
         expire: session.expires_in,
-        path: '/',
-        domain: window.location.hostname,
         secure: true,
         sameSite: 'Lax',
     });
