@@ -40,7 +40,7 @@ export default {
     userAttributes: [
         { label: 'Name', key: 'name' },
         { label: 'Picture', key: 'picture' },
-        { label: 'Given name', key: 'gisven_name' },
+        { label: 'Given name', key: 'given_name' },
         { label: 'Family name', key: 'family_name' },
         { label: 'Middle name', key: 'middle_name' },
         { label: 'Nickname', key: 'nickname' },
