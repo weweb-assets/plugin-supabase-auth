@@ -234,12 +234,14 @@ export default {
         }
     },
     async signInProvider({ provider, redirectPage }) {
+        console.log('signInProvider');
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
         const { error } = await this.instance.auth.signIn({ provider }, { redirectTo });
+        console.log(redirectTo);
         if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata, redirectPage }) {
@@ -346,20 +348,18 @@ const getDoc = async (url, apiKey) => {
 };
 /* wwEditor:end */
 const setCookies = session => {
-    window.vm.config.globalProperties.$cookie.setCookie(
-        'sb-access-token',
-        session.access_token,
-        session.expires_in,
-        '/',
-        window.location.hostname,
-        true
-    );
-    window.vm.config.globalProperties.$cookie.setCookie(
-        'sb-refresh-token',
-        session.refresh_token,
-        session.expires_in,
-        '/',
-        window.location.hostname,
-        true
-    );
+    window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
+        expire: session.expires_in,
+        path: '/',
+        domain: window.location.hostname,
+        secure: true,
+        sameSite: 'Lax',
+    });
+    window.vm.config.globalProperties.$cookie.setCookie('sb-refresh-token', session.refresh_token, {
+        expire: session.expires_in,
+        path: '/',
+        domain: window.location.hostname,
+        secure: true,
+        sameSite: 'Lax',
+    });
 };
