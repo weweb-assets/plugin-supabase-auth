@@ -53,6 +53,7 @@ export default {
         { label: 'Address', key: 'address' },
     ],
     async adminGetUsers() {
+        console.log(this.instance);
         const response = await this.instance.auth.api.listUsers();
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
@@ -210,10 +211,8 @@ export default {
         try {
             const { session, error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            console.log(session.access_token);
             this.instance.auth.setAuth(session.access_token);
             this.instance.auth.refreshSession();
-            console.log(this.instance.auth);
             return await this.fetchUser();
         } catch (err) {
             this.signOut();
