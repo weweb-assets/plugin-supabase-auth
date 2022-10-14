@@ -53,7 +53,6 @@ export default {
         { label: 'Address', key: 'address' },
     ],
     async adminGetUsers() {
-        console.log(this.instance);
         const response = await this.instance.auth.api.listUsers();
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
@@ -277,6 +276,7 @@ export default {
             domain: window.location.hostname,
         });
         // For safari
+        console.log('removeCookies', window.location.hostname, window.location);
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
             path: '/',
             domain: '.' + window.location.hostname,
@@ -363,6 +363,7 @@ const getDoc = async (url, apiKey) => {
 };
 /* wwEditor:end */
 const setCookies = session => {
+    console.log('setCookies', window.location.hostname, window.location, session);
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
         expire: session.expires_in,
         path: '/',
