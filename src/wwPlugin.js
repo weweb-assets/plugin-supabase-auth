@@ -181,15 +181,15 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.refreshAuthUser(true);
+            await this.refreshAuthUser();
             this.instance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
                 if (event == 'USER_UPDATED') {
-                    this.refreshAuthUser();
+                    this.refreshAuthUser(session);
                 }
                 if (event === 'SIGNED_IN') {
-                    this.refreshAuthUser();
+                    this.refreshAuthUser(session);
                 }
                 if (event == 'TOKEN_REFRESHED') {
                     setCookies(session);
@@ -207,9 +207,9 @@ export default {
     async signInEmail({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { error } = await this.instance.auth.signIn({ email, password });
+            const { session, error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            return await this.refreshAuthUser();
+            return await this.refreshAuthUser(session);
         } catch (err) {
             this.signOut();
             throw err;
@@ -281,14 +281,12 @@ export default {
         });
         this.instance.auth.signOut();
     },
-    async refreshAuthUser(refreshSession) {
+    async refreshAuthUser(session) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
 
-        if (refreshSession) await this.instance.auth.refreshSession();
-
-        const session = this.instance.auth.session();
+        const _session = session || this.instance.auth.session();
         console.log('refreshAuthUser', session);
-        const user = session ? session.user : this.instance.auth.user();
+        const user = _session ? _session.user : this.instance.auth.user();
         if (!user) {
             this.signOut();
             return false;
@@ -296,7 +294,7 @@ export default {
         user.roles = await this.getUserRoles(user.id);
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
-        setCookies(session);
+        setCookies(_session);
         return user;
     },
     async getUserRoles(userId) {
