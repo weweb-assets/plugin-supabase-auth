@@ -285,7 +285,6 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
 
         const _session = session || this.instance.auth.session();
-        console.log('refreshAuthUser', session);
         const user = _session ? _session.user : this.instance.auth.user();
         if (!user) {
             this.signOut();
