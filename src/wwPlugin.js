@@ -208,10 +208,8 @@ export default {
     async signInEmail({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { session, error } = await this.instance.auth.signIn({ email, password });
+            const { error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            this.instance.auth.setAuth(session.access_token);
-            this.instance.auth.refreshSession();
             return await this.fetchUser();
         } catch (err) {
             this.signOut();
