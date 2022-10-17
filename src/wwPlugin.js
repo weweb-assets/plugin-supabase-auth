@@ -181,16 +181,15 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.fetchUser(this.instance.auth.session());
-            this.instance.auth.onAuthStateChange((event, session) => {
+            this.setAuthUser();
+            this.instance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
                 if (event == 'USER_UPDATED') {
-                    this.fetchUser(session);
+                    this.setAuthUser();
                 }
                 if (event === 'SIGNED_IN') {
-                    this.fetchUser(session);
-                    setCookies(session);
+                    this.setAuthUser();
                 }
                 if (event == 'TOKEN_REFRESHED') {
                     setCookies(session);
@@ -210,7 +209,7 @@ export default {
         try {
             const { error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            return await this.fetchUser();
+            return await this.setAuthUser();
         } catch (err) {
             this.signOut();
             throw err;
@@ -282,19 +281,22 @@ export default {
         });
         this.instance.auth.signOut();
     },
-    async fetchUser(session) {
+    async setAuthUser() {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const user = session ? session.user : this.instance.auth.user();
-            if (!user) throw new Error('No user authenticated.');
-            user.roles = await this.getUserRoles(user.id);
-            wwLib.wwVariable.updateValue(`${this.id}-user`, user);
-            wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
-            return user;
-        } catch (err) {
+        await this.instance.auth.refreshSession();
+
+        const session = this.instance.session();
+        console.log('setAuthUser', session);
+        const user = session ? session.user : this.instance.auth.user();
+        if (!user) {
             this.signOut();
-            throw err;
+            return false;
         }
+        user.roles = await this.getUserRoles(user.id);
+        wwLib.wwVariable.updateValue(`${this.id}-user`, user);
+        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
+        setCookies(session);
+        return user;
     },
     async getUserRoles(userId) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
