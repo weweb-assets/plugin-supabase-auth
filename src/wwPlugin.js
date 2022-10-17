@@ -181,15 +181,15 @@ export default {
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.setAuthUser();
+            this.refreshAuthUser(true);
             this.instance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
                 if (event == 'USER_UPDATED') {
-                    this.setAuthUser();
+                    this.refreshAuthUser();
                 }
                 if (event === 'SIGNED_IN') {
-                    this.setAuthUser();
+                    this.refreshAuthUser();
                 }
                 if (event == 'TOKEN_REFRESHED') {
                     setCookies(session);
@@ -209,7 +209,7 @@ export default {
         try {
             const { error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            return await this.setAuthUser();
+            return await this.refreshAuthUser();
         } catch (err) {
             this.signOut();
             throw err;
@@ -281,12 +281,13 @@ export default {
         });
         this.instance.auth.signOut();
     },
-    async setAuthUser() {
+    async refreshAuthUser(refreshSession) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        await this.instance.auth.refreshSession();
 
-        const session = this.instance.session();
-        console.log('setAuthUser', session);
+        if (refreshSession) await this.instance.auth.refreshSession();
+
+        const session = this.instance.auth.session();
+        console.log('refreshAuthUser', session);
         const user = session ? session.user : this.instance.auth.user();
         if (!user) {
             this.signOut();
