@@ -175,19 +175,21 @@ export default {
         try {
             if (!projectUrl || !apiKey) return;
             this.instance = createClient(projectUrl, apiKey);
+            // The same instance mist be shared between supabase and supabase auth
+            if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.instance = this.instance;
             /* wwEditor:start */
             await this.fetchDoc(projectUrl, apiKey);
             /* wwEditor:end */
             if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-            this.instance.auth.onAuthStateChange((event, session) => {
+            await this.refreshAuthUser();
+            this.instance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
                 if (event == 'USER_UPDATED') {
-                    this.fetchUser(session);
+                    this.refreshAuthUser(session);
                 }
                 if (event === 'SIGNED_IN') {
-                    this.fetchUser(session);
-                    setCookies(session);
+                    this.refreshAuthUser(session);
                 }
                 if (event == 'TOKEN_REFRESHED') {
                     setCookies(session);
@@ -205,9 +207,9 @@ export default {
     async signInEmail({ email, password }) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { error } = await this.instance.auth.signIn({ email, password });
+            const { session, error } = await this.instance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
-            return await this.fetchUser();
+            return await this.refreshAuthUser(session);
         } catch (err) {
             this.signOut();
             throw err;
@@ -260,23 +262,39 @@ export default {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token');
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token');
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
+            path: '/',
+            domain: window.location.hostname,
+        });
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
+            path: '/',
+            domain: window.location.hostname,
+        });
+        // For safari
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
+            path: '/',
+            domain: '.' + window.location.hostname,
+        });
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
+            path: '/',
+            domain: '.' + window.location.hostname,
+        });
         this.instance.auth.signOut();
     },
-    async fetchUser(session) {
+    async refreshAuthUser(session) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const user = session ? session.user : this.instance.auth.user();
-            if (!user) throw new Error('No user authenticated.');
-            user.roles = await this.getUserRoles(user.id);
-            wwLib.wwVariable.updateValue(`${this.id}-user`, user);
-            wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
-            return user;
-        } catch (err) {
+
+        const _session = session || this.instance.auth.session();
+        const user = _session ? _session.user : this.instance.auth.user();
+        if (!user) {
             this.signOut();
-            throw err;
+            return false;
         }
+        user.roles = await this.getUserRoles(user.id);
+        wwLib.wwVariable.updateValue(`${this.id}-user`, user);
+        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
+        setCookies(_session);
+        return user;
     },
     async getUserRoles(userId) {
         if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
@@ -340,20 +358,18 @@ const getDoc = async (url, apiKey) => {
 };
 /* wwEditor:end */
 const setCookies = session => {
-    window.vm.config.globalProperties.$cookie.setCookie(
-        'sb-access-token',
-        session.access_token,
-        session.expires_in,
-        '/',
-        window.location.hostname,
-        true
-    );
-    window.vm.config.globalProperties.$cookie.setCookie(
-        'sb-refresh-token',
-        session.refresh_token,
-        session.expires_in,
-        '/',
-        window.location.hostname,
-        true
-    );
+    window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
+        expire: session.expires_in,
+        path: '/',
+        domain: window.location.hostname,
+        secure: true,
+        sameSite: 'Lax',
+    });
+    window.vm.config.globalProperties.$cookie.setCookie('sb-refresh-token', session.refresh_token, {
+        expire: session.expires_in,
+        path: '/',
+        domain: window.location.hostname,
+        secure: true,
+        sameSite: 'Lax',
+    });
 };

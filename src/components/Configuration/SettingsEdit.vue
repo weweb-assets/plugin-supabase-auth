@@ -93,11 +93,7 @@ export default {
             this.$nextTick(this.loadInstance);
         },
         loadInstance() {
-            this.plugin.load(
-                this.settings.publicData.projectUrl,
-                this.settings.publicData.apiKey,
-                this.settings.privateData.apiKey
-            );
+            this.plugin.load(this.settings.publicData.projectUrl, this.settings.privateData.apiKey);
         },
     },
 };

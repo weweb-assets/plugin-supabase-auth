@@ -72,7 +72,7 @@ export default {
         pagesOptions() {
             return wwLib.wwWebsiteData
                 .getPages()
-                .filter(page => !page.cmsDataSetPath)
+                .filter(page => !page.cmsDataSetPath && !page.pageUserGroups.some(item => !!item))
                 .map(page => ({ label: page.name, value: page.id }));
         },
     },
