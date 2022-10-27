@@ -17,7 +17,8 @@ import './components/Functions/ForgotPassword.vue';
 import { createClient } from '@supabase/supabase-js';
 
 export default {
-    instance: null,
+    privateInstance: null,
+    publicInstance: null,
     /* wwEditor:start */
     doc: null,
     /* wwEditor:end */
@@ -29,7 +30,7 @@ export default {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
-        await this.load(settings.publicData.projectUrl, settings.privateData.apiKey);
+        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
     },
     /*=============================================m_ÔÔ_m=============================================\
@@ -53,7 +54,7 @@ export default {
         { label: 'Address', key: 'address' },
     ],
     async adminGetUsers() {
-        const response = await this.instance.auth.api.listUsers();
+        const response = await this.privateInstance.auth.api.listUsers();
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
             response.data.map(async user => ({
@@ -62,9 +63,21 @@ export default {
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
-                roles: await this.getUserRoles(user.id),
+                roles: await this.adminGetUserRoles(user.id),
             }))
         );
+    },
+    async adminGetUserRoles(userId) {
+        if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const roles = this.settings.publicData.userRoleTable
+            ? (
+                  await this.privateInstance
+                      .from(this.settings.publicData.userRoleTable)
+                      .select('role:roleId(*)')
+                      .eq('userId', userId)
+              ).data.map(({ role }) => role)
+            : [];
+        return roles;
     },
     async adminCreateUser(data) {
         const attributes = data.attributes.reduce(
@@ -72,7 +85,7 @@ export default {
             {}
         );
 
-        const response = await this.instance.auth.api.createUser({
+        const response = await this.privateInstance.auth.api.createUser({
             email: data.email,
             email_confirm: true,
             password: data.password,
@@ -94,7 +107,7 @@ export default {
             {}
         );
 
-        const response = await this.instance.auth.api.updateUserById(user.id, {
+        const response = await this.privateInstance.auth.api.updateUserById(user.id, {
             email: data.email,
             email_confirm: true,
             user_metadata: { ...attributes, name: data.name },
@@ -109,7 +122,7 @@ export default {
         };
     },
     async adminUpdateUserPassword(user, password) {
-        const { error } = await this.instance.auth.api.updateUserById(user.id, {
+        const { error } = await this.privateInstance.auth.api.updateUserById(user.id, {
             password: password,
         });
         if (error) throw new Error(error.message, { cause: error });
@@ -121,27 +134,27 @@ export default {
             throw new Error(text);
         }
         for (const role of user.roles || []) {
-            const { error } = await this.instance
+            const { error } = await this.privateInstance
                 .from(this.settings.publicData.userRoleTable)
                 .delete()
                 .match({ roleId: role.id, userId: user.id });
             if (error) throw new Error(error.message, { cause: error });
         }
         for (const role of roles) {
-            const { error } = await this.instance
+            const { error } = await this.privateInstance
                 .from(this.settings.publicData.userRoleTable)
                 .upsert({ id: role.id, roleId: role.id, userId: user.id });
             if (error) throw new Error(error.message, { cause: error });
         }
     },
     async adminDeleteUser(user) {
-        const { error } = await this.instance.auth.api.deleteUser(user.id);
+        const { error } = await this.privateInstance.auth.api.deleteUser(user.id);
         if (error) throw new Error(error.message, { cause: error });
     },
     /* Roles */
     async adminGetRoles() {
         if (!this.settings.publicData.roleTable) return [];
-        const { data: roles, error } = await this.instance.from(this.settings.publicData.roleTable).select();
+        const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
         return roles.map(role => ({ ...role, createdAt: role.created_at }));
     },
@@ -151,12 +164,14 @@ export default {
             wwLib.wwNotification.open({ text, color: 'red' });
             throw new Error(text);
         }
-        const { data: roles, error } = await this.instance.from(this.settings.publicData.roleTable).insert([{ name }]);
+        const { data: roles, error } = await this.privateInstance
+            .from(this.settings.publicData.roleTable)
+            .insert([{ name }]);
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminUpdateRole(roleId, name) {
-        const { data: roles, error } = await this.instance
+        const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .update({ name })
             .match({ id: roleId });
@@ -164,25 +179,34 @@ export default {
         return { ...roles[0], createdAt: roles[0].created_at };
     },
     async adminDeleteRole(roleId) {
-        const { error } = await this.instance.from(this.settings.publicData.roleTable).delete().match({ id: roleId });
+        const { error } = await this.privateInstance
+            .from(this.settings.publicData.roleTable)
+            .delete()
+            .match({ id: roleId });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
         Supabase Auth API
     \================================================================================================*/
-    async load(projectUrl, apiKey) {
+    async load(projectUrl, publicApiKey, privateApiKey = null) {
         try {
-            if (!projectUrl || !apiKey) return;
-            this.instance = createClient(projectUrl, apiKey);
-            // The same instance must be shared between supabase and supabase auth
+            if (!projectUrl || !publicApiKey) return;
+
+            /* wwEditor:start */
+            if (!privateApiKey) return;
+            this.privateInstance = createClient(projectUrl, privateApiKey);
+            /* wwEditor:end */
+            this.publicInstance = createClient(projectUrl, publicApiKey);
+
+            // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
             /* wwEditor:start */
-            await this.fetchDoc(projectUrl, apiKey);
+            await this.fetchDoc(projectUrl, privateApiKey || publicApiKey);
             /* wwEditor:end */
-            if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+            if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
             await this.refreshAuthUser();
-            this.instance.auth.onAuthStateChange(async (event, session) => {
+            this.publicInstance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
                 if (event == 'USER_UPDATED') {
@@ -196,7 +220,8 @@ export default {
                 }
             });
         } catch (err) {
-            this.instance = null;
+            this.publicInstance = null;
+            this.privateInstance = null;
             this.doc = null;
             wwLib.wwLog.error(err);
             /* wwEditor:start */
@@ -205,9 +230,9 @@ export default {
         }
     },
     async signInEmail({ email, password }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { session, error } = await this.instance.auth.signIn({ email, password });
+            const { session, error } = await this.publicInstance.auth.signIn({ email, password });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(session);
         } catch (err) {
@@ -216,13 +241,13 @@ export default {
         }
     },
     async signInMagicLink({ email, redirectPage }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const websiteId = wwLib.wwWebsiteData.getInfo().id;
             const redirectTo = wwLib.manager
                 ? `${window.location.origin}/${websiteId}/${redirectPage}`
                 : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-            const { error } = await this.instance.auth.signIn({ email }, { redirectTo });
+            const { error } = await this.publicInstance.auth.signIn({ email }, { redirectTo });
             if (error) throw new Error(error.message, { cause: error });
         } catch (err) {
             this.signOut();
@@ -230,16 +255,16 @@ export default {
         }
     },
     async signInProvider({ provider, redirectPage }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.instance.auth.signIn({ provider }, { redirectTo });
+        const { error } = await this.publicInstance.auth.signIn({ provider }, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata, redirectPage }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         try {
             const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
             const websiteId = wwLib.wwWebsiteData.getInfo().id;
@@ -247,7 +272,7 @@ export default {
                 ? `${window.location.origin}/${websiteId}/${redirectPage}`
                 : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
 
-            const { user, error } = await this.instance.auth.signUp(
+            const { user, error } = await this.publicInstance.auth.signUp(
                 { email, password },
                 { data: user_metadata, redirectTo }
             );
@@ -259,7 +284,7 @@ export default {
         }
     },
     signOut() {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
@@ -279,13 +304,13 @@ export default {
             path: '/',
             domain: '.' + window.location.hostname,
         });
-        this.instance.auth.signOut();
+        this.publicInstance.auth.signOut();
     },
     async refreshAuthUser(session) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        const _session = session || this.instance.auth.session();
-        const user = _session ? _session.user : this.instance.auth.user();
+        const _session = session || this.publicInstance.auth.session();
+        const user = _session ? _session.user : this.publicInstance.auth.user();
         if (!user) {
             this.signOut();
             return false;
@@ -297,10 +322,10 @@ export default {
         return user;
     },
     async getUserRoles(userId) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
-                  await this.instance
+                  await this.publicInstance
                       .from(this.settings.publicData.userRoleTable)
                       .select('role:roleId(*)')
                       .eq('userId', userId)
@@ -309,39 +334,39 @@ export default {
         return roles;
     },
     async updateUserMeta({ email, metadata }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
         const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const { data: result, error } = await this.instance.auth.update({ email, data: user_metadata });
+        const { data: result, error } = await this.publicInstance.auth.update({ email, data: user_metadata });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
         await this.signIn({ email: this.user.email, password: oldPassword });
 
-        const { data: result, error } = await this.instance.auth.update({ password: newPassword });
+        const { data: result, error } = await this.publicInstance.auth.update({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
     async resetPasswordForEmail({ email, redirectPage }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.instance.auth.api.resetPasswordForEmail(email, { redirectTo });
+        const { error } = await this.publicInstance.auth.api.resetPasswordForEmail(email, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
-        if (!this.instance) throw new Error('Invalid Supabase Auth configuration.');
-        const { access_token } = this.instance.auth.currentSession || {};
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const { access_token } = this.publicInstance.auth.currentSession || {};
         if (!access_token) throw new Error('No access token provided.');
 
-        const { error } = await this.instance.auth.api.updateUser(access_token, { password: newPassword });
+        const { error } = await this.publicInstance.auth.api.updateUser(access_token, { password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:start */
