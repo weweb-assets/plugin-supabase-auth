@@ -346,7 +346,11 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
-        await this.signInEmail({ email: this.user.email, password: oldPassword });
+        const { error: signInError } = await this.publicInstance.auth.signIn({
+            email: this.user.email,
+            password: oldPassword,
+        });
+        if (signInError) throw new Error(signInError.message, { cause: signInError });
 
         const { data: result, error } = await this.publicInstance.auth.update({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
