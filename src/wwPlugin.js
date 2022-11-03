@@ -204,7 +204,7 @@ export default {
             /* wwEditor:start */
             await this.fetchDoc(projectUrl, privateApiKey || publicApiKey);
             /* wwEditor:end */
-            if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
+            if (!this.privateInstance && !this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
             await this.refreshAuthUser();
             this.publicInstance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
