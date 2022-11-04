@@ -268,9 +268,11 @@ export default {
         try {
             const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
             const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo = wwLib.manager
-                ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+            const redirectTo =
+                redirectPage &&
+                (wwLib.manager
+                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
 
             const { user, error } = await this.publicInstance.auth.signUp(
                 { email, password },
@@ -346,7 +348,11 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
-        await this.signIn({ email: this.user.email, password: oldPassword });
+        const { error: signInError } = await this.publicInstance.auth.signIn({
+            email: this.user.email,
+            password: oldPassword,
+        });
+        if (signInError) throw new Error(signInError.message, { cause: signInError });
 
         const { data: result, error } = await this.publicInstance.auth.update({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });

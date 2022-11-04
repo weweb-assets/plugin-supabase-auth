@@ -45,7 +45,6 @@
         </template>
     </wwEditorInputRow>
     <wwEditorInputRow
-        required
         type="select"
         label="Redirect to"
         :options="pagesOptions"
