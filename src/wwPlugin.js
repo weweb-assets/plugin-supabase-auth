@@ -268,9 +268,11 @@ export default {
         try {
             const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
             const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo = wwLib.manager
-                ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+            const redirectTo =
+                redirectPage &&
+                (wwLib.manager
+                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
 
             const { user, error } = await this.publicInstance.auth.signUp(
                 { email, password },
