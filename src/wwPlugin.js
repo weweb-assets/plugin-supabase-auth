@@ -318,6 +318,7 @@ export default {
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
+        user._session = _session;
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
         setCookies(_session);
