@@ -143,7 +143,7 @@ export default {
         for (const role of roles) {
             const { error } = await this.privateInstance
                 .from(this.settings.publicData.userRoleTable)
-                .upsert({ id: role.id, roleId: role.id, userId: user.id });
+                .insert({ roleId: role.id, userId: user.id });
             if (error) throw new Error(error.message, { cause: error });
         }
     },
