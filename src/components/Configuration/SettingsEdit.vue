@@ -25,19 +25,22 @@
         @update:modelValue="changePublicApiKey"
     />
     <wwEditorFormRow required label="Private API key">
-        <wwEditorInputText
-            type="text"
-            placeholder="ey********"
-            :model-value="settings.privateData.apiKey"
-            :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
-            large
-            @update:modelValue="changePrivateApiKey"
-        />
+        <div class="supabase-auth-settings-edit__password">
+            <wwEditorInputText
+                :type="isKeyVisible ? 'text' : 'password'"
+                placeholder="ey********"
+                :model-value="settings.privateData.apiKey"
+                :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
+                large
+                @update:modelValue="changePrivateApiKey"
+            />
+            <wwEditorIcon
+                class="toggle"
+                :name="isKeyVisible ? 'eye-off' : 'eye'"
+                @click="isKeyVisible = !isKeyVisible"
+            ></wwEditorIcon>
+        </div>
     </wwEditorFormRow>
-    <div class="flex items-center">
-        <wwEditorInputSwitch v-model="isKeyVisible" />
-        <span class="ml-2 body-2">Show private api key</span>
-    </div>
 </template>
 
 <script>
@@ -102,3 +105,19 @@ export default {
     },
 };
 </script>
+
+<style lang="scss" scoped>
+.supabase-auth-settings-edit {
+    &__password {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        input {
+            flex: auto;
+        }
+        .toggle {
+            cursor: pointer;
+        }
+    }
+}
+</style>
