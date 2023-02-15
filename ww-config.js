@@ -34,6 +34,7 @@ export default {
                 },
             },
         ],
+        designSystemId: '290de5c1-a7fb-49a7-88bb-6acd08576c07',
     },
     variables: [
         { name: 'user', value: 'user', type: 'object', defaultValue: null },
