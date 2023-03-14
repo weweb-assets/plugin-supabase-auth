@@ -25,19 +25,21 @@
         @update:modelValue="changePublicApiKey"
     />
     <wwEditorFormRow required label="Private API key">
-        <wwEditorInputText
-            type="text"
-            placeholder="ey********"
-            :model-value="settings.privateData.apiKey"
-            :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
-            large
-            @update:modelValue="changePrivateApiKey"
-        />
+        <div class="flex items-center">
+            <wwEditorInputText
+                :type="isKeyVisible ? 'text' : 'password'"
+                placeholder="ey********"
+                :model-value="settings.privateData.apiKey"
+                :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
+                large
+                @update:modelValue="changePrivateApiKey"
+                class="w-full mr-3"
+            />
+            <button class="pointer" @click.prevent="isKeyVisible = !isKeyVisible">
+                <wwEditorIcon :name="isKeyVisible ? 'eye-off' : 'eye'"></wwEditorIcon>
+            </button>
+        </div>
     </wwEditorFormRow>
-    <div class="flex items-center">
-        <wwEditorInputSwitch v-model="isKeyVisible" />
-        <span class="ml-2 body-2">Show private api key</span>
-    </div>
 </template>
 
 <script>
