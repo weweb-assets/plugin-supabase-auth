@@ -306,6 +306,10 @@ export default {
         });
         this.publicInstance.auth.signOut();
     },
+    // Ensure Retro compatibility for the workflow action fetchUser
+    fetchUser() {
+        return this.refreshAuthUser();
+    },
     async refreshAuthUser(session) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
