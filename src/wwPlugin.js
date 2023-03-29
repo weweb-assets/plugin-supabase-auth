@@ -320,6 +320,8 @@ export default {
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
+        // avoid recurssive date session->user->session->...
+        delete _session.user;
         user._session = _session;
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
