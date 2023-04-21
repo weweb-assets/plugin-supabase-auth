@@ -306,6 +306,10 @@ export default {
         });
         this.publicInstance.auth.signOut();
     },
+    // Ensure Retro compatibility for the workflow action fetchUser
+    fetchUser() {
+        return this.refreshAuthUser();
+    },
     async refreshAuthUser(session) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
@@ -316,7 +320,12 @@ export default {
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
-        user._session = _session;
+        user._session = {
+            access_token: _session.access_token,
+            token_type: _session.token_type,
+            expires_in: _session.expires_in,
+            refresh_token: _session.refresh_token,
+        };
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
         setCookies(_session);
