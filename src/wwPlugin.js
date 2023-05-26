@@ -190,13 +190,7 @@ export default {
     async load(projectUrl, publicApiKey, privateApiKey = null) {
         try {
             if (!projectUrl || !publicApiKey) return;
-
-            /* wwEditor:start */
-            if (!privateApiKey) return;
-            this.privateInstance = createClient(projectUrl, privateApiKey);
-            /* wwEditor:end */
-
-            this.publicInstance = createClient(projectUrl, publicApiKey, {
+            const clientOptions = {
                 cookieOptions: {
                     path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
                 },
@@ -213,7 +207,14 @@ export default {
                           },
                       }
                     : undefined,
-            });
+            };
+
+            /* wwEditor:start */
+            if (!privateApiKey) return;
+            this.privateInstance = createClient(projectUrl, privateApiKey, clientOptions);
+            /* wwEditor:end */
+
+            this.publicInstance = createClient(projectUrl, publicApiKey, clientOptions);
 
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
