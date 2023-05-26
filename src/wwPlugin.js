@@ -190,31 +190,30 @@ export default {
     async load(projectUrl, publicApiKey, privateApiKey = null) {
         try {
             if (!projectUrl || !publicApiKey) return;
-            const clientOptions = {
+
+            /* wwEditor:start */
+            if (!privateApiKey) return;
+            this.privateInstance = createClient(projectUrl, privateApiKey);
+            /* wwEditor:end */
+
+            this.publicInstance = createClient(projectUrl, publicApiKey, {
                 cookieOptions: {
                     path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
                 },
                 localStorage: wwLib.manager
                     ? {
                           getItem(key) {
-                              window.localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                              return window.localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
                           },
                           setItem(key, value) {
-                              window.localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`, value);
+                              window.localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`, value);
                           },
                           removeItem(key) {
-                              window.localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                              window.localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
                           },
                       }
                     : undefined,
-            };
-
-            /* wwEditor:start */
-            if (!privateApiKey) return;
-            this.privateInstance = createClient(projectUrl, privateApiKey, clientOptions);
-            /* wwEditor:end */
-
-            this.publicInstance = createClient(projectUrl, publicApiKey, clientOptions);
+            });
 
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
