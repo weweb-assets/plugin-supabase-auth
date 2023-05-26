@@ -200,6 +200,20 @@ export default {
                 cookieOptions: {
                     path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
                 },
+                localStorage: wwLib.manager
+                    ? {
+                          getItem(key) {
+                              wwLib
+                                  .getEditorDocument()
+                                  .localStoage.getItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                          },
+                          setItem(key) {
+                              wwLib
+                                  .getEditorDocument()
+                                  .localStoage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                          },
+                      }
+                    : undefined,
             });
 
             // The same public instance must be shared between supabase and supabase auth
