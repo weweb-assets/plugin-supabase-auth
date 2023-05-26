@@ -205,8 +205,8 @@ export default {
                           getItem(key) {
                               window.localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
                           },
-                          setItem(key) {
-                              window.localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                          setItem(key, value) {
+                              window.localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`, value);
                           },
                           removeItem(key) {
                               window.localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
