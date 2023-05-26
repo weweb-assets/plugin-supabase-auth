@@ -203,14 +203,13 @@ export default {
                 localStorage: wwLib.manager
                     ? {
                           getItem(key) {
-                              wwLib
-                                  .getEditorDocument()
-                                  .localStoage.getItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                              window.localStoage.getItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
                           },
                           setItem(key) {
-                              wwLib
-                                  .getEditorDocument()
-                                  .localStoage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                              window.localStoage.setItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
+                          },
+                          removeItem(key) {
+                              window.localStoage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}-${key}`);
                           },
                       }
                     : undefined,
