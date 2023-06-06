@@ -195,7 +195,31 @@ export default {
             if (!privateApiKey) return;
             this.privateInstance = createClient(projectUrl, privateApiKey);
             /* wwEditor:end */
-            this.publicInstance = createClient(projectUrl, publicApiKey);
+
+            this.publicInstance = createClient(projectUrl, publicApiKey, {
+                cookieOptions: {
+                    path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
+                },
+                localStorage: wwLib.manager
+                    ? {
+                          getItem(key) {
+                              return wwLib
+                                  .getEditorWindow()
+                                  .localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
+                          },
+                          setItem(key, value) {
+                              wwLib
+                                  .getEditorWindow()
+                                  .localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`, value);
+                          },
+                          removeItem(key) {
+                              wwLib
+                                  .getEditorWindow()
+                                  .localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
+                          },
+                      }
+                    : undefined,
+            });
 
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
@@ -287,21 +311,22 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
+        const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-            path: '/',
+            path,
             domain: window.location.hostname,
         });
         window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-            path: '/',
+            path,
             domain: window.location.hostname,
         });
         // For safari
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-            path: '/',
+            path,
             domain: '.' + window.location.hostname,
         });
         window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-            path: '/',
+            path,
             domain: '.' + window.location.hostname,
         });
         this.publicInstance.auth.signOut();
@@ -397,16 +422,17 @@ const getDoc = async (url, apiKey) => {
 };
 /* wwEditor:end */
 const setCookies = session => {
+    const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
         expire: session.expires_in,
-        path: '/',
+        path,
         domain: window.location.hostname,
         secure: true,
         sameSite: 'Lax',
     });
     window.vm.config.globalProperties.$cookie.setCookie('sb-refresh-token', session.refresh_token, {
         expire: session.expires_in,
-        path: '/',
+        path,
         domain: window.location.hostname,
         secure: true,
         sameSite: 'Lax',
