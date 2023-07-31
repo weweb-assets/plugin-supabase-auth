@@ -417,10 +417,11 @@ export default {
 
 /* wwEditor:start */
 const getDoc = async (url, apiKey) => {
-    const { data } = await axios.get(`${url}/rest/v1/?apikey=${apiKey}`);
+    const { data } = await axios.get(`${url}/rest/v1/`, { headers: { apiKey } });
     return data;
 };
 /* wwEditor:end */
+
 const setCookies = session => {
     const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
