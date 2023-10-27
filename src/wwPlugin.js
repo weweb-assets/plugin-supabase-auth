@@ -200,7 +200,7 @@ export default {
 
             this.publicInstance = createClient(projectUrl, publicApiKey, {
                 auth: {
-                    storageKey: `${wwLib.wwWebsiteData.getInfo().id}.${key}`,
+                    storageKey: wwLib.wwWebsiteData.getInfo().id,
                 },
             });
 
