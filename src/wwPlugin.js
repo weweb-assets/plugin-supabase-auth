@@ -164,7 +164,8 @@ export default {
         }
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
-            .insert([{ name }]);
+            .insert([{ name }])
+            .select();
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
@@ -172,7 +173,8 @@ export default {
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .update({ name })
-            .match({ id: roleId });
+            .match({ id: roleId })
+            .select();
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
@@ -197,28 +199,9 @@ export default {
             /* wwEditor:end */
 
             this.publicInstance = createClient(projectUrl, publicApiKey, {
-                cookieOptions: {
-                    path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
+                auth: {
+                    storageKey: `${wwLib.wwWebsiteData.getInfo().id}.${key}`,
                 },
-                localStorage: wwLib.manager
-                    ? {
-                          getItem(key) {
-                              return wwLib
-                                  .getEditorWindow()
-                                  .localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
-                          },
-                          setItem(key, value) {
-                              wwLib
-                                  .getEditorWindow()
-                                  .localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`, value);
-                          },
-                          removeItem(key) {
-                              wwLib
-                                  .getEditorWindow()
-                                  .localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
-                          },
-                      }
-                    : undefined,
             });
 
             // The same public instance must be shared between supabase and supabase auth
@@ -254,7 +237,10 @@ export default {
     async signInEmail({ email, password }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { session, error } = await this.publicInstance.auth.signIn({ email, password });
+            const {
+                data: { session },
+                error,
+            } = await this.publicInstance.auth.signInWithEmail({ email, password });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(session);
         } catch (err) {
@@ -269,7 +255,7 @@ export default {
             const redirectTo = wwLib.manager
                 ? `${window.location.origin}/${websiteId}/${redirectPage}`
                 : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-            const { error } = await this.publicInstance.auth.signIn({ email }, { redirectTo });
+            const { error } = await this.publicInstance.auth.signInWithOtp({ email }, { redirectTo });
             if (error) throw new Error(error.message, { cause: error });
         } catch (err) {
             this.signOut();
@@ -282,7 +268,7 @@ export default {
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.publicInstance.auth.signIn({ provider }, { redirectTo });
+        const { error } = await this.publicInstance.auth.signInWithOAuth({ provider }, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async signUp({ email, password, metadata, redirectPage }) {
@@ -335,25 +321,26 @@ export default {
     fetchUser() {
         return this.refreshAuthUser();
     },
-    async refreshAuthUser(session) {
+    async refreshAuthUser(_session) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        const _session = session || this.publicInstance.auth.session();
-        const user = _session ? _session.user : this.publicInstance.auth.user();
+        const { data } = await this.publicInstance.auth.getSession();
+        const session = _session || data.session;
+        const user = session ? session.user : data.user;
         if (!user) {
             this.signOut();
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
-        user._session = {
-            access_token: _session.access_token,
-            token_type: _session.token_type,
-            expires_in: _session.expires_in,
-            refresh_token: _session.refresh_token,
+        user.session = {
+            access_token: session.access_token,
+            token_type: session.token_type,
+            expires_in: session.expires_in,
+            refresh_token: session.refresh_token,
         };
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
-        setCookies(_session);
+        setCookies(session);
         return user;
     },
     async getUserRoles(userId) {
@@ -381,13 +368,13 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
-        const { error: signInError } = await this.publicInstance.auth.signIn({
+        const { error: signInError } = await this.publicInstance.auth.signInWithEmail({
             email: this.user.email,
             password: oldPassword,
         });
         if (signInError) throw new Error(signInError.message, { cause: signInError });
 
-        const { data: result, error } = await this.publicInstance.auth.update({ password: newPassword });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
@@ -397,7 +384,7 @@ export default {
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.publicInstance.auth.api.resetPasswordForEmail(email, { redirectTo });
+        const { error } = await this.publicInstance.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
@@ -405,7 +392,7 @@ export default {
         const { access_token } = this.publicInstance.auth.currentSession || {};
         if (!access_token) throw new Error('No access token provided.');
 
-        const { error } = await this.publicInstance.auth.api.updateUser(access_token, { password: newPassword });
+        const { error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:start */
