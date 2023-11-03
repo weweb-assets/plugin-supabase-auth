@@ -11,7 +11,7 @@
         "serve": "weweb serve"
     },
     "dependencies": {
-        "@supabase/supabase-js": "2.38.3"
+        "@supabase/supabase-js": "2.38.4"
     },
     "devDependencies": {
         "@vue/eslint-config-prettier": "^6.0.0",
