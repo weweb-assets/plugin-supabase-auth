@@ -1,12 +1,34 @@
 <template>
+    <wwEditorFormRow label="Type">
+        <wwEditorInputRadio
+            :model-value="type"
+            :choices="[
+                { label: 'Email', value: 'email' },
+                { label: 'Phone', value: 'phone' },
+            ]"
+            small
+            @update:modelValue="setArg('type', $event)"
+        />
+    </wwEditorFormRow>
     <wwEditorInputRow
+        v-if="type === 'email'"
         label="Email"
         type="query"
         :model-value="email"
         bindable
         required
-        placeholder="Enter a email"
-        @update:modelValue="setEmail"
+        placeholder="Enter an email"
+        @update:modelValue="setArg('email', $event)"
+    />
+    <wwEditorInputRow
+        v-else
+        label="Phone"
+        type="query"
+        :model-value="phone"
+        bindable
+        required
+        placeholder="Enter a phone number"
+        @update:modelValue="setArg('phone', $event)"
     />
     <wwEditorInputRow
         label="Password"
@@ -15,15 +37,35 @@
         bindable
         required
         placeholder="Enter a password"
-        @update:modelValue="setPassword"
+        @update:modelValue="setArg('password', $event)"
+    />
+    <wwEditorInputRow
+        v-if="type === 'email'"
+        label="Email redirect to"
+        type="select"
+        placeholder="Select a page"
+        bindable
+        :options="pagesOptions"
+        :actions="pageActions"
+        :model-value="redirectPage"
+        @update:modelValue="setArg('redirectPage', $event)"
+    />
+    <wwEditorInputRow
+        v-if="type === 'phone'"
+        label="Channel"
+        type="query"
+        placeholder="whatsapp"
+        bindable
+        :model-value="channel"
+        @update:modelValue="setArg('channel', $event)"
     />
     <wwEditorInputRow
         label="Metadata"
         type="array"
         :model-value="metadata"
         bindable
-        @update:modelValue="setMetadata"
-        @add-item="setMetadata([...(metadata || []), {}])"
+        @update:modelValue="setArg('metadata', $event)"
+        @add-item="setArg('metadata', [...(metadata || []), {}])"
     >
         <template #default="{ item, setItem }">
             <wwEditorInputRow
@@ -45,15 +87,12 @@
         </template>
     </wwEditorInputRow>
     <wwEditorInputRow
-        type="select"
-        label="Redirect to"
-        :options="pagesOptions"
-        :actions="pageActions"
-        :model-value="redirectPage"
+        label="Captcha token"
+        type="query"
         placeholder="Select a page"
         bindable
-        @update:modelValue="setRedirectPage"
-        @action="onAction"
+        :model-value="captchaToken"
+        @update:modelValue="setArg('captchaToken', $event)"
     />
 </template>
 
@@ -70,8 +109,14 @@ export default {
         };
     },
     computed: {
+        type() {
+            return this.args.type || 'email';
+        },
         email() {
             return this.args.email;
+        },
+        phone() {
+            return this.args.phone;
         },
         password() {
             return this.args.password;
@@ -79,8 +124,14 @@ export default {
         metadata() {
             return this.args.metadata || [];
         },
+        channel() {
+            return this.args.channel;
+        },
         redirectPage() {
             return this.args.redirectPage;
+        },
+        captchaToken() {
+            return this.args.captchaToken;
         },
         userMetadataOptions() {
             return this.plugin.userAttributes.map(attribute => ({
@@ -96,17 +147,8 @@ export default {
         },
     },
     methods: {
-        setEmail(email) {
-            this.$emit('update:args', { ...this.args, email });
-        },
-        setPassword(password) {
-            this.$emit('update:args', { ...this.args, password });
-        },
-        setMetadata(metadata) {
-            this.$emit('update:args', { ...this.args, metadata });
-        },
-        setRedirectPage(redirectPage) {
-            this.$emit('update:args', { ...this.args, redirectPage });
+        setArg(arg, value) {
+            this.$emit('update:args', { ...this.args, [arg]: value });
         },
         createPage() {
             // eslint-disable-next-line vue/custom-event-name-casing

@@ -6,9 +6,16 @@ import './components/Redirections/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
+import './components/Functions/SignOut.vue';
 import './components/Functions/SignInEmail.vue';
+import './components/Functions/SignInPhone.vue';
 import './components/Functions/SignInMagicLink.vue';
+import './components/Functions/SignInOIDC.vue';
+import './components/Functions/SignInOTP.vue';
 import './components/Functions/SignInProvider.vue';
+import './components/Functions/SignInSSO.vue';
+import './components/Functions/VerifyOTP.vue';
+import './components/Functions/ResendOTP.vue';
 import './components/Functions/UpdateUserMeta.vue';
 import './components/Functions/ChangePassword.vue';
 import './components/Functions/ConfirmPassword.vue';
@@ -234,13 +241,163 @@ export default {
             /* wwEditor:end */
         }
     },
+    async signUp({ type = 'email', email, phone, channel, password, metadata, redirectPage, captchaToken }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        try {
+            const user_metadata = Array.isArray(metadata)
+                ? metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {})
+                : metadata;
+            const websiteId = wwLib.wwWebsiteData.getInfo().id;
+            const emailRedirectTo =
+                redirectPage &&
+                (wwLib.manager
+                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
+
+            const { data, error } = await this.publicInstance.auth.signUp(
+                type === 'email'
+                    ? { email, password, options: { captchaToken } }
+                    : { phone, password, options: { channel, captchaToken } },
+                { data: user_metadata, emailRedirectTo }
+            );
+            if (error) throw new Error(error.message, { cause: error });
+            return data;
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+
     async signInEmail({ email, password }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!email || !password) throw new Error('Email and Password are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({ email, password });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInPhone({ phone, password }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!phone || !password) throw new Error('Phone and Password are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({ phone, password });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInOIDC({ token, provider, access_token, nonce, captchaToken }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!token || !provider) throw new Error('Token and Provider are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithIdToken({
+                token,
+                provider,
+                access_token,
+                nonce,
+                options: { captchaToken },
+            });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInMagicLink({ email, redirectPage, captchaToken }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!email) throw new Error('Email is required.');
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+
+        const { data, error } = await this.publicInstance.auth.signInWithOtp({
+            email,
+            options: { redirectTo, captchaToken },
+        });
+        if (error) throw new Error(error.message, { cause: error });
+        return data;
+    },
+    async signInOtp({ type, email, phone, channel, captchaToken, shouldCreateUser = true }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (type === 'email' && !email) throw new Error('Email is required.');
+        else if (type === 'phone' && !phone) throw new Error('Phone is required.');
+
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithOtp(
+                type === 'email'
+                    ? { email, options: { captchaToken, shouldCreateUser } }
+                    : { phone, options: { channel, captchaToken, shouldCreateUser } }
+            );
+            if (error) throw new Error(error.message, { cause: error });
+            return data?.session ? await this.refreshAuthUser(data?.session) : data;
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInProvider({ provider, redirectPage, queryParams, scopes, skipBrowserRedirect }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!provider) throw new Error('Provider is required.');
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const { data, error } = await this.publicInstance.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo,
+                scopes,
+                queryParams: Array.isArray(queryParams)
+                    ? queryParams.reduce((result, param) => ({ ...result, [param.key]: param.value }))
+                    : queryParams,
+                skipBrowserRedirect,
+            },
+        });
+        if (error) throw new Error(error.message, { cause: error });
+        return data;
+    },
+    async signInSSO({ domain, providerId }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!domain && !providerId) throw new Error('Domain or ProviderId is required.');
+
+        try {
+            const { data, error } = await supabase.auth.signInWithSSO(domain ? { domain } : { providerId });
+
+            if (error) throw new Error(error.message, { cause: error });
+            if (data?.url) {
+                // redirect the user to the identity provider's authentication flow
+                window.location.href = data.url;
+            }
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async verifyOTP({ type, email, phone, token, tokenHash }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const isEmail = ['email', 'recovery', 'invite', 'email_change'].includes(type);
+        const isPhone = ['sms', 'phone_change'].includes(type);
+        if (isEmail && !email) throw new Error('Email is required.');
+        else if (isPhone && !phone) throw new Error('Phone is required.');
         try {
             const {
                 data: { session },
                 error,
-            } = await this.publicInstance.auth.signInWithEmail({ email, password });
+            } = await this.publicInstance.auth.verifyOtp({
+                type,
+                ...(isEmail ? { email } : null),
+                ...(isPhone ? { phone } : null),
+                ...(token ? { token } : null),
+                ...(tokenHash ? { token_hash: tokenHash } : null),
+            });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(session);
         } catch (err) {
@@ -248,52 +405,29 @@ export default {
             throw err;
         }
     },
-    async signInMagicLink({ email, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo = wwLib.manager
-                ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-            const { error } = await this.publicInstance.auth.signInWithOtp({ email }, { redirectTo });
-            if (error) throw new Error(error.message, { cause: error });
-        } catch (err) {
-            this.signOut();
-            throw err;
-        }
-    },
-    async signInProvider({ provider, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+
+    async resendOTP({ type, email, phone, redirectPage }) {
+        const isEmail = ['email', 'recovery', 'invite', 'email_change'].includes(type);
+        const isPhone = ['sms', 'phone_change'].includes(type);
+        if (isEmail && !email) throw new Error('Email is required.');
+        else if (isPhone && !phone) throw new Error('Phone is required.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.publicInstance.auth.signInWithOAuth({ provider, options: { redirectTo } });
+        const { data, error } = await supabase.auth.resend({
+            type,
+            ...(isEmail ? { email } : null),
+            ...(isPhone ? { phone } : null),
+            options: {
+                emailRedirectTo: redirectTo,
+            },
+        });
         if (error) throw new Error(error.message, { cause: error });
+        return data;
     },
-    async signUp({ email, password, metadata, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
-            const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo =
-                redirectPage &&
-                (wwLib.manager
-                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
 
-            const { user, error } = await this.publicInstance.auth.signUp(
-                { email, password },
-                { data: user_metadata, redirectTo }
-            );
-            if (error) throw new Error(error.message, { cause: error });
-            return user;
-        } catch (err) {
-            this.signOut();
-            throw err;
-        }
-    },
-    signOut() {
+    signOut({ scope }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
@@ -315,7 +449,7 @@ export default {
             path,
             domain: '.' + window.location.hostname,
         });
-        this.publicInstance.auth.signOut();
+        this.publicInstance.auth.signOut({ scope });
     },
     // Ensure Retro compatibility for the workflow action fetchUser
     fetchUser() {

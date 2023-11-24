@@ -47,18 +47,65 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignUp.vue'),
+            getIsValid({ provider, token }) {
+                return !!provider && !!token;
+            },
             /* wwEditor:end */
         },
         {
-            name: 'Login with email',
+            name: 'Sign Out',
+            code: 'signOut',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignOut.vue'),
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with Email and Password',
             code: 'signInEmail',
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInEmail.vue'),
+            getIsValid({ email, password }) {
+                return !!email && !!password;
+            },
             /* wwEditor:end */
         },
         {
-            name: 'Login with magic link',
+            name: 'Login with Phone and Password',
+            code: 'signInPhone',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInPhone.vue'),
+            getIsValid({ phone, passowrd }) {
+                return !!phone && !!passowrd;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with OIDC token',
+            code: 'signInOIDC',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInOIDC.vue'),
+            getIsValid({ provider, token }) {
+                return !!provider && !!token;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with One-Time Password',
+            code: 'signInOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInOTP.vue'),
+            getIsValid({ email, redirectPage }) {
+                return !!phone && !!redirectPage;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with Magic Link',
             code: 'signInMagicLink',
             isAsync: true,
             /* wwEditor:start */
@@ -69,13 +116,46 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with provider',
+            name: 'Login with OAuth Provider',
             code: 'signInProvider',
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInProvider.vue'),
-            getIsValid({ provider, redirectPage }) {
-                return !!provider && !!redirectPage;
+            getIsValid({ provider }) {
+                return !!provider;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Login with SSO',
+            code: 'signInSSO',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInSSO.vue'),
+            getIsValid({ domain, providerId }) {
+                return !!domain || !!providerId;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Verify OTP',
+            code: 'verifyOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/verifyOTP.vue'),
+            getIsValid({ type, email, phone, token, tokenHash }) {
+                return !!type && (!!email || !!phone) && (!!token || !!tokenHash);
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Resend OTP',
+            code: 'resendOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/resendOTP.vue'),
+            getIsValid({ type, email, phone }) {
+                return !!type && (!!email || !!phone);
             },
             /* wwEditor:end */
         },

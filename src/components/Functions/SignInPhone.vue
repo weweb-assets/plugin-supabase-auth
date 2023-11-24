@@ -1,11 +1,11 @@
 <template>
     <wwEditorInputRow
-        label="Email"
+        label="Phone"
         type="query"
-        :model-value="email"
+        :model-value="phone"
         bindable
         required
-        placeholder="Enter an email"
+        placeholder="Enter a phone number"
         @update:modelValue="setEmail"
     />
     <wwEditorInputRow
@@ -27,16 +27,16 @@ export default {
     },
     emits: ['update:args'],
     computed: {
-        email() {
-            return this.args.email;
+        phone() {
+            return this.args.phone;
         },
         password() {
             return this.args.password;
         },
     },
     methods: {
-        setEmail(email) {
-            this.$emit('update:args', { ...this.args, email });
+        setPhone(phone) {
+            this.$emit('update:args', { ...this.args, phone });
         },
         setPassword(password) {
             this.$emit('update:args', { ...this.args, password });

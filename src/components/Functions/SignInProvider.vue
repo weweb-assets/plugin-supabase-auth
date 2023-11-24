@@ -1,22 +1,27 @@
 <template>
-    <wwEditorInputRow
-        label="Provider"
-        type="select"
-        :model-value="provider"
-        :options="providers"
-        bindable
-        required
-        placeholder="Select a provider"
-        @update:modelValue="setProvider"
-    />
-    <a
-        v-if="provider"
-        class="ww-editor-link my-2"
-        :href="`https://supabase.com/docs/guides/auth/auth-${provider}`"
-        target="_blank"
-    >
-        See documentation
-    </a>
+    <wwEditorFormRow required label="Third-Party Provider">
+        <template #append-label>
+            <a
+                class="ww-editor-link"
+                :href="
+                    provider
+                        ? `https://supabase.com/docs/guides/auth/auth-${provider}`
+                        : 'https://supabase.com/docs/guides/auth#social-auth'
+                "
+                target="_blank"
+            >
+                See documentation
+            </a>
+        </template>
+        <wwEditorInputText
+            type="select"
+            :model-value="provider"
+            :options="providers"
+            bindable
+            placeholder="Select a provider"
+            @update:modelValue="setArg('provider', $event)"
+        />
+    </wwEditorFormRow>
     <wwEditorInputRow
         required
         type="select"
@@ -26,9 +31,65 @@
         :model-value="redirectPage"
         placeholder="Select a page"
         bindable
-        @update:modelValue="setRedirectPage"
+        @update:modelValue="setArg('redirectPage', $event)"
         @action="onAction"
     />
+    <wwEditorInputRow
+        label="Query Parameters"
+        type="array"
+        :model-value="queryParams"
+        bindable
+        @update:modelValue="setArgs({ queryParams: $event })"
+        @add-item="setArg('queryParams', [...(headers || []), {}])"
+    >
+        <template #default="{ item, setItem }">
+            <wwEditorInputRow
+                type="query"
+                :model-value="item.key"
+                label="Key"
+                placeholder="Parameter name"
+                bindable
+                small
+                @update:modelValue="setItem({ ...item, key: $event })"
+            />
+            <wwEditorInputRow
+                type="query"
+                :model-value="item.value"
+                label="Value"
+                placeholder="Parameter value"
+                bindable
+                small
+                @update:modelValue="setItem({ ...item, value: $event })"
+            />
+        </template>
+    </wwEditorInputRow>
+    <wwEditorFormRow label="Scopes">
+        <wwEditorInput
+            type="query"
+            :model-value="scopes"
+            bindable
+            placeholder="Enter scopes"
+            @update:modelValue="setArg('scopes', $event)"
+        />
+        <wwEditorQuestionMark
+            tooltip-position="top-left"
+            forced-content="A space-separated list of scopes granted to the OAuth application."
+            class="ml-auto"
+        />
+    </wwEditorFormRow>
+    <wwEditorFormRow label="skipBrowserRedirect">
+        <wwEditorInput
+            type="onoff"
+            :model-value="skipBrowserRedirect"
+            bindable
+            @update:modelValue="setArg('skipBrowserRedirect', $event)"
+        />
+        <wwEditorQuestionMark
+            tooltip-position="top-left"
+            forced-content="If set to true does not immediately redirect the current browser context to visit the OAuth authorization page for the provider."
+            class="ml-auto"
+        />
+    </wwEditorFormRow>
 </template>
 
 <script>
@@ -46,9 +107,11 @@ export default {
                 { label: 'Bitbucket', value: 'bitbucket', icon: 'bitbucket' },
                 { label: 'Discord', value: 'discord', icon: 'discord' },
                 { label: 'Facebook', value: 'facebook', icon: 'facebook' },
+                { label: 'Figma', value: 'figma', icon: 'figma' },
                 { label: 'GitHub', value: 'gitHub', icon: 'gitHub' },
                 { label: 'GitLab', value: 'gitLab', icon: 'gitLab' },
                 { label: 'Google', value: 'google', icon: 'google' },
+                { label: 'Kakao', value: 'kakao', icon: 'kakao' },
                 { label: 'Keycloak', value: 'keycloak', icon: 'keycloak' },
                 { label: 'Linkedin', value: 'linkedin', icon: 'linkedin' },
                 { label: 'Notion', value: 'notion', icon: 'notion' },
@@ -69,6 +132,15 @@ export default {
         redirectPage() {
             return this.args.redirectPage;
         },
+        queryParams() {
+            return this.args.queryParams;
+        },
+        scopes() {
+            return this.args.scopes;
+        },
+        skipBrowserRedirect() {
+            return this.args.skipBrowserRedirect;
+        },
         pagesOptions() {
             return wwLib.wwWebsiteData
                 .getPages()
@@ -77,11 +149,8 @@ export default {
         },
     },
     methods: {
-        setProvider(provider) {
-            this.$emit('update:args', { ...this.args, provider });
-        },
-        setRedirectPage(redirectPage) {
-            this.$emit('update:args', { ...this.args, redirectPage });
+        setArg(arg, value) {
+            this.$emit('update:args', { ...this.args, [arg]: value });
         },
         createPage() {
             // eslint-disable-next-line vue/custom-event-name-casing
