@@ -142,7 +142,7 @@ export default {
             code: 'verifyOTP',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/verifyOTP.vue'),
+            edit: () => import('./src/components/Functions/VerifyOTP.vue'),
             getIsValid({ type, email, phone, token, tokenHash }) {
                 return !!type && (!!email || !!phone) && (!!token || !!tokenHash);
             },
@@ -153,7 +153,7 @@ export default {
             code: 'resendOTP',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/resendOTP.vue'),
+            edit: () => import('./src/components/Functions/ResendOTP.vue'),
             getIsValid({ type, email, phone }) {
                 return !!type && (!!email || !!phone);
             },
