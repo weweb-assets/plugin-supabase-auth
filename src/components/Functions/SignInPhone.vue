@@ -6,7 +6,7 @@
         bindable
         required
         placeholder="Enter a phone number"
-        @update:modelValue="setEmail"
+        @update:modelValue="setPhone"
     />
     <wwEditorInputRow
         label="Password"
