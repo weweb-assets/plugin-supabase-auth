@@ -11,13 +11,12 @@
         />
     </wwEditorInputRow>
 
-    <wwEditorFormRow v-if="type === 'email'" label="Email">
+    <wwEditorFormRow v-if="type === 'email'" label="Email" required>
         <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="email"
                 bindable
-                required
                 placeholder="Enter an email"
                 @update:modelValue="setArg('email', $event)"
             />
@@ -59,7 +58,7 @@
             </div>
         </wwEditorFormRow>
     </template>
-    <wwEditorFormRow label="Should create user" required>
+    <wwEditorFormRow label="Should create user">
         <div class="flex items-center justify-between">
             <wwEditorInput
                 type="onoff"
