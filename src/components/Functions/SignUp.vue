@@ -97,14 +97,22 @@
             />
         </template>
     </wwEditorInputRow>
-    <wwEditorInputRow
-        label="Captcha token"
-        type="query"
-        placeholder="Select a page"
-        bindable
-        :model-value="captchaToken"
-        @update:modelValue="setArg('captchaToken', $event)"
-    />
+    <wwEditorFormRow label="Captcha Token">
+        <div class="flex items-center justify-between">
+            <wwEditorInput
+                type="query"
+                :model-value="captchaToken"
+                bindable
+                placeholder="Enter a captcha token"
+                @update:modelValue="setArg('captchaToken', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="Verification token received when the user completes the captcha on the site. [Enable captcha protection](https://supabase.com/docs/guides/auth/auth-captcha)"
+                class="ml-2"
+            />
+        </div>
+    </wwEditorFormRow>
 </template>
 
 <script>
