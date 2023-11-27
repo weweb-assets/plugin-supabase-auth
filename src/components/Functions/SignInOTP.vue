@@ -3,23 +3,31 @@
         <wwEditorInputRadio
             :model-value="type"
             :choices="[
-                { label: 'Email', value: 'email', default: true },
-                { label: 'Phone', value: 'phone' },
+                { label: 'Phone', value: 'phone', default: true },
+                { label: 'Email', value: 'email' },
             ]"
             small
             @update:modelValue="setArg('type', $event)"
         />
     </wwEditorInputRow>
-    <wwEditorInputRow
-        v-if="type === 'email'"
-        label="Email"
-        type="query"
-        :model-value="email"
-        bindable
-        required
-        placeholder="Enter an email"
-        @update:modelValue="setArg('email', $event)"
-    />
+
+    <wwEditorFormRow v-if="type === 'email'" label="Email">
+        <div class="flex items-center justify-between">
+            <wwEditorInputRow
+                type="query"
+                :model-value="email"
+                bindable
+                required
+                placeholder="Enter an email"
+                @update:modelValue="setArg('email', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                :forced-content="`To send users a one-time code instead of a magic link, modify the [magic link email template](https://supabase.com/dashboard/project/${projectId}/auth/templates) to include {{ .Token }} instead of {{ .ConfirmationURL }}`"
+                class="ml-2 text-blue-500"
+            />
+        </div>
+    </wwEditorFormRow>
     <template v-else>
         <wwEditorInputRow
             label="Phone"
@@ -45,7 +53,7 @@
                 />
                 <wwEditorQuestionMark
                     tooltip-position="top-left"
-                    forced-content="To use the whatsapp channel you may need further configuration. [See documentation](https://supabase.com/docs/guides/auth/phone-login/twilio#whatsapp-otp-logins)."
+                    forced-content="See supabase Twilio Phone Auth Guide for details about configuring WhatsApp sign in. [See documentation](https://supabase.com/docs/guides/auth/phone-login/twilio#whatsapp-otp-logins)."
                     class="ml-2"
                 />
             </div>
@@ -86,7 +94,7 @@ export default {
     emits: ['update:args'],
     computed: {
         type() {
-            return this.args.type || 'email';
+            return this.args.type || 'phone';
         },
         email() {
             return this.args.email;
@@ -102,6 +110,9 @@ export default {
         },
         captchaToken() {
             return this.args.captchaToken;
+        },
+        projectId() {
+            return this.plugin.getProjectId();
         },
     },
     methods: {

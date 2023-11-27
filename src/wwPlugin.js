@@ -60,6 +60,9 @@ export default {
         { label: 'Locale', key: 'locale' },
         { label: 'Address', key: 'address' },
     ],
+    getProjectId() {
+        return this.privateInstance?.supabaseUrl.split('https://')[1].split('.')[0];
+    },
     async adminGetUsers() {
         const response = await this.privateInstance.auth.api.listUsers();
         if (response.error) throw new Error(response.error.message, { cause: response.error });
@@ -325,7 +328,7 @@ export default {
         if (error) throw new Error(error.message, { cause: error });
         return data;
     },
-    async signInOtp({ type = 'email', email, phone, channel, captchaToken, shouldCreateUser = true }) {
+    async signInOtp({ type = 'phone', email, phone, channel, captchaToken, shouldCreateUser = true }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (type === 'email' && !email) throw new Error('Email is required.');
         else if (type === 'phone' && !phone) throw new Error('Phone is required.');
