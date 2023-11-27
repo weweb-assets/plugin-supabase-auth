@@ -13,7 +13,7 @@
 
     <wwEditorFormRow v-if="type === 'email'" label="Email">
         <div class="flex items-center justify-between">
-            <wwEditorInputRow
+            <wwEditorInput
                 type="query"
                 :model-value="email"
                 bindable
