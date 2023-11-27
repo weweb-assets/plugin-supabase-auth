@@ -8,7 +8,7 @@
         :options="[
             { label: 'Email signup', value: 'email' },
             { label: 'Email change', value: 'email_change' },
-            { label: 'Recover', value: 'recover' },
+            { label: 'Recover', value: 'recovery' },
             { label: 'Invite', value: 'invite' },
             { label: 'Phone signup', value: 'sms' },
             { label: 'Phone change', value: 'phone_change' },
