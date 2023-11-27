@@ -1,7 +1,8 @@
 <template>
     <wwEditorInputRow
-        label="OTP source"
+        label="Origin"
         type="select"
+        placeholder="Select the otp origin"
         :model-value="type"
         :options="[
             { label: 'Email signup', value: 'email' },
@@ -11,7 +12,6 @@
             { label: 'Phone signup', value: 'sms' },
             { label: 'Phone change', value: 'phone_change' },
         ]"
-        small
         @update:modelValue="setArg('type', $event)"
     >
     </wwEditorInputRow>
