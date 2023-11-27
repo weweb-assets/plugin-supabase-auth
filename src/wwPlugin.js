@@ -427,7 +427,7 @@ export default {
         return data;
     },
 
-    signOut({ scope }) {
+    signOut({ scope = 'global' } = {}) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
