@@ -2,7 +2,7 @@
     <wwEditorFormRow required label="Provider">
         <template #append-label>
             <a
-                class="ww-editor-link"
+                class="ww-editor-link ml-2"
                 :href="
                     provider
                         ? `https://supabase.com/docs/guides/auth/auth-${provider}`
