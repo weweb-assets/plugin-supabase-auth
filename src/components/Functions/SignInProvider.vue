@@ -1,5 +1,5 @@
 <template>
-    <wwEditorFormRow required label="Third-Party Provider">
+    <wwEditorFormRow required label="Provider">
         <template #append-label>
             <a
                 class="ww-editor-link"
@@ -13,7 +13,7 @@
                 See documentation
             </a>
         </template>
-        <wwEditorInputText
+        <wwEditorInput
             type="select"
             :model-value="provider"
             :options="providers"
@@ -39,7 +39,7 @@
         type="array"
         :model-value="queryParams"
         bindable
-        @update:modelValue="setArgs({ queryParams: $event })"
+        @update:modelValue="setArg('queryParams', $event)"
         @add-item="setArg('queryParams', [...(headers || []), {}])"
     >
         <template #default="{ item, setItem }">
@@ -85,6 +85,7 @@
                 type="onoff"
                 :model-value="skipBrowserRedirect"
                 bindable
+                small
                 @update:modelValue="setArg('skipBrowserRedirect', $event)"
             />
             <wwEditorQuestionMark

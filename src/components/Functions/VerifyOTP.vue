@@ -3,6 +3,7 @@
         label="Origin"
         type="select"
         placeholder="Select the otp origin"
+        required
         :model-value="type"
         :options="[
             { label: 'Email signup', value: 'email' },

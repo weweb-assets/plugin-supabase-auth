@@ -32,7 +32,7 @@
         />
         <wwEditorFormRow label="Channel">
             <div class="flex items-center justify-between">
-                <wwEditorInputRow
+                <wwEditorInput
                     type="select"
                     placeholder="Select a channel"
                     bindable
@@ -56,6 +56,7 @@
             <wwEditorInput
                 type="onoff"
                 bindable
+                small
                 :model-value="shouldCreateUser"
                 @update:modelValue="setArg('shouldCreateUser', $event)"
             />
