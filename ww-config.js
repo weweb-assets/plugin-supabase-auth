@@ -83,13 +83,13 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with OIDC token',
-            code: 'signInOIDC',
+            name: 'Login with OAuth Provider',
+            code: 'signInProvider',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/SignInOIDC.vue'),
-            getIsValid({ provider, token }) {
-                return !!provider && !!token;
+            edit: () => import('./src/components/Functions/SignInProvider.vue'),
+            getIsValid({ provider }) {
+                return !!provider;
             },
             /* wwEditor:end */
         },
@@ -116,18 +116,18 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with OAuth Provider',
-            code: 'signInProvider',
+            name: 'Login with OIDC Token',
+            code: 'signInOIDC',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/SignInProvider.vue'),
-            getIsValid({ provider }) {
-                return !!provider;
+            edit: () => import('./src/components/Functions/SignInOIDC.vue'),
+            getIsValid({ provider, token }) {
+                return !!provider && !!token;
             },
             /* wwEditor:end */
         },
         {
-            name: 'Login with SSO',
+            name: 'Login with Enterprise SSO',
             code: 'signInSSO',
             isAsync: true,
             /* wwEditor:start */

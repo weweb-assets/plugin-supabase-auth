@@ -1,31 +1,35 @@
 <template>
     <wwEditorFormRow label="Domain">
-        <wwEditorInput
-            type="query"
-            :model-value="domain"
-            bindable
-            placeholder="Enter a domain"
-            @update:modelValue="setArg('domain', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="If you've associated an email domain to the identity provider, you can use the domain property to start a sign-in flow. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="domain"
+                bindable
+                placeholder="Enter a domain"
+                @update:modelValue="setArg('domain', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="If you've associated an email domain to the identity provider, you can use the domain property to start a sign-in flow. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Provider UUID">
-        <wwEditorInput
-            type="query"
-            :model-value="providerId"
-            bindable
-            placeholder="Enter a provider uuid"
-            @update:modelValue="setArg('providerId', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="In case you need to use a different way to start the authentication flow with an identity provider, you can use the providerId property. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="providerId"
+                bindable
+                placeholder="Enter a provider uuid"
+                @update:modelValue="setArg('providerId', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="In case you need to use a different way to start the authentication flow with an identity provider, you can use the providerId property. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
 </template>
 

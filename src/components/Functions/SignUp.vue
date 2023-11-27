@@ -50,15 +50,26 @@
         :model-value="redirectPage"
         @update:modelValue="setArg('redirectPage', $event)"
     />
-    <wwEditorInputRow
-        v-if="type === 'phone'"
-        label="Channel"
-        type="query"
-        placeholder="whatsapp"
-        bindable
-        :model-value="channel"
-        @update:modelValue="setArg('channel', $event)"
-    />
+    <wwEditorFormRow label="Channel" v-if="type === 'phone'">
+        <div class="flex items-center">
+            <wwEditorInputRow
+                type="select"
+                placeholder="Select a channel"
+                bindable
+                :options="[
+                    { label: 'Whatsapp', value: 'whatsapp' },
+                    { label: 'SMS', value: 'sms', default: true },
+                ]"
+                :model-value="channel"
+                @update:modelValue="setArg('channel', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="To use the whatsapp channel you may need further configuration. [See documentation](https://supabase.com/docs/guides/auth/phone-login/twilio#whatsapp-otp-logins)."
+                class="ml-auto"
+            />
+        </div>
+    </wwEditorFormRow>
     <wwEditorInputRow
         label="Metadata"
         type="array"

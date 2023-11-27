@@ -64,31 +64,35 @@
         </template>
     </wwEditorInputRow>
     <wwEditorFormRow label="Scopes">
-        <wwEditorInput
-            type="query"
-            :model-value="scopes"
-            bindable
-            placeholder="Enter scopes"
-            @update:modelValue="setArg('scopes', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="A space-separated list of scopes granted to the OAuth application."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="scopes"
+                bindable
+                placeholder="Enter scopes"
+                @update:modelValue="setArg('scopes', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="A space-separated list of scopes granted to the OAuth application."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="skipBrowserRedirect">
-        <wwEditorInput
-            type="onoff"
-            :model-value="skipBrowserRedirect"
-            bindable
-            @update:modelValue="setArg('skipBrowserRedirect', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="If set to true does not immediately redirect the current browser context to visit the OAuth authorization page for the provider."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="onoff"
+                :model-value="skipBrowserRedirect"
+                bindable
+                @update:modelValue="setArg('skipBrowserRedirect', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="If set to true does not immediately redirect the current browser context to visit the OAuth authorization page for the provider."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
 </template>
 

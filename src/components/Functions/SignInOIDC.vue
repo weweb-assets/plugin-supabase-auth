@@ -1,74 +1,84 @@
 <template>
     <wwEditorFormRow label="OIDC ID Token" required>
-        <wwEditorInput
-            type="query"
-            :model-value="token"
-            bindable
-            placeholder="Enter a token"
-            @update:modelValue="setArg('token', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="OIDC ID token issued by the specified provider. The `iss` claim in the ID token must match the supplied provider. Some ID tokens contain an `at_hash` which require that you provide an `access_token` value to be accepted properly. If the token contains a `nonce` claim you must supply the nonce used to obtain the ID token."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="token"
+                bindable
+                placeholder="Enter a token"
+                @update:modelValue="setArg('token', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="OIDC ID token issued by the specified provider. The `iss` claim in the ID token must match the supplied provider. Some ID tokens contain an `at_hash` which require that you provide an `access_token` value to be accepted properly. If the token contains a `nonce` claim you must supply the nonce used to obtain the ID token."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Provider" required>
-        <wwEditorInput
-            type="select"
-            :model-value="provider"
-            :options="providers"
-            bindable
-            placeholder="Enter a provider"
-            @update:modelValue="setArg('provider', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="Provider name or OIDC `iss` value identifying which provider should be used to verify the provided token. Supported names: `google`, `apple`, `azure`, `facebook`, `keycloak` (deprecated)."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="select"
+                :model-value="provider"
+                :options="providers"
+                bindable
+                placeholder="Select a provider"
+                @update:modelValue="setArg('provider', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="Provider name or OIDC `iss` value identifying which provider should be used to verify the provided token. Supported names: `google`, `apple`, `azure`, `facebook`, `keycloak` (deprecated)."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Access Token">
-        <wwEditorInput
-            type="query"
-            :model-value="accessToken"
-            bindable
-            placeholder="Enter an access_token"
-            @update:modelValue="setArg('accessToken', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="If the ID token contains an `at_hash` claim, then the hash of this value is compared to the value in the ID token."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="accessToken"
+                bindable
+                placeholder="Enter an access_token"
+                @update:modelValue="setArg('accessToken', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="If the ID token contains an `at_hash` claim, then the hash of this value is compared to the value in the ID token."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Nonce">
-        <wwEditorInput
-            type="query"
-            :model-value="nonce"
-            bindable
-            placeholder="Enter a nonce"
-            @update:modelValue="setArg('nonce', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="If the ID token contains a `nonce` claim, then the hash of this value is compared to the value in the ID token."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="nonce"
+                bindable
+                placeholder="Enter a nonce"
+                @update:modelValue="setArg('nonce', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="If the ID token contains a `nonce` claim, then the hash of this value is compared to the value in the ID token."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Captcha Token">
-        <wwEditorInput
-            type="query"
-            :model-value="captchaToken"
-            bindable
-            placeholder="Enter a captcha token"
-            @update:modelValue="setArg('captchaToken', $event)"
-        />
-        <wwEditorQuestionMark
-            tooltip-position="top-left"
-            forced-content="Verification token received when the user completes the captcha on the site."
-            class="ml-auto"
-        />
+        <div class="flex items-center">
+            <wwEditorInput
+                type="query"
+                :model-value="captchaToken"
+                bindable
+                placeholder="Enter a captcha token"
+                @update:modelValue="setArg('captchaToken', $event)"
+            />
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="Verification token received when the user completes the captcha on the site."
+                class="ml-auto"
+            />
+        </div>
     </wwEditorFormRow>
 </template>
 
