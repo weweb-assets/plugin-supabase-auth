@@ -51,7 +51,7 @@
         @update:modelValue="setArg('redirectPage', $event)"
     />
     <wwEditorFormRow label="Channel" v-if="type === 'phone'">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInputRow
                 type="select"
                 placeholder="Select a channel"
@@ -66,7 +66,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="To use the whatsapp channel you may need further configuration. [See documentation](https://supabase.com/docs/guides/auth/phone-login/twilio#whatsapp-otp-logins)."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>

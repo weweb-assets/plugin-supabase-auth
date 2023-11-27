@@ -64,7 +64,7 @@
         </template>
     </wwEditorInputRow>
     <wwEditorFormRow label="Scopes">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="scopes"
@@ -75,12 +75,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="A space-separated list of scopes granted to the OAuth application."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="skipBrowserRedirect">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="onoff"
                 :model-value="skipBrowserRedirect"
@@ -90,7 +90,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="If set to true does not immediately redirect the current browser context to visit the OAuth authorization page for the provider."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>

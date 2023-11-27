@@ -1,6 +1,6 @@
 <template>
     <wwEditorFormRow label="Domain">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="domain"
@@ -11,12 +11,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="If you've associated an email domain to the identity provider, you can use the domain property to start a sign-in flow. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Provider UUID">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="providerId"
@@ -27,7 +27,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="In case you need to use a different way to start the authentication flow with an identity provider, you can use the providerId property. [Learn more](https://supabase.com/docs/reference/javascript/auth-signinwithsso?example=sign-in-with-provider-uuid)"
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>

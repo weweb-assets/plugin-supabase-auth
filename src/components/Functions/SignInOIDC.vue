@@ -1,6 +1,6 @@
 <template>
     <wwEditorFormRow label="OIDC ID Token" required>
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="token"
@@ -11,12 +11,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="OIDC ID token issued by the specified provider. The `iss` claim in the ID token must match the supplied provider. Some ID tokens contain an `at_hash` which require that you provide an `access_token` value to be accepted properly. If the token contains a `nonce` claim you must supply the nonce used to obtain the ID token."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Provider" required>
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="select"
                 :model-value="provider"
@@ -28,12 +28,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="Provider name or OIDC `iss` value identifying which provider should be used to verify the provided token. Supported names: `google`, `apple`, `azure`, `facebook`, `keycloak` (deprecated)."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Access Token">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="accessToken"
@@ -44,12 +44,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="If the ID token contains an `at_hash` claim, then the hash of this value is compared to the value in the ID token."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Nonce">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="nonce"
@@ -60,12 +60,12 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="If the ID token contains a `nonce` claim, then the hash of this value is compared to the value in the ID token."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
     <wwEditorFormRow label="Captcha Token">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="query"
                 :model-value="captchaToken"
@@ -76,7 +76,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="Verification token received when the user completes the captcha on the site."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>

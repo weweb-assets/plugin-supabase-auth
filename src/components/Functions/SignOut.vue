@@ -1,6 +1,6 @@
 <template>
     <wwEditorFormRow label="Scope">
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="select"
                 bindable
@@ -15,7 +15,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="Determines which sessions should be logged out. Global means all sessions by this account. Local means only this session. Others means all other sessions except the current one. When using others, there is no sign-out event fired on the current session!"
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>

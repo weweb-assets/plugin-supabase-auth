@@ -31,7 +31,7 @@
             @update:modelValue="setArg('phone', $event)"
         />
         <wwEditorFormRow label="Channel">
-            <div class="flex items-center">
+            <div class="flex items-center justify-between">
                 <wwEditorInputRow
                     type="select"
                     placeholder="Select a channel"
@@ -46,13 +46,13 @@
                 <wwEditorQuestionMark
                     tooltip-position="top-left"
                     forced-content="To use the whatsapp channel you may need further configuration. [See documentation](https://supabase.com/docs/guides/auth/phone-login/twilio#whatsapp-otp-logins)."
-                    class="ml-auto"
+                    class="ml-2"
                 />
             </div>
         </wwEditorFormRow>
     </template>
     <wwEditorFormRow label="Should create user" required>
-        <div class="flex items-center">
+        <div class="flex items-center justify-between">
             <wwEditorInput
                 type="onoff"
                 bindable
@@ -62,7 +62,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="If the user doesn't exist, it will signup the user instead. To restrict this behaviour, you can set it to `false`."
-                class="ml-auto"
+                class="ml-2"
             />
         </div>
     </wwEditorFormRow>
