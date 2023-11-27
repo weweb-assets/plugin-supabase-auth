@@ -77,8 +77,8 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInPhone.vue'),
-            getIsValid({ phone, passowrd }) {
-                return !!phone && !!passowrd;
+            getIsValid({ phone, password }) {
+                return !!phone && !!password;
             },
             /* wwEditor:end */
         },
@@ -158,10 +158,6 @@ export default {
                 return !!type && (!!email || !!phone);
             },
             /* wwEditor:end */
-        },
-        {
-            name: 'Logout',
-            code: 'signOut',
         },
         {
             name: 'Fetch User',
