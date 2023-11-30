@@ -47,8 +47,8 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignUp.vue'),
-            getIsValid({ provider, token }) {
-                return !!provider && !!token;
+            getIsValid({ email, phone, password }) {
+                return (!!email || !!phone) && !!password;
             },
             /* wwEditor:end */
         },
@@ -61,7 +61,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with Email and Password',
+            name: 'Sign In | Email and Password',
             code: 'signInEmail',
             isAsync: true,
             /* wwEditor:start */
@@ -72,7 +72,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with Phone and Password',
+            name: 'Sign In | Phone and Password',
             code: 'signInPhone',
             isAsync: true,
             /* wwEditor:start */
@@ -83,7 +83,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with OAuth Provider',
+            name: 'Sign In | OAuth Provider',
             code: 'signInProvider',
             isAsync: true,
             /* wwEditor:start */
@@ -94,7 +94,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with One-Time Password',
+            name: 'Sign In | One-Time Password',
             code: 'signInOTP',
             isAsync: true,
             /* wwEditor:start */
@@ -105,7 +105,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with Magic Link',
+            name: 'Sign In | Magic Link',
             code: 'signInMagicLink',
             isAsync: true,
             /* wwEditor:start */
@@ -116,7 +116,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with OIDC Token',
+            name: 'Sign In | OIDC Token',
             code: 'signInOIDC',
             isAsync: true,
             /* wwEditor:start */
@@ -127,7 +127,7 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with Enterprise SSO',
+            name: 'Sign In | SAML 2.0 SSO',
             code: 'signInSSO',
             isAsync: true,
             /* wwEditor:start */
