@@ -497,7 +497,7 @@ export default {
 
         const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const { data: result, error } = await this.publicInstance.auth.update({ email, data: user_metadata });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({ email, data: user_metadata });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },

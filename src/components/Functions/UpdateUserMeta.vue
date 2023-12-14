@@ -18,19 +18,19 @@
     >
         <template #default="{ item, setItem }">
             <wwEditorInputRow
-                :model-value="item.key"
-                type="select"
-                :options="userMetadataOptions"
+                type="query"
+                placeholder="Enter a key"
                 small
-                placeholder="Select an attribute"
+                bindable
+                :model-value="item.key"
                 @update:model-value="setItem({ ...item, key: $event })"
             />
             <wwEditorInputRow
                 :model-value="item.value"
                 type="query"
+                placeholder="Enter a value"
                 small
                 bindable
-                placeholder="Enter a value"
                 @update:model-value="setItem({ ...item, value: $event })"
             />
         </template>
@@ -50,12 +50,6 @@ export default {
         },
         metadata() {
             return this.args.metadata || [];
-        },
-        userMetadataOptions() {
-            return this.plugin.userAttributes.map(attribute => ({
-                label: attribute.label,
-                value: attribute.key,
-            }));
         },
     },
     methods: {
