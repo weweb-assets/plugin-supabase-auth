@@ -526,8 +526,8 @@ export default {
     },
     async confirmPassword({ newPassword }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        const { access_token } = this.publicInstance.auth.currentSession || {};
-        if (!access_token) throw new Error('No access token provided.');
+        const { data } = await this.publicInstance.auth.getSession();
+        if (!data?.session?.access_token) throw new Error('No access token provided.');
 
         const { error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
