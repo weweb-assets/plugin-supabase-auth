@@ -1,5 +1,5 @@
 <template>
-    <wwEditorFormRow label="Scope">
+    <!-- <wwEditorFormRow label="Scope">
         <div class="flex items-center justify-between">
             <wwEditorInput
                 type="select"
@@ -18,7 +18,7 @@
                 class="ml-2"
             />
         </div>
-    </wwEditorFormRow>
+    </wwEditorFormRow> -->
 </template>
 
 <script>
@@ -28,15 +28,15 @@ export default {
         args: { type: Object, required: true },
     },
     emits: ['update:args'],
-    computed: {
-        scope() {
-            return this.args.scope || 'global';
-        },
-    },
-    methods: {
-        setScope(scope) {
-            this.$emit('update:args', { ...this.args, scope });
-        },
-    },
+    // computed: {
+    //     scope() {
+    //         return this.args.scope || 'global';
+    //     },
+    // },
+    // methods: {
+    //     setScope(scope) {
+    //         this.$emit('update:args', { ...this.args, scope });
+    //     },
+    // },
 };
 </script>
