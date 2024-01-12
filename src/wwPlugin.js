@@ -328,7 +328,7 @@ export default {
         if (error) throw new Error(error.message, { cause: error });
         return data;
     },
-    async signInOtp({ type = 'phone', email, phone, channel, captchaToken, shouldCreateUser = true }) {
+    async signInOTP({ type = 'phone', email, phone, channel, captchaToken, shouldCreateUser = true }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (type === 'email' && !email) throw new Error('Email is required.');
         else if (type === 'phone' && !phone) throw new Error('Phone is required.');
