@@ -99,8 +99,8 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInOTP.vue'),
-            getIsValid({ email, phone, redirectPage }) {
-                return (!!email || !!phone) && !!redirectPage;
+            getIsValid({ email, phone }) {
+                return !!email || !!phone;
             },
             /* wwEditor:end */
         },
