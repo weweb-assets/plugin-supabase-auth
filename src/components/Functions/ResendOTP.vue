@@ -6,11 +6,11 @@
         required
         :model-value="type"
         :options="[
-            { label: 'Email signup', value: 'email' },
+            { label: 'Email signup/signin', value: 'email' },
             { label: 'Email change', value: 'email_change' },
             { label: 'Recovery', value: 'recovery' },
             { label: 'Invite', value: 'invite' },
-            { label: 'Phone signup', value: 'sms' },
+            { label: 'Phone signup/signin', value: 'sms' },
             { label: 'Phone change', value: 'phone_change' },
         ]"
         @update:modelValue="setArg('type', $event)"
