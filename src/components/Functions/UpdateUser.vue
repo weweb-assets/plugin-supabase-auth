@@ -4,7 +4,6 @@
         type="query"
         :model-value="email"
         bindable
-        required
         placeholder="Enter an email"
         @update:modelValue="setEmail"
     />
@@ -13,7 +12,6 @@
         type="query"
         :model-value="phone"
         bindable
-        required
         placeholder="Enter a phone number"
         @update:modelValue="setPhone"
     />
