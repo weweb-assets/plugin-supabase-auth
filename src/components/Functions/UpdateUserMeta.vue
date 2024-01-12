@@ -1,6 +1,6 @@
 <template>
     <wwEditorInputRow
-        label="Email"
+        label="New email"
         type="query"
         :model-value="email"
         bindable
