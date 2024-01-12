@@ -418,7 +418,7 @@ export default {
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { data, error } = await supabase.auth.resend({
+        const { data, error } = await this.publicInstance.auth.resend({
             type,
             ...(isEmail ? { email } : null),
             ...(isPhone ? { phone } : null),
