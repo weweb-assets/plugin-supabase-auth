@@ -430,31 +430,30 @@ export default {
         return data;
     },
 
-    signOut({ scope = 'global' } = {}) {
+    signOut() {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        if (scope !== 'others') {
-            wwLib.wwVariable.updateValue(`${this.id}-user`, null);
-            wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
-            const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
-            window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-                path,
-                domain: window.location.hostname,
-            });
-            window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-                path,
-                domain: window.location.hostname,
-            });
-            // For safari
-            window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-                path,
-                domain: '.' + window.location.hostname,
-            });
-            window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-                path,
-                domain: '.' + window.location.hostname,
-            });
-        }
-        this.publicInstance.auth.signOut({ scope });
+
+        wwLib.wwVariable.updateValue(`${this.id}-user`, null);
+        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
+        const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
+            path,
+            domain: window.location.hostname,
+        });
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
+            path,
+            domain: window.location.hostname,
+        });
+        // For safari
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
+            path,
+            domain: '.' + window.location.hostname,
+        });
+        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
+            path,
+            domain: '.' + window.location.hostname,
+        });
+        this.publicInstance.auth.signOut();
     },
     // Ensure Retro compatibility for the workflow action fetchUser
     fetchUser() {
