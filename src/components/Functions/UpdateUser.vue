@@ -9,6 +9,15 @@
         @update:modelValue="setEmail"
     />
     <wwEditorInputRow
+        label="New phone"
+        type="query"
+        :model-value="phone"
+        bindable
+        required
+        placeholder="Enter a phone number"
+        @update:modelValue="setPhone"
+    />
+    <wwEditorInputRow
         label="Metadata"
         type="array"
         :model-value="metadata"
@@ -48,6 +57,9 @@ export default {
         email() {
             return this.args.email;
         },
+        phone() {
+            return this.args.phone;
+        },
         metadata() {
             return this.args.metadata || [];
         },
@@ -55,6 +67,9 @@ export default {
     methods: {
         setEmail(email) {
             this.$emit('update:args', { ...this.args, email });
+        },
+        setPhone(phone) {
+            this.$emit('update:args', { ...this.args, phone });
         },
         setMetadata(metadata) {
             this.$emit('update:args', { ...this.args, metadata });

@@ -16,7 +16,7 @@ import './components/Functions/SignInProvider.vue';
 import './components/Functions/SignInSSO.vue';
 import './components/Functions/VerifyOTP.vue';
 import './components/Functions/ResendOTP.vue';
-import './components/Functions/UpdateUserMeta.vue';
+import './components/Functions/UpdateUser.vue';
 import './components/Functions/ChangePassword.vue';
 import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
@@ -493,12 +493,16 @@ export default {
             : [];
         return roles;
     },
-    async updateUserMeta({ email, metadata }) {
+    async updateUserMeta({ email, phone, metadata }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
         const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const { data: result, error } = await this.publicInstance.auth.updateUser({ email, data: user_metadata });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({
+            email,
+            phone,
+            data: user_metadata,
+        });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },

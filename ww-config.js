@@ -168,7 +168,7 @@ export default {
             code: 'updateUserMeta',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/UpdateUserMeta.vue'),
+            edit: () => import('./src/components/Functions/UpdateUser.vue'),
             /* wwEditor:end */
         },
         {
