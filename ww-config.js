@@ -47,18 +47,65 @@ export default {
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignUp.vue'),
+            getIsValid({ email, phone, password }) {
+                return (!!email || !!phone) && !!password;
+            },
             /* wwEditor:end */
         },
         {
-            name: 'Login with email',
+            name: 'Sign Out',
+            code: 'signOut',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignOut.vue'),
+            /* wwEditor:end */
+        },
+        {
+            name: 'Sign In | Email and Password',
             code: 'signInEmail',
             isAsync: true,
             /* wwEditor:start */
             edit: () => import('./src/components/Functions/SignInEmail.vue'),
+            getIsValid({ email, password }) {
+                return !!email && !!password;
+            },
             /* wwEditor:end */
         },
         {
-            name: 'Login with magic link',
+            name: 'Sign In | Phone and Password',
+            code: 'signInPhone',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInPhone.vue'),
+            getIsValid({ phone, password }) {
+                return !!phone && !!password;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Sign In | OAuth Provider',
+            code: 'signInProvider',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInProvider.vue'),
+            getIsValid({ provider }) {
+                return !!provider;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Sign In | One-Time Password',
+            code: 'signInOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInOTP.vue'),
+            getIsValid({ email, phone }) {
+                return !!email || !!phone;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Sign In | Magic Link',
             code: 'signInMagicLink',
             isAsync: true,
             /* wwEditor:start */
@@ -69,33 +116,59 @@ export default {
             /* wwEditor:end */
         },
         {
-            name: 'Login with provider',
-            code: 'signInProvider',
+            name: 'Sign In | OIDC Token',
+            code: 'signInOIDC',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/SignInProvider.vue'),
-            getIsValid({ provider, redirectPage }) {
-                return !!provider && !!redirectPage;
+            edit: () => import('./src/components/Functions/SignInOIDC.vue'),
+            getIsValid({ provider, token }) {
+                return !!provider && !!token;
             },
             /* wwEditor:end */
         },
         {
-            name: 'Logout',
-            code: 'signOut',
+            name: 'Sign In | SAML 2.0 SSO',
+            code: 'signInSSO',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/SignInSSO.vue'),
+            getIsValid({ domain, providerId }) {
+                return !!domain || !!providerId;
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Verify OTP',
+            code: 'verifyOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/VerifyOTP.vue'),
+            getIsValid({ type, email, phone, token, tokenHash }) {
+                return !!type && (!!email || !!phone) && (!!token || !!tokenHash);
+            },
+            /* wwEditor:end */
+        },
+        {
+            name: 'Resend OTP',
+            code: 'resendOTP',
+            isAsync: true,
+            /* wwEditor:start */
+            edit: () => import('./src/components/Functions/ResendOTP.vue'),
+            getIsValid({ type, email, phone }) {
+                return !!type && (!!email || !!phone);
+            },
+            /* wwEditor:end */
         },
         {
             name: 'Fetch User',
             code: 'fetchUser',
         },
         {
-            name: 'Update User Metadata',
+            name: 'Update User',
             code: 'updateUserMeta',
             isAsync: true,
             /* wwEditor:start */
-            edit: () => import('./src/components/Functions/UpdateUserMeta.vue'),
-            getIsValid({ email }) {
-                return !!email;
-            },
+            edit: () => import('./src/components/Functions/UpdateUser.vue'),
             /* wwEditor:end */
         },
         {

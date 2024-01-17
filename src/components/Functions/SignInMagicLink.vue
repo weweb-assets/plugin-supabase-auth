@@ -5,13 +5,13 @@
         :model-value="email"
         bindable
         required
-        placeholder="Enter a email"
+        placeholder="Enter an email"
         @update:modelValue="setEmail"
     />
     <wwEditorInputRow
         required
         type="select"
-        label="Redirect to"
+        label="Email redirect to"
         :options="pagesOptions"
         :actions="pageActions"
         :model-value="redirectPage"

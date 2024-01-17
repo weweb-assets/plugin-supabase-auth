@@ -1,12 +1,19 @@
 <template>
     <wwEditorInputRow
-        label="Email"
+        label="New email"
         type="query"
         :model-value="email"
         bindable
-        required
-        placeholder="Enter a email"
+        placeholder="Enter an email"
         @update:modelValue="setEmail"
+    />
+    <wwEditorInputRow
+        label="New phone"
+        type="query"
+        :model-value="phone"
+        bindable
+        placeholder="Enter a phone number"
+        @update:modelValue="setPhone"
     />
     <wwEditorInputRow
         label="Metadata"
@@ -18,19 +25,19 @@
     >
         <template #default="{ item, setItem }">
             <wwEditorInputRow
-                :model-value="item.key"
-                type="select"
-                :options="userMetadataOptions"
+                type="query"
+                placeholder="Enter a key"
                 small
-                placeholder="Select an attribute"
+                bindable
+                :model-value="item.key"
                 @update:model-value="setItem({ ...item, key: $event })"
             />
             <wwEditorInputRow
                 :model-value="item.value"
                 type="query"
+                placeholder="Enter a value"
                 small
                 bindable
-                placeholder="Enter a value"
                 @update:model-value="setItem({ ...item, value: $event })"
             />
         </template>
@@ -48,19 +55,19 @@ export default {
         email() {
             return this.args.email;
         },
+        phone() {
+            return this.args.phone;
+        },
         metadata() {
             return this.args.metadata || [];
-        },
-        userMetadataOptions() {
-            return this.plugin.userAttributes.map(attribute => ({
-                label: attribute.label,
-                value: attribute.key,
-            }));
         },
     },
     methods: {
         setEmail(email) {
             this.$emit('update:args', { ...this.args, email });
+        },
+        setPhone(phone) {
+            this.$emit('update:args', { ...this.args, phone });
         },
         setMetadata(metadata) {
             this.$emit('update:args', { ...this.args, metadata });

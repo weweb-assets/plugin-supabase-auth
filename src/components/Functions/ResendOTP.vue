@@ -1,24 +1,51 @@
 <template>
     <wwEditorInputRow
+        label="Origin"
+        type="select"
+        placeholder="Select the otp origin"
+        required
+        :model-value="type"
+        :options="[
+            { label: 'Email Sign Up | Sign In', value: 'email' },
+            { label: 'Email change', value: 'email_change' },
+            { label: 'Recovery', value: 'recovery' },
+            { label: 'Invite', value: 'invite' },
+            { label: 'Phone Sign Up | Sign In', value: 'sms' },
+            { label: 'Phone change', value: 'phone_change' },
+        ]"
+        @update:modelValue="setArg('type', $event)"
+    >
+    </wwEditorInputRow>
+    <wwEditorInputRow
+        v-if="['email', 'recovery', 'invite', 'email_change'].includes(type)"
         label="Email"
         type="query"
         :model-value="email"
         bindable
         required
-        placeholder="Enter an email"
-        @update:modelValue="setEmail"
+        placeholder="Enter used email"
+        @update:modelValue="setArg('email', $event)"
     />
     <wwEditorInputRow
+        v-else
+        label="Phone"
+        type="query"
+        :model-value="phone"
+        bindable
         required
+        placeholder="Enter used phone number"
+        @update:modelValue="setArg('phone', $event)"
+    />
+    <wwEditorInputRow
+        v-if="type === 'email'"
+        label="Email redirect to"
         type="select"
-        label="Redirect to"
+        placeholder="Select a page"
+        bindable
         :options="pagesOptions"
         :actions="pageActions"
         :model-value="redirectPage"
-        placeholder="Select a page"
-        bindable
-        @update:modelValue="setRedirectPage"
-        @action="onAction"
+        @update:modelValue="setArg('redirectPage', $event)"
     />
 </template>
 
@@ -35,8 +62,14 @@ export default {
         };
     },
     computed: {
+        type() {
+            return this.args.type;
+        },
         email() {
             return this.args.email;
+        },
+        phone() {
+            return this.args.phone;
         },
         redirectPage() {
             return this.args.redirectPage;
@@ -49,11 +82,8 @@ export default {
         },
     },
     methods: {
-        setEmail(email) {
-            this.$emit('update:args', { ...this.args, email });
-        },
-        setRedirectPage(redirectPage) {
-            this.$emit('update:args', { ...this.args, redirectPage });
+        setArg(arg, value) {
+            this.$emit('update:args', { ...this.args, [arg]: value });
         },
         createPage() {
             // eslint-disable-next-line vue/custom-event-name-casing

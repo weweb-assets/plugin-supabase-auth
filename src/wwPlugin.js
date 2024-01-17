@@ -6,10 +6,17 @@ import './components/Redirections/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
+import './components/Functions/SignOut.vue';
 import './components/Functions/SignInEmail.vue';
+import './components/Functions/SignInPhone.vue';
 import './components/Functions/SignInMagicLink.vue';
+import './components/Functions/SignInOIDC.vue';
+import './components/Functions/SignInOTP.vue';
 import './components/Functions/SignInProvider.vue';
-import './components/Functions/UpdateUserMeta.vue';
+import './components/Functions/SignInSSO.vue';
+import './components/Functions/VerifyOTP.vue';
+import './components/Functions/ResendOTP.vue';
+import './components/Functions/UpdateUser.vue';
 import './components/Functions/ChangePassword.vue';
 import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
@@ -53,6 +60,9 @@ export default {
         { label: 'Locale', key: 'locale' },
         { label: 'Address', key: 'address' },
     ],
+    getProjectId() {
+        return this.privateInstance?.supabaseUrl.split('https://')[1].split('.')[0];
+    },
     async adminGetUsers() {
         const response = await this.privateInstance.auth.api.listUsers();
         if (response.error) throw new Error(response.error.message, { cause: response.error });
@@ -164,7 +174,8 @@ export default {
         }
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
-            .insert([{ name }]);
+            .insert([{ name }])
+            .select();
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
@@ -172,7 +183,8 @@ export default {
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .update({ name })
-            .match({ id: roleId });
+            .match({ id: roleId })
+            .select();
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
@@ -197,28 +209,9 @@ export default {
             /* wwEditor:end */
 
             this.publicInstance = createClient(projectUrl, publicApiKey, {
-                cookieOptions: {
-                    path: wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/',
+                auth: {
+                    storageKey: wwLib.wwWebsiteData.getInfo().id,
                 },
-                localStorage: wwLib.manager
-                    ? {
-                          getItem(key) {
-                              return wwLib
-                                  .getEditorWindow()
-                                  .localStorage.getItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
-                          },
-                          setItem(key, value) {
-                              wwLib
-                                  .getEditorWindow()
-                                  .localStorage.setItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`, value);
-                          },
-                          removeItem(key) {
-                              wwLib
-                                  .getEditorWindow()
-                                  .localStorage.removeItem(`${wwLib.wwWebsiteData.getInfo().id}.${key}`);
-                          },
-                      }
-                    : undefined,
             });
 
             // The same public instance must be shared between supabase and supabase auth
@@ -251,10 +244,163 @@ export default {
             /* wwEditor:end */
         }
     },
-    async signInEmail({ email, password }) {
+    async signUp({ type = 'email', email, phone, channel, password, metadata, redirectPage, captchaToken }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         try {
-            const { session, error } = await this.publicInstance.auth.signIn({ email, password });
+            const user_metadata = Array.isArray(metadata)
+                ? metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {})
+                : metadata;
+            const websiteId = wwLib.wwWebsiteData.getInfo().id;
+            const emailRedirectTo =
+                redirectPage &&
+                (wwLib.manager
+                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
+                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
+
+            const { data, error } = await this.publicInstance.auth.signUp(
+                type === 'email'
+                    ? { email, password, options: { captchaToken } }
+                    : { phone, password, options: { channel, captchaToken } },
+                { data: user_metadata, emailRedirectTo }
+            );
+            if (error) throw new Error(error.message, { cause: error });
+            return data;
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+
+    async signInEmail({ email, password }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!email || !password) throw new Error('Email and Password are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({ email, password });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInPhone({ phone, password }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!phone || !password) throw new Error('Phone and Password are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({ phone, password });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInOIDC({ token, provider, access_token, nonce, captchaToken }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!token || !provider) throw new Error('Token and Provider are required.');
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithIdToken({
+                token,
+                provider,
+                access_token,
+                nonce,
+                options: { captchaToken },
+            });
+            if (error) throw new Error(error.message, { cause: error });
+            return await this.refreshAuthUser(data?.session);
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInMagicLink({ email, redirectPage, captchaToken }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!email) throw new Error('Email is required.');
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+
+        const { data, error } = await this.publicInstance.auth.signInWithOtp({
+            email,
+            options: { redirectTo, captchaToken },
+        });
+        if (error) throw new Error(error.message, { cause: error });
+        return data;
+    },
+    async signInOTP({ type = 'phone', email, phone, channel, captchaToken, shouldCreateUser = true }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (type === 'email' && !email) throw new Error('Email is required.');
+        else if (type === 'phone' && !phone) throw new Error('Phone is required.');
+
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithOtp(
+                type === 'email'
+                    ? { email, options: { captchaToken, shouldCreateUser } }
+                    : { phone, options: { channel, captchaToken, shouldCreateUser } }
+            );
+            if (error) throw new Error(error.message, { cause: error });
+            return data?.session ? await this.refreshAuthUser(data?.session) : data;
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async signInProvider({ provider, redirectPage, queryParams, scopes, skipBrowserRedirect }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!provider) throw new Error('Provider is required.');
+        const websiteId = wwLib.wwWebsiteData.getInfo().id;
+        const redirectTo = wwLib.manager
+            ? `${window.location.origin}/${websiteId}/${redirectPage}`
+            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const { data, error } = await this.publicInstance.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo,
+                scopes,
+                queryParams: Array.isArray(queryParams)
+                    ? queryParams.reduce((result, param) => ({ ...result, [param.key]: param.value }))
+                    : queryParams,
+                skipBrowserRedirect,
+            },
+        });
+        if (error) throw new Error(error.message, { cause: error });
+        return data;
+    },
+    async signInSSO({ domain, providerId }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        if (!domain && !providerId) throw new Error('Domain or ProviderId is required.');
+
+        try {
+            const { data, error } = await supabase.auth.signInWithSSO(domain ? { domain } : { providerId });
+
+            if (error) throw new Error(error.message, { cause: error });
+            if (data?.url) {
+                // redirect the user to the identity provider's authentication flow
+                window.location.href = data.url;
+            }
+        } catch (err) {
+            this.signOut();
+            throw err;
+        }
+    },
+    async verifyOTP({ type, email, phone, token, tokenHash }) {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const isEmail = ['email', 'recovery', 'invite', 'email_change'].includes(type);
+        const isPhone = ['sms', 'phone_change'].includes(type);
+        if (isEmail && !email) throw new Error('Email is required.');
+        else if (isPhone && !phone) throw new Error('Phone is required.');
+        try {
+            const {
+                data: { session },
+                error,
+            } = await this.publicInstance.auth.verifyOtp({
+                type,
+                ...(isEmail ? { email } : null),
+                ...(isPhone ? { phone } : null),
+                ...(token ? { token } : null),
+                ...(tokenHash ? { token_hash: tokenHash } : null),
+            });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(session);
         } catch (err) {
@@ -262,53 +408,31 @@ export default {
             throw err;
         }
     },
-    async signInMagicLink({ email, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo = wwLib.manager
-                ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-            const { error } = await this.publicInstance.auth.signIn({ email }, { redirectTo });
-            if (error) throw new Error(error.message, { cause: error });
-        } catch (err) {
-            this.signOut();
-            throw err;
-        }
-    },
-    async signInProvider({ provider, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+
+    async resendOTP({ type, email, phone, redirectPage }) {
+        const isEmail = ['email', 'recovery', 'invite', 'email_change'].includes(type);
+        const isPhone = ['sms', 'phone_change'].includes(type);
+        if (isEmail && !email) throw new Error('Email is required.');
+        else if (isPhone && !phone) throw new Error('Phone is required.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.publicInstance.auth.signIn({ provider }, { redirectTo });
+        const { data, error } = await this.publicInstance.auth.resend({
+            type,
+            ...(isEmail ? { email } : null),
+            ...(isPhone ? { phone } : null),
+            options: {
+                emailRedirectTo: redirectTo,
+            },
+        });
         if (error) throw new Error(error.message, { cause: error });
+        return data;
     },
-    async signUp({ email, password, metadata, redirectPage }) {
-        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        try {
-            const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
-            const websiteId = wwLib.wwWebsiteData.getInfo().id;
-            const redirectTo =
-                redirectPage &&
-                (wwLib.manager
-                    ? `${window.location.origin}/${websiteId}/${redirectPage}`
-                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
 
-            const { user, error } = await this.publicInstance.auth.signUp(
-                { email, password },
-                { data: user_metadata, redirectTo }
-            );
-            if (error) throw new Error(error.message, { cause: error });
-            return user;
-        } catch (err) {
-            this.signOut();
-            throw err;
-        }
-    },
     signOut() {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+
         wwLib.wwVariable.updateValue(`${this.id}-user`, null);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
         const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
@@ -335,25 +459,26 @@ export default {
     fetchUser() {
         return this.refreshAuthUser();
     },
-    async refreshAuthUser(session) {
+    async refreshAuthUser(_session) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        const _session = session || this.publicInstance.auth.session();
-        const user = _session ? _session.user : this.publicInstance.auth.user();
+        const { data } = await this.publicInstance.auth.getSession();
+        const session = _session || data.session;
+        const user = session ? session.user : data.user;
         if (!user) {
             this.signOut();
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
-        user._session = {
-            access_token: _session.access_token,
-            token_type: _session.token_type,
-            expires_in: _session.expires_in,
-            refresh_token: _session.refresh_token,
+        user.session = {
+            access_token: session.access_token,
+            token_type: session.token_type,
+            expires_in: session.expires_in,
+            refresh_token: session.refresh_token,
         };
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
-        setCookies(_session);
+        setCookies(session);
         return user;
     },
     async getUserRoles(userId) {
@@ -368,12 +493,16 @@ export default {
             : [];
         return roles;
     },
-    async updateUserMeta({ email, metadata }) {
+    async updateUserMeta({ email, phone, metadata }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
         const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const { data: result, error } = await this.publicInstance.auth.update({ email, data: user_metadata });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({
+            email,
+            phone,
+            data: user_metadata,
+        });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
@@ -381,13 +510,13 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!this.user) throw new Error('User not authenticated.');
 
-        const { error: signInError } = await this.publicInstance.auth.signIn({
-            email: this.user.email,
+        const { error: signInError } = await this.publicInstance.auth.signInWithPassword({
+            ...(this.user.email ? { email: this.user.email } : this.user.phone ? { phone: this.user.phone } : null),
             password: oldPassword,
         });
         if (signInError) throw new Error(signInError.message, { cause: signInError });
 
-        const { data: result, error } = await this.publicInstance.auth.update({ password: newPassword });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
@@ -397,15 +526,15 @@ export default {
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { error } = await this.publicInstance.auth.api.resetPasswordForEmail(email, { redirectTo });
+        const { error } = await this.publicInstance.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
     async confirmPassword({ newPassword }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        const { access_token } = this.publicInstance.auth.currentSession || {};
-        if (!access_token) throw new Error('No access token provided.');
+        const { data } = await this.publicInstance.auth.getSession();
+        if (!data?.session?.access_token) throw new Error('No access token provided.');
 
-        const { error } = await this.publicInstance.auth.api.updateUser(access_token, { password: newPassword });
+        const { error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:start */
