@@ -64,7 +64,10 @@ export default {
         return this.privateInstance?.supabaseUrl.split('https://')[1].split('.')[0];
     },
     async adminGetUsers() {
-        const response = await this.privateInstance.auth.api.listUsers();
+        const response = await this.privateInstance.auth.admin.listUsers({
+            page: 1,
+            perPage: 100,
+        });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
             response.data.map(async user => ({
@@ -95,7 +98,7 @@ export default {
             {}
         );
 
-        const response = await this.privateInstance.auth.api.createUser({
+        const response = await this.privateInstance.auth.admin.createUser({
             email: data.email,
             email_confirm: true,
             password: data.password,
@@ -117,7 +120,7 @@ export default {
             {}
         );
 
-        const response = await this.privateInstance.auth.api.updateUserById(user.id, {
+        const response = await this.privateInstance.auth.admin.updateUserById(user.id, {
             email: data.email,
             email_confirm: true,
             user_metadata: { ...attributes, name: data.name },
@@ -132,7 +135,7 @@ export default {
         };
     },
     async adminUpdateUserPassword(user, password) {
-        const { error } = await this.privateInstance.auth.api.updateUserById(user.id, {
+        const { error } = await this.privateInstance.auth.admin.updateUserById(user.id, {
             password: password,
         });
         if (error) throw new Error(error.message, { cause: error });
@@ -156,7 +159,7 @@ export default {
         }
     },
     async adminDeleteUser(user) {
-        const { error } = await this.privateInstance.auth.api.deleteUser(user.id);
+        const { error } = await this.privateInstance.auth.admin.deleteUser(user.id);
         if (error) throw new Error(error.message, { cause: error });
     },
     /* Roles */
