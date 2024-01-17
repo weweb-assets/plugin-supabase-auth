@@ -262,9 +262,8 @@ export default {
 
             const { data, error } = await this.publicInstance.auth.signUp(
                 type === 'email'
-                    ? { email, password, options: { captchaToken } }
-                    : { phone, password, options: { channel, captchaToken } },
-                { data: user_metadata, emailRedirectTo }
+                    ? { email, password, options: { captchaToken, data: user_metadata, emailRedirectTo } }
+                    : { phone, password, options: { channel, captchaToken, data: user_metadata, emailRedirectTo } }
             );
             if (error) throw new Error(error.message, { cause: error });
             return data;
