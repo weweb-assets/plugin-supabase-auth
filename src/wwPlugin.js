@@ -127,11 +127,11 @@ export default {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return {
-            ...response.data,
-            ...response.data.user_metadata,
+            ...response.data.user,
+            ...response.data.user.user_metadata,
             enabled: true,
-            createdAt: response.data.created_at,
-            updatedAt: response.data.updated_at,
+            createdAt: response.data.user.created_at,
+            updatedAt: response.data.user.updated_at,
         };
     },
     async adminUpdateUserPassword(user, password) {
