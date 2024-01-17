@@ -70,7 +70,7 @@ export default {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
-            response.data.map(async user => ({
+            response.data.users.map(async user => ({
                 ...user,
                 ...user.user_metadata,
                 enabled: true,
