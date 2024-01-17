@@ -470,7 +470,7 @@ export default {
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
-        user.session = {
+        user._session = {
             access_token: session.access_token,
             token_type: session.token_type,
             expires_in: session.expires_in,
