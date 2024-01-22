@@ -319,13 +319,13 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!email) throw new Error('Email is required.');
         const websiteId = wwLib.wwWebsiteData.getInfo().id;
-        const redirectTo = wwLib.manager
+        const emailRedirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
 
         const { data, error } = await this.publicInstance.auth.signInWithOtp({
             email,
-            options: { redirectTo, captchaToken },
+            options: { emailRedirectTo, captchaToken },
         });
         if (error) throw new Error(error.message, { cause: error });
         return data;
