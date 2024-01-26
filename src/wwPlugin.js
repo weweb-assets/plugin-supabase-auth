@@ -268,7 +268,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return data;
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -281,7 +281,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(data?.session);
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -293,7 +293,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(data?.session);
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -311,7 +311,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(data?.session);
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -344,7 +344,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return data?.session ? await this.refreshAuthUser(data?.session) : data;
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -355,26 +355,31 @@ export default {
         const redirectTo = wwLib.manager
             ? `${window.location.origin}/${websiteId}/${redirectPage}`
             : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
-        const { data, error } = await this.publicInstance.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo,
-                scopes,
-                queryParams: Array.isArray(queryParams)
-                    ? queryParams.reduce((result, param) => ({ ...result, [param.key]: param.value }))
-                    : queryParams,
-                skipBrowserRedirect,
-            },
-        });
-        if (error) throw new Error(error.message, { cause: error });
-        return data;
+        try {
+            const { data, error } = await this.publicInstance.auth.signInWithOAuth({
+                provider,
+                options: {
+                    redirectTo,
+                    scopes,
+                    queryParams: Array.isArray(queryParams)
+                        ? queryParams.reduce((result, param) => ({ ...result, [param.key]: param.value }))
+                        : queryParams,
+                    skipBrowserRedirect,
+                },
+            });
+            if (error) throw new Error(error.message, { cause: error });
+            return data;
+        } catch (err) {
+            wwLib.wwLog.error(err);
+            throw err;
+        }
     },
     async signInSSO({ domain, providerId }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!domain && !providerId) throw new Error('Domain or ProviderId is required.');
 
         try {
-            const { data, error } = await supabase.auth.signInWithSSO(domain ? { domain } : { providerId });
+            const { data, error } = await this.publicInstance.auth.signInWithSSO(domain ? { domain } : { providerId });
 
             if (error) throw new Error(error.message, { cause: error });
             if (data?.url) {
@@ -382,7 +387,7 @@ export default {
                 window.location.href = data.url;
             }
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
@@ -406,7 +411,7 @@ export default {
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(session);
         } catch (err) {
-            this.signOut();
+            wwLib.wwLog.error(err);
             throw err;
         }
     },
