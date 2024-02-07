@@ -1,11 +1,7 @@
 <template>
     <wwEditorFormRow required label="Project URL">
         <template #append-label>
-            <a
-                class="ww-editor-link ml-2"
-                href="https://supabase.com/docs/guides/with-expo#get-the-api-keys"
-                target="_blank"
-            >
+            <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/project/_/settings/api" target="_blank">
                 Find it here
             </a>
         </template>
