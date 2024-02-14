@@ -511,6 +511,7 @@ export default {
             data: user_metadata,
         });
         if (error) throw new Error(error.message, { cause: error });
+        await this.publicInstance.auth.refreshSession();
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
