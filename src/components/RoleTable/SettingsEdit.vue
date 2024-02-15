@@ -1,33 +1,35 @@
 <template>
-    <div class="flex items-center">
-        <div class="w-100 -full">
-            <wwEditorInputRow
-                label="Role table"
+    <wwEditorFormRow label="Role table" required class="-full">
+        <div class="flex items-center">
+            <wwEditorInput
                 type="select"
                 placeholder="Select a table"
                 :model-value="settings.publicData.roleTable"
                 :options="tablesOptions"
                 @update:modelValue="changePrivateSettings('roleTable', $event)"
             />
+            <button type="button" class="ww-editor-button -primary -small -icon m-left" @click="fetchTables">
+                <wwEditorIcon name="refresh" medium />
+            </button>
         </div>
-        <button type="button" class="ww-editor-button -small -primary ml-2 mt-3" @click="fetchTables">refresh</button>
-    </div>
+    </wwEditorFormRow>
     <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
         Table must have columns "id" and "name".
     </div>
-    <div class="flex items-center">
-        <div class="w-100 -full">
-            <wwEditorInputRow
-                label="User Role table"
+    <wwEditorFormRow label="User role table" required class="-full">
+        <div class="flex items-center">
+            <wwEditorInput
                 type="select"
                 placeholder="Select a table"
                 :model-value="settings.publicData.userRoleTable"
                 :options="tablesOptions"
                 @update:modelValue="changePrivateSettings('userRoleTable', $event)"
             />
+            <button type="button" class="ww-editor-button -primary -small -icon m-left" @click="fetchTables">
+                <wwEditorIcon name="refresh" medium />
+            </button>
         </div>
-        <button type="button" class="ww-editor-button -small -primary ml-2 mt-3" @click="fetchTables">refresh</button>
-    </div>
+    </wwEditorFormRow>
     <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-error mb-2">
         Table must have column "id", "roleId" and "userId".
     </div>
