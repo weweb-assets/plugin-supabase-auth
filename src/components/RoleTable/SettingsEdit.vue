@@ -1,8 +1,8 @@
 <template>
     <wwEditorFormRow label="Role table" required class="-full">
         <div class="flex items-center">
-            <wwEditorInput
-                type="select"
+            <wwEditorInputTextSelect
+                class="w-100"
                 placeholder="Select a table"
                 :model-value="settings.publicData.roleTable"
                 :options="tablesOptions"
@@ -18,8 +18,8 @@
     </div>
     <wwEditorFormRow label="User role table" required class="-full">
         <div class="flex items-center">
-            <wwEditorInput
-                type="select"
+            <wwEditorInputTextSelect
+                class="w-100"
                 placeholder="Select a table"
                 :model-value="settings.publicData.userRoleTable"
                 :options="tablesOptions"
