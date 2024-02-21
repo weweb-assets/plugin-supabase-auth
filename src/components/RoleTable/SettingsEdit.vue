@@ -1,5 +1,5 @@
 <template>
-    <wwEditorFormRow label="Role table" required class="-full">
+    <wwEditorFormRow label="Role table" required>
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
@@ -16,7 +16,7 @@
     <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
         Table must have columns "id" and "name".
     </div>
-    <wwEditorFormRow label="User role table" required class="-full">
+    <wwEditorFormRow label="User role table" required>
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
