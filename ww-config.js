@@ -204,5 +204,10 @@ export default {
             },
             /* wwEditor:end */
         },
+        {
+            name: 'Refresh session',
+            code: 'refreshSession',
+            isAsync: true,
+        },
     ],
 };

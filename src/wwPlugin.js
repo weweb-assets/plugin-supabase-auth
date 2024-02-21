@@ -511,7 +511,6 @@ export default {
             data: user_metadata,
         });
         if (error) throw new Error(error.message, { cause: error });
-        await this.publicInstance.auth.refreshSession();
         return result;
     },
     async updateUserPassword({ oldPassword, newPassword }) {
@@ -544,6 +543,21 @@ export default {
 
         const { error } = await this.publicInstance.auth.updateUser({ password: newPassword });
         if (error) throw new Error(error.message, { cause: error });
+    },
+    async refreshSession() {
+        if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const session = await this.publicInstance.auth.refreshSession();
+        const user = wwLib.wwVariable.getValue(`${this.id}-user`);
+        if (!user) return;
+        wwLib.wwVariable.updateValue(`${this.id}-user`, {
+            ...user,
+            _session: {
+                access_token: session.access_token,
+                token_type: session.token_type,
+                expires_in: session.expires_in,
+                refresh_token: session.refresh_token,
+            },
+        });
     },
     /* wwEditor:start */
     async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
