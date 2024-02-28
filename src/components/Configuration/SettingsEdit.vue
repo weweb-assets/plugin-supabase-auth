@@ -20,7 +20,7 @@
         :model-value="settings.publicData.apiKey"
         @update:modelValue="changePublicApiKey"
     />
-    <wwEditorFormRow required label="Private API key">
+    <wwEditorFormRow label="Private API key (optional)">
         <div class="flex items-center">
             <wwEditorInputText
                 :type="isKeyVisible ? 'text' : 'password'"
@@ -31,9 +31,11 @@
                 @update:modelValue="changePrivateApiKey"
                 class="w-full mr-3"
             />
-            <button class="pointer" @click.prevent="isKeyVisible = !isKeyVisible">
-                <wwEditorIcon :name="isKeyVisible ? 'eye-off' : 'eye'"></wwEditorIcon>
-            </button>
+            <wwEditorQuestionMark
+                tooltip-position="top-left"
+                forced-content="Is required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
+                class="ml-2"
+            />
         </div>
     </wwEditorFormRow>
 </template>
