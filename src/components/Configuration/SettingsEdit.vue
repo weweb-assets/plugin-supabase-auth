@@ -29,12 +29,13 @@
                 :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
                 large
                 @update:modelValue="changePrivateApiKey"
-                class="w-full mr-3"
+                class="w-full"
             />
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 forced-content="Is required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
                 class="ml-2"
+                :class="{ 'text-yellow-500': !settings.privateData.apiKey }"
             />
         </div>
     </wwEditorFormRow>
@@ -76,28 +77,18 @@ export default {
                 ...this.settings,
                 publicData: { ...this.settings.publicData, projectUrl },
             });
-            this.$nextTick(this.loadInstance);
         },
         changePublicApiKey(apiKey) {
             this.$emit('update:settings', {
                 ...this.settings,
                 publicData: { ...this.settings.publicData, apiKey },
             });
-            this.$nextTick(this.loadInstance);
         },
         changePrivateApiKey(apiKey) {
             this.$emit('update:settings', {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, apiKey },
             });
-            this.$nextTick(this.loadInstance);
-        },
-        loadInstance() {
-            this.plugin.load(
-                this.settings.publicData.projectUrl,
-                this.settings.publicData.apiKey,
-                this.settings.privateData.apiKey
-            );
         },
     },
 };
