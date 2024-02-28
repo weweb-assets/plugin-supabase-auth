@@ -69,6 +69,8 @@ export default {
             for (const key in adminFunctions) {
                 if (this.hasOwnProperty(key)) delete this[key];
             }
+            this.adminGetUsers =
+                'Please add your service role key in the supabase auth plugin configuration to manage users here.';
         }
     },
     /* wwEditor:end */

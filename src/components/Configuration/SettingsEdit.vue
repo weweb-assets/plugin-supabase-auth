@@ -20,7 +20,7 @@
         :model-value="settings.publicData.apiKey"
         @update:modelValue="changePublicApiKey"
     />
-    <wwEditorFormRow label="Private API key (optional)">
+    <wwEditorFormRow label="Service role key (optional)">
         <div class="flex items-center">
             <wwEditorInputText
                 :type="isKeyVisible ? 'text' : 'password'"
@@ -33,7 +33,7 @@
             />
             <wwEditorQuestionMark
                 tooltip-position="top-left"
-                forced-content="Is required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
+                forced-content="Required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
                 class="ml-2"
                 :class="{ 'text-yellow-500': !settings.privateData.apiKey }"
             />
