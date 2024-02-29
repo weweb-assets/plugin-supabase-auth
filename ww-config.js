@@ -22,7 +22,7 @@ export default {
                 },
             },
             {
-                label: 'Roles tables (Optional)',
+                label: 'Roles tables (optional)',
                 icon: 'data',
                 edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
                 summary: () => import('./src/components/RoleTable/SettingsSummary.vue'),
