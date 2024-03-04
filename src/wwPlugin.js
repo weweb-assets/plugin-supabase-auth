@@ -71,6 +71,8 @@ export default {
             }
             this.adminGetUsers =
                 'Please add your service role key in the supabase auth plugin configuration to manage users here.';
+            this.adminGetRoles =
+                'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
     },
     /* wwEditor:end */
