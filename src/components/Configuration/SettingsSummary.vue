@@ -10,7 +10,7 @@
     <div class="flex items-center body-2">
         <wwEditorIcon name="key" class="mr-2" />
         <div class="text-ellipsis" :class="{ 'text-dark-400': !settings.privateData.apiKey }">
-            {{ settings.privateData.apiKey.replace(/./g, '*') || 'No service role key provided' }}
+            {{ settings.privateData?.apiKey.replace(/./g, '*') || 'No service role key provided' }}
         </div>
     </div>
 </template>
