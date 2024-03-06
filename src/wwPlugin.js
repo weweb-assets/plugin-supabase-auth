@@ -61,142 +61,19 @@ export default {
         { label: 'Address', key: 'address' },
     ],
     getProjectId() {
-        return this.privateInstance?.supabaseUrl.split('https://')[1].split('.')[0];
+        return this.publicInstance?.supabaseUrl.split('https://')[1].split('.')[0];
     },
-    async adminGetUsers() {
-        const response = await this.privateInstance.auth.admin.listUsers({
-            page: 1,
-            perPage: 100,
-        });
-        if (response.error) throw new Error(response.error.message, { cause: response.error });
-        return await Promise.all(
-            response.data.users.map(async user => ({
-                ...user,
-                ...user.user_metadata,
-                enabled: true,
-                createdAt: user.created_at,
-                updatedAt: user.updated_at,
-                roles: await this.adminGetUserRoles(user.id),
-            }))
-        );
-    },
-    async adminGetUserRoles(userId) {
-        if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
-        const roles = this.settings.publicData.userRoleTable
-            ? (
-                  await this.privateInstance
-                      .from(this.settings.publicData.userRoleTable)
-                      .select('role:roleId(*)')
-                      .eq('userId', userId)
-              ).data.map(({ role }) => role)
-            : [];
-        return roles;
-    },
-    async adminCreateUser(data) {
-        const attributes = data.attributes.reduce(
-            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
-            {}
-        );
-
-        const response = await this.privateInstance.auth.admin.createUser({
-            email: data.email,
-            email_confirm: true,
-            password: data.password,
-            user_metadata: { ...attributes, name: data.name },
-        });
-        if (response.error) throw new Error(response.error.message, { cause: response.error });
-        return {
-            ...response.data,
-            ...response.data.user_metadata,
-            enabled: true,
-            createdAt: response.data.created_at,
-            updatedAt: response.data.updated_at,
-            roles: [],
-        };
-    },
-    async adminUpdateUser(user, data) {
-        const attributes = data.attributes.reduce(
-            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
-            {}
-        );
-
-        const response = await this.privateInstance.auth.admin.updateUserById(user.id, {
-            email: data.email,
-            email_confirm: true,
-            user_metadata: { ...attributes, name: data.name },
-        });
-        if (response.error) throw new Error(response.error.message, { cause: response.error });
-        return {
-            ...response.data.user,
-            ...response.data.user.user_metadata,
-            enabled: true,
-            createdAt: response.data.user.created_at,
-            updatedAt: response.data.user.updated_at,
-        };
-    },
-    async adminUpdateUserPassword(user, password) {
-        const { error } = await this.privateInstance.auth.admin.updateUserById(user.id, {
-            password: password,
-        });
-        if (error) throw new Error(error.message, { cause: error });
-    },
-    async adminUpdateUserRoles(user, roles) {
-        if (!this.settings.publicData.roleTable) {
-            const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
-            wwLib.wwNotification.open({ text, color: 'red' });
-            throw new Error(text);
+    switchAdmin(isEnabled) {
+        if (isEnabled) Object.assign(this, adminFunctions);
+        else {
+            for (const key in adminFunctions) {
+                if (this.hasOwnProperty(key)) delete this[key];
+            }
+            this.adminGetUsers =
+                'Please add your service role key in the supabase auth plugin configuration to manage users here.';
+            this.adminGetRoles =
+                'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
-        const response = await this.privateInstance
-            .from(this.settings.publicData.userRoleTable)
-            .delete()
-            .match({ userId: user.id });
-        if (response.error) throw new Error(response.error.message, { cause: response.error });
-        for (const role of roles) {
-            const { error } = await this.privateInstance
-                .from(this.settings.publicData.userRoleTable)
-                .insert({ roleId: role.id, userId: user.id });
-            if (error) throw new Error(error.message, { cause: error });
-        }
-    },
-    async adminDeleteUser(user) {
-        const { error } = await this.privateInstance.auth.admin.deleteUser(user.id);
-        if (error) throw new Error(error.message, { cause: error });
-    },
-    /* Roles */
-    async adminGetRoles() {
-        if (!this.settings.publicData.roleTable) return [];
-        const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
-        if (error) throw new Error(error.message, { cause: error });
-        return roles.map(role => ({ ...role, createdAt: role.created_at }));
-    },
-    async adminCreateRole(name) {
-        if (!this.settings.publicData.roleTable) {
-            const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
-            wwLib.wwNotification.open({ text, color: 'red' });
-            throw new Error(text);
-        }
-        const { data: roles, error } = await this.privateInstance
-            .from(this.settings.publicData.roleTable)
-            .insert([{ name }])
-            .select();
-        if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
-    },
-    async adminUpdateRole(roleId, name) {
-        const { data: roles, error } = await this.privateInstance
-            .from(this.settings.publicData.roleTable)
-            .update({ name })
-            .match({ id: roleId })
-            .select();
-        if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
-    },
-    async adminDeleteRole(roleId) {
-        const { error } = await this.privateInstance
-            .from(this.settings.publicData.roleTable)
-            .delete()
-            .match({ id: roleId });
-        if (error) throw new Error(error.message, { cause: error });
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -207,8 +84,8 @@ export default {
             if (!projectUrl || !publicApiKey) return;
 
             /* wwEditor:start */
-            if (!privateApiKey) return;
-            this.privateInstance = createClient(projectUrl, privateApiKey);
+            if (privateApiKey) this.privateInstance = createClient(projectUrl, privateApiKey);
+            this.switchAdmin(!!privateApiKey);
             /* wwEditor:end */
 
             this.publicInstance = createClient(projectUrl, publicApiKey, {
@@ -593,4 +470,143 @@ const setCookies = session => {
         secure: true,
         sameSite: 'Lax',
     });
+};
+
+const adminFunctions = {
+    async adminGetUsers() {
+        if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const response = await this.privateInstance.auth.admin.listUsers({
+            page: 1,
+            perPage: 100,
+        });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        return await Promise.all(
+            response.data.users.map(async user => ({
+                ...user,
+                ...user.user_metadata,
+                enabled: true,
+                createdAt: user.created_at,
+                updatedAt: user.updated_at,
+                roles: await this.adminGetUserRoles(user.id),
+            }))
+        );
+    },
+    async adminGetUserRoles(userId) {
+        if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
+        const roles = this.settings.publicData.userRoleTable
+            ? (
+                  await this.privateInstance
+                      .from(this.settings.publicData.userRoleTable)
+                      .select('role:roleId(*)')
+                      .eq('userId', userId)
+              ).data.map(({ role }) => role)
+            : [];
+        return roles;
+    },
+    async adminCreateUser(data) {
+        const attributes = data.attributes.reduce(
+            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
+            {}
+        );
+
+        const response = await this.privateInstance.auth.admin.createUser({
+            email: data.email,
+            email_confirm: true,
+            password: data.password,
+            user_metadata: { ...attributes, name: data.name },
+        });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        return {
+            ...response.data,
+            ...response.data.user_metadata,
+            enabled: true,
+            createdAt: response.data.created_at,
+            updatedAt: response.data.updated_at,
+            roles: [],
+        };
+    },
+    async adminUpdateUser(user, data) {
+        const attributes = data.attributes.reduce(
+            (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
+            {}
+        );
+
+        const response = await this.privateInstance.auth.admin.updateUserById(user.id, {
+            email: data.email,
+            email_confirm: true,
+            user_metadata: { ...attributes, name: data.name },
+        });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        return {
+            ...response.data.user,
+            ...response.data.user.user_metadata,
+            enabled: true,
+            createdAt: response.data.user.created_at,
+            updatedAt: response.data.user.updated_at,
+        };
+    },
+    async adminUpdateUserPassword(user, password) {
+        const { error } = await this.privateInstance.auth.admin.updateUserById(user.id, {
+            password: password,
+        });
+        if (error) throw new Error(error.message, { cause: error });
+    },
+    async adminUpdateUserRoles(user, roles) {
+        if (!this.settings.publicData.roleTable) {
+            const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
+            wwLib.wwNotification.open({ text, color: 'red' });
+            throw new Error(text);
+        }
+        const response = await this.privateInstance
+            .from(this.settings.publicData.userRoleTable)
+            .delete()
+            .match({ userId: user.id });
+        if (response.error) throw new Error(response.error.message, { cause: response.error });
+        for (const role of roles) {
+            const { error } = await this.privateInstance
+                .from(this.settings.publicData.userRoleTable)
+                .insert({ roleId: role.id, userId: user.id });
+            if (error) throw new Error(error.message, { cause: error });
+        }
+    },
+    async adminDeleteUser(user) {
+        const { error } = await this.privateInstance.auth.admin.deleteUser(user.id);
+        if (error) throw new Error(error.message, { cause: error });
+    },
+    /* Roles */
+    async adminGetRoles() {
+        if (!this.settings.publicData.roleTable) return [];
+        const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
+        if (error) throw new Error(error.message, { cause: error });
+        return roles.map(role => ({ ...role, createdAt: role.created_at }));
+    },
+    async adminCreateRole(name) {
+        if (!this.settings.publicData.roleTable) {
+            const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
+            wwLib.wwNotification.open({ text, color: 'red' });
+            throw new Error(text);
+        }
+        const { data: roles, error } = await this.privateInstance
+            .from(this.settings.publicData.roleTable)
+            .insert([{ name }])
+            .select();
+        if (error) throw new Error(error.message, { cause: error });
+        return { ...roles[0], createdAt: roles[0].created_at };
+    },
+    async adminUpdateRole(roleId, name) {
+        const { data: roles, error } = await this.privateInstance
+            .from(this.settings.publicData.roleTable)
+            .update({ name })
+            .match({ id: roleId })
+            .select();
+        if (error) throw new Error(error.message, { cause: error });
+        return { ...roles[0], createdAt: roles[0].created_at };
+    },
+    async adminDeleteRole(roleId) {
+        const { error } = await this.privateInstance
+            .from(this.settings.publicData.roleTable)
+            .delete()
+            .match({ id: roleId });
+        if (error) throw new Error(error.message, { cause: error });
+    },
 };

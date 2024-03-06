@@ -1,5 +1,5 @@
 <template>
-    <wwEditorFormRow label="Role table" required>
+    <wwEditorFormRow label="Role table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
@@ -16,7 +16,7 @@
     <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
         Table must have columns "id" and "name".
     </div>
-    <wwEditorFormRow label="User role table" required>
+    <wwEditorFormRow label="User role table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
@@ -51,10 +51,13 @@ export default {
     },
     computed: {
         tablesOptions() {
-            return Object.keys(this.definitions).map(tableName => ({
-                label: tableName,
-                value: tableName,
-            }));
+            return [
+                { label: 'None', value: null },
+                ...Object.keys(this.definitions).map(tableName => ({
+                    label: tableName,
+                    value: tableName,
+                })),
+            ];
         },
         isRoleTableValid() {
             const table = this.definitions[this.settings.publicData.roleTable];
