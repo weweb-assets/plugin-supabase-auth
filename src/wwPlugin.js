@@ -477,7 +477,7 @@ const adminFunctions = {
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const response = await this.privateInstance.auth.admin.listUsers({
             page: 1,
-            perPage: 100,
+            perPage: 10000,
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
