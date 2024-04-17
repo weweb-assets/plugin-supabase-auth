@@ -356,9 +356,11 @@ export default {
         user.roles = await this.getUserRoles(user.id);
         user._session = {
             access_token: session.access_token,
-            token_type: session.token_type,
             expires_in: session.expires_in,
+            expires_at: session.expires_at,
+            provider_token: session.provider_token,
             refresh_token: session.refresh_token,
+            token_type: session.token_type,
         };
         wwLib.wwVariable.updateValue(`${this.id}-user`, user);
         wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
@@ -433,9 +435,11 @@ export default {
             ...user,
             _session: {
                 access_token: session?.access_token,
-                token_type: session?.token_type,
                 expires_in: session?.expires_in,
+                expires_at: session?.expires_at,
+                provider_token: session?.provider_token,
                 refresh_token: session?.refresh_token,
+                token_type: session?.token_type,
             },
         });
         setCookies(session);
