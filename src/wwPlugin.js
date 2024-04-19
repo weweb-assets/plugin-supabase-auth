@@ -25,14 +25,11 @@ import { createClient } from '@supabase/supabase-js';
 
 export default {
     wwAPI: {
-        getUnauthenticatedPageId: () => {
-            return this.settings.publicData.afterSignInPageId;
-        },
         getUserRoles: () => {
-            return this.user?.roles || [];
+            return wwLib.wwAuth.getUser()?.roles || [];
         },
         matchUserGroup: userGroup => {
-            return userGroup.roles.every(({ value: roleId }) => this.user?.roles.includes(roleId));
+            return userGroup.roles.every(({ value: roleId }) => wwLib.wwAuth.getUser()?.roles.includes(roleId));
         },
     },
     privateInstance: null,
