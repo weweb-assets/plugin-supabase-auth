@@ -28,8 +28,13 @@ export default {
         getUserRoles: () => {
             return wwLib.wwAuth.getUser()?.roles || [];
         },
-        matchUserGroup: userGroup => {
-            return userGroup.roles.every(({ value: roleId }) => wwLib.wwAuth.getUser()?.roles.includes(roleId));
+        matchRoles: roles => {
+            return roles.every(role =>
+                wwLib.wwAuth
+                    .getUser()
+                    ?.roles?.map(({ id }) => id)
+                    .includes(role)
+            );
         },
     },
     privateInstance: null,
