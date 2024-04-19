@@ -24,6 +24,17 @@ import './components/Functions/ForgotPassword.vue';
 import { createClient } from '@supabase/supabase-js';
 
 export default {
+    wwAPI: {
+        getUnauthenticatedPageId: () => {
+            return this.settings.publicData.afterSignInPageId;
+        },
+        getUserRoles: () => {
+            return this.user?.roles || [];
+        },
+        matchUserGroup: userGroup => {
+            return userGroup.roles.every(({ value: roleId }) => this.user?.roles.includes(roleId));
+        },
+    },
     privateInstance: null,
     publicInstance: null,
     /* wwEditor:start */
@@ -317,8 +328,7 @@ export default {
     signOut() {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        wwLib.wwVariable.updateValue(`${this.id}-user`, null);
-        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, false);
+        wwLib.wwAuth.setUser(null);
         const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
             path,
@@ -363,8 +373,7 @@ export default {
             refresh_token: session.refresh_token,
             token_type: session.token_type,
         };
-        wwLib.wwVariable.updateValue(`${this.id}-user`, user);
-        wwLib.wwVariable.updateValue(`${this.id}-isAuthenticated`, true);
+        wwLib.wwAuth.setUser(user);
         setCookies(session);
         return user;
     },
@@ -431,7 +440,7 @@ export default {
         const currentUser = wwLib.wwVariable.getValue(`${this.id}-user`);
         const { user, session } = data;
         if (!user || !session) return;
-        wwLib.wwVariable.updateValue(`${this.id}-user`, {
+        wwLib.wwAuth.setUser({
             ...currentUser,
             ...user,
             _session: {
