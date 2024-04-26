@@ -349,6 +349,7 @@ export default {
         const { data } = await this.publicInstance.auth.getSession();
         const session = _session || data.session;
         const user = session ? session.user : data.user;
+        const currentUser = wwLib.wwVariable.getValue(`${this.id}-user`);
         if (!user) {
             this.signOut();
             return false;
@@ -358,7 +359,7 @@ export default {
             access_token: session.access_token,
             expires_in: session.expires_in,
             expires_at: session.expires_at,
-            provider_token: session.provider_token,
+            provider_token: session.provider_token || currentUser?._session?.provider_token,
             refresh_token: session.refresh_token,
             token_type: session.token_type,
         };
