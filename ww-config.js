@@ -1,4 +1,7 @@
 export default {
+    features: {
+        auth: true,
+    },
     editor: {
         settings: [
             {
@@ -12,16 +15,6 @@ export default {
                 onSave: 'onLoad',
             },
             {
-                label: 'Define redirections (URLs)',
-                icon: 'open-out',
-                edit: () => import('./src/components/Redirections/SettingsEdit.vue'),
-                summary: () => import('./src/components/Redirections/SettingsSummary.vue'),
-                getIsValid(settings) {
-                    const { afterNotSignInPageId } = settings.publicData;
-                    return !!afterNotSignInPageId;
-                },
-            },
-            {
                 label: 'Roles tables (optional)',
                 icon: 'data',
                 edit: () => import('./src/components/RoleTable/SettingsEdit.vue'),
@@ -33,10 +26,6 @@ export default {
         ],
         designSystemId: '290de5c1-a7fb-49a7-88bb-6acd08576c07',
     },
-    variables: [
-        { name: 'user', value: 'user', type: 'object', defaultValue: null },
-        { name: 'isAuthenticated', value: 'isAuthenticated', type: 'boolean', defaultValue: false },
-    ],
     actions: [
         {
             name: 'Sign Up',
