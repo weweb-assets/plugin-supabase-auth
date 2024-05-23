@@ -1,8 +1,6 @@
 /* wwEditor:start */
 import './components/Configuration/SettingsEdit.vue';
 import './components/Configuration/SettingsSummary.vue';
-import './components/Redirections/SettingsEdit.vue';
-import './components/Redirections/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
 import './components/RoleTable/SettingsSummary.vue';
 import './components/Functions/SignUp.vue';
@@ -24,19 +22,6 @@ import './components/Functions/ForgotPassword.vue';
 import { createClient } from '@supabase/supabase-js';
 
 export default {
-    wwAPI: {
-        getUserRoles: () => {
-            return wwLib.wwAuth.getUser()?.roles || [];
-        },
-        matchRoles: roles => {
-            return roles.every(role =>
-                wwLib.wwAuth
-                    .getUser()
-                    ?.roles?.map(({ id }) => id)
-                    .includes(role)
-            );
-        },
-    },
     privateInstance: null,
     publicInstance: null,
     /* wwEditor:start */
@@ -45,13 +30,22 @@ export default {
     /*=============================================m_ÔÔ_m=============================================\
         Plugin API
     \================================================================================================*/
-    async onLoad(settings) {
+    async _onLoad(settings) {
         /* wwFront:start */
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
+    },
+    async _initAuth() {
+        await this.refreshAuthUser();
+    },
+    _getUserRoles: () => {
+        return this.user?.roles || [];
+    },
+    _matchRoles: roles => {
+        return roles.every(role => this.user?.roles?.map(({ id }) => id).includes(role));
     },
     /*=============================================m_ÔÔ_m=============================================\
         Auth API
@@ -82,9 +76,9 @@ export default {
             for (const key in adminFunctions) {
                 if (this.hasOwnProperty(key)) delete this[key];
             }
-            this.adminGetUsers =
+            this._adminGetUsers =
                 'Please add your service role key in the supabase auth plugin configuration to manage users here.';
-            this.adminGetRoles =
+            this._adminGetRoles =
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
     },
@@ -113,7 +107,6 @@ export default {
             await this.fetchDoc(projectUrl, privateApiKey || publicApiKey);
             /* wwEditor:end */
             if (!this.privateInstance && !this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-            await this.refreshAuthUser();
             this.publicInstance.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_OUT') return;
                 if (event == 'USER_DELETED') return this.signOut();
@@ -488,7 +481,7 @@ const setCookies = session => {
 };
 
 const adminFunctions = {
-    async adminGetUsers() {
+    async _adminGetUsers() {
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const response = await this.privateInstance.auth.admin.listUsers({
             page: 1,
@@ -506,7 +499,7 @@ const adminFunctions = {
             }))
         );
     },
-    async adminGetUserRoles(userId) {
+    async _adminGetUserRoles(userId) {
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
@@ -518,7 +511,7 @@ const adminFunctions = {
             : [];
         return roles;
     },
-    async adminCreateUser(data) {
+    async _adminCreateUser(data) {
         const attributes = data.attributes.reduce(
             (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
             {}
@@ -540,7 +533,7 @@ const adminFunctions = {
             roles: [],
         };
     },
-    async adminUpdateUser(user, data) {
+    async _adminUpdateUser(user, data) {
         const attributes = data.attributes.reduce(
             (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
             {}
@@ -560,13 +553,13 @@ const adminFunctions = {
             updatedAt: response.data.user.updated_at,
         };
     },
-    async adminUpdateUserPassword(user, password) {
+    async _adminUpdateUserPassword(user, password) {
         const { error } = await this.privateInstance.auth.admin.updateUserById(user.id, {
             password: password,
         });
         if (error) throw new Error(error.message, { cause: error });
     },
-    async adminUpdateUserRoles(user, roles) {
+    async _adminUpdateUserRoles(user, roles) {
         if (!this.settings.publicData.roleTable) {
             const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
@@ -584,18 +577,18 @@ const adminFunctions = {
             if (error) throw new Error(error.message, { cause: error });
         }
     },
-    async adminDeleteUser(user) {
+    async _adminDeleteUser(user) {
         const { error } = await this.privateInstance.auth.admin.deleteUser(user.id);
         if (error) throw new Error(error.message, { cause: error });
     },
     /* Roles */
-    async adminGetRoles() {
+    async _adminGetRoles() {
         if (!this.settings.publicData.roleTable) return [];
         const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
         return roles.map(role => ({ ...role, createdAt: role.created_at }));
     },
-    async adminCreateRole(name) {
+    async _adminCreateRole(name) {
         if (!this.settings.publicData.roleTable) {
             const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
@@ -608,7 +601,7 @@ const adminFunctions = {
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
-    async adminUpdateRole(roleId, name) {
+    async _adminUpdateRole(roleId, name) {
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .update({ name })
@@ -617,7 +610,7 @@ const adminFunctions = {
         if (error) throw new Error(error.message, { cause: error });
         return { ...roles[0], createdAt: roles[0].created_at };
     },
-    async adminDeleteRole(roleId) {
+    async _adminDeleteRole(roleId) {
         const { error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .delete()
