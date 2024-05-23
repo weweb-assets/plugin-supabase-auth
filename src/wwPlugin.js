@@ -495,7 +495,7 @@ const adminFunctions = {
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
-                roles: await this.adminGetUserRoles(user.id),
+                roles: await this._adminGetUserRoles(user.id),
             }))
         );
     },
