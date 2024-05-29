@@ -1,7 +1,4 @@
 export default {
-    features: {
-        auth: true,
-    },
     editor: {
         settings: [
             {
