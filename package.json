@@ -5,6 +5,9 @@
         "url": "https://github.com/weweb-assets/plugin-supabase-auth"
     },
     "version": "3.1.0",
+    "features": {
+        "auth": true
+    },
     "license": "MIT",
     "scripts": {
         "build": "weweb build",
