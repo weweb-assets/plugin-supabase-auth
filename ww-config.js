@@ -1,4 +1,7 @@
 export default {
+    features: {
+        auth: true,
+    },
     editor: {
         settings: [
             {
@@ -9,7 +12,7 @@ export default {
                 getIsValid(settings) {
                     return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
                 },
-                onSave: 'onLoad',
+                onSave: '_onLoad',
             },
             {
                 label: 'Roles tables (optional)',
