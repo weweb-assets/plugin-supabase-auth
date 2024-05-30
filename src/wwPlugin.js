@@ -41,6 +41,12 @@ export default {
     async _initAuth() {
         await this.refreshAuthUser();
     },
+    _getUser: () => {
+        return this.user;
+    },
+    _getIsAuthenticated: () => {
+        return this.isAuthenticated;
+    },
     _getUserRoles: () => {
         return this.user?.roles || [];
     },
@@ -323,7 +329,8 @@ export default {
     signOut() {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        wwLib.wwAuth.setUser(null);
+        this.user = null;
+        this.isAuthenticated = false;
         const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
             path,
@@ -368,7 +375,8 @@ export default {
             refresh_token: session.refresh_token,
             token_type: session.token_type,
         };
-        wwLib.wwAuth.setUser(user);
+        this.user = user;
+        this.isAuthenticated = true;
         setCookies(session);
         return user;
     },
@@ -435,7 +443,7 @@ export default {
         const currentUser = wwLib.wwVariable.getValue(`${this.id}-user`);
         const { user, session } = data;
         if (!user || !session) return;
-        wwLib.wwAuth.setUser({
+        this.user = {
             ...currentUser,
             ...user,
             _session: {
@@ -446,7 +454,8 @@ export default {
                 refresh_token: session?.refresh_token,
                 token_type: session?.token_type,
             },
-        });
+        };
+        this.isAuthenticated = true;
         setCookies(session);
     },
     /* wwEditor:start */
