@@ -41,16 +41,10 @@ export default {
     async _initAuth() {
         await this.refreshAuthUser();
     },
-    _getUser: () => {
-        return this.user;
-    },
-    _getIsAuthenticated: () => {
-        return this.isAuthenticated;
-    },
-    _getUserRoles: () => {
+    _getUserRoles() {
         return this.user?.roles || [];
     },
-    _matchRoles: roles => {
+    _matchRoles(roles) {
         return roles.every(role => this.user?.roles?.map(({ id }) => id).includes(role));
     },
     /*=============================================m_ÔÔ_m=============================================\
