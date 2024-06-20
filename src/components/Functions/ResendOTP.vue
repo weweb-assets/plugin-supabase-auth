@@ -6,18 +6,16 @@
         required
         :model-value="type"
         :options="[
-            { label: 'Email Sign Up | Sign In', value: 'email' },
+            { label: 'Email Sign Up', value: 'signup' },
             { label: 'Email change', value: 'email_change' },
-            { label: 'Recovery', value: 'recovery' },
-            { label: 'Invite', value: 'invite' },
-            { label: 'Phone Sign Up | Sign In', value: 'sms' },
+            { label: 'Phone Sign Up', value: 'sms' },
             { label: 'Phone change', value: 'phone_change' },
         ]"
         @update:modelValue="setArg('type', $event)"
     >
     </wwEditorInputRow>
     <wwEditorInputRow
-        v-if="['email', 'recovery', 'invite', 'email_change'].includes(type)"
+        v-if="['signup', 'email_change'].includes(type)"
         label="Email"
         type="query"
         :model-value="email"
@@ -37,7 +35,7 @@
         @update:modelValue="setArg('phone', $event)"
     />
     <wwEditorInputRow
-        v-if="type === 'email'"
+        v-if="type === 'signup'"
         label="Email redirect to"
         type="select"
         placeholder="Select a page"

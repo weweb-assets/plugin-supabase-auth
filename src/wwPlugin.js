@@ -294,7 +294,7 @@ export default {
     },
 
     async resendOTP({ type, email, phone, redirectPage }) {
-        const isEmail = ['email', 'recovery', 'invite', 'email_change'].includes(type);
+        const isEmail = ['signup', 'email_change'].includes(type);
         const isPhone = ['sms', 'phone_change'].includes(type);
         if (isEmail && !email) throw new Error('Email is required.');
         else if (isPhone && !phone) throw new Error('Phone is required.');
