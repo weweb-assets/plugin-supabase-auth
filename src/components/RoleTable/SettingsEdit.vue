@@ -13,7 +13,7 @@
             </button>
         </div>
     </wwEditorFormRow>
-    <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
+    <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 content-alert mb-2">
         Table must have columns "id" and "name".
     </div>
     <wwEditorFormRow label="User role table">
@@ -30,7 +30,7 @@
             </button>
         </div>
     </wwEditorFormRow>
-    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-red mb-2">
+    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 content-alert mb-2">
         Table must have column "id", "roleId" and "userId".
     </div>
     <wwLoader :loading="isLoading" />
@@ -96,9 +96,3 @@ export default {
     },
 };
 </script>
-
-<style lang="scss" scoped>
-.text-error {
-    color: var(--ww-color-red-500);
-}
-</style>

@@ -23,7 +23,7 @@
             <wwEditorQuestionMark
                 tooltip-position="top-left"
                 :forced-content="`To send users a one-time code instead of a magic link, modify the [magic link email template](https://supabase.com/dashboard/project/${projectId}/auth/templates) to include {{ .Token }} instead of {{ .ConfirmationURL }}`"
-                class="ml-2 text-blue-500"
+                class="ml-2 content-brand"
             />
         </div>
     </wwEditorFormRow>
