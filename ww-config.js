@@ -1,4 +1,7 @@
 export default {
+    features: {
+        auth: true,
+    },
     editor: {
         settings: [
             {
@@ -9,17 +12,7 @@ export default {
                 getIsValid(settings) {
                     return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
                 },
-                onSave: 'onLoad',
-            },
-            {
-                label: 'Define redirections (URLs)',
-                icon: 'open-out',
-                edit: () => import('./src/components/Redirections/SettingsEdit.vue'),
-                summary: () => import('./src/components/Redirections/SettingsSummary.vue'),
-                getIsValid(settings) {
-                    const { afterNotSignInPageId } = settings.publicData;
-                    return !!afterNotSignInPageId;
-                },
+                onSave: '_onLoad',
             },
             {
                 label: 'Roles tables (optional)',

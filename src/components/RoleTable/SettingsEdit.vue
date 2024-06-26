@@ -30,7 +30,7 @@
             </button>
         </div>
     </wwEditorFormRow>
-    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-error mb-2">
+    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-red mb-2">
         Table must have column "id", "roleId" and "userId".
     </div>
     <wwLoader :loading="isLoading" />
