@@ -17,6 +17,15 @@
         placeholder="Enter a password"
         @update:modelValue="setPassword"
     />
+    <wwEditorInputRow
+        label="Captcha Token"
+        type="query"
+        :model-value="captchaToken"
+        bindable
+        placeholder="Enter a captcha token"
+        tooltip="Verification token received when the user completes the captcha on the site. [Enable captcha protection](https://supabase.com/docs/guides/auth/auth-captcha)"
+        @update:modelValue="setCaptchaToken"
+    />
 </template>
 
 <script>
@@ -33,6 +42,9 @@ export default {
         password() {
             return this.args.password;
         },
+        captchaToken() {
+            return this.args.captchaToken;
+        },
     },
     methods: {
         setPhone(phone) {
@@ -40,6 +52,9 @@ export default {
         },
         setPassword(password) {
             this.$emit('update:args', { ...this.args, password });
+        },
+        setCaptchaToken(captchaToken) {
+            this.$emit('update:args', { ...this.args, captchaToken });
         },
     },
 };

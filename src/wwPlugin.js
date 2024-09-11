@@ -156,11 +156,15 @@ export default {
         }
     },
 
-    async signInEmail({ email, password }) {
+    async signInEmail({ email, password, captchaToken }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!email || !password) throw new Error('Email and Password are required.');
         try {
-            const { data, error } = await this.publicInstance.auth.signInWithPassword({ email, password });
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({
+                email,
+                password,
+                options: { captchaToken },
+            });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(data?.session);
         } catch (err) {
@@ -168,11 +172,15 @@ export default {
             throw err;
         }
     },
-    async signInPhone({ phone, password }) {
+    async signInPhone({ phone, password, captchaToken }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!phone || !password) throw new Error('Phone and Password are required.');
         try {
-            const { data, error } = await this.publicInstance.auth.signInWithPassword({ phone, password });
+            const { data, error } = await this.publicInstance.auth.signInWithPassword({
+                phone,
+                password,
+                options: { captchaToken },
+            });
             if (error) throw new Error(error.message, { cause: error });
             return await this.refreshAuthUser(data?.session);
         } catch (err) {
