@@ -20,6 +20,15 @@
         @update:modelValue="setRedirectPage"
         @action="onAction"
     />
+    <wwEditorInputRow
+        label="Captcha Token"
+        type="query"
+        :model-value="captchaToken"
+        bindable
+        placeholder="Enter a captcha token"
+        tooltip="Verification token received when the user completes the captcha on the site. [Enable captcha protection](https://supabase.com/docs/guides/auth/auth-captcha)"
+        @update:modelValue="setCaptchaToken"
+    />
 </template>
 
 <script>
@@ -41,6 +50,9 @@ export default {
         redirectPage() {
             return this.args.redirectPage;
         },
+        captchaToken() {
+            return this.args.captchaToken;
+        },
         pagesOptions() {
             return wwLib.wwWebsiteData
                 .getPages()
@@ -54,6 +66,9 @@ export default {
         },
         setRedirectPage(redirectPage) {
             this.$emit('update:args', { ...this.args, redirectPage });
+        },
+        setCaptchaToken(captchaToken) {
+            this.$emit('update:args', { ...this.args, captchaToken });
         },
         createPage() {
             // eslint-disable-next-line vue/custom-event-name-casing
