@@ -39,6 +39,20 @@
             />
         </div>
     </wwEditorFormRow>
+    <wwEditorInputRow
+        label="Personal Access Token"
+        required
+        type="query"
+        placeholder="sbp_bdd0********4f23"
+        :model-value="settings.privateData.accessToken"
+        @update:modelValue="changeAccessToken"
+    >
+        <template #append-label>
+            <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/account/tokens" target="_blank">
+                Find it here
+            </a>
+        </template>
+    </wwEditorInputRow>
 </template>
 
 <script>
@@ -68,6 +82,10 @@ export default {
                     apiKey: wwLib.wwPlugins.supabase.settings.publicData.apiKey,
                     projectUrl: wwLib.wwPlugins.supabase.settings.publicData.projectUrl,
                 },
+                privateData: {
+                    ...this.settings.privateData,
+                    accessToken: wwLib.wwPlugins.supabase.settings.privateData.accessToken,
+                },
             });
         }
     },
@@ -88,6 +106,12 @@ export default {
             this.$emit('update:settings', {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, apiKey },
+            });
+        },
+        changeAccessToken(accessToken) {
+            this.$emit('update:settings', {
+                ...this.settings,
+                privateData: { ...this.settings.privateData, accessToken },
             });
         },
     },
