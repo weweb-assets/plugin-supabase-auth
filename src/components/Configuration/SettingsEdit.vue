@@ -39,20 +39,36 @@
             />
         </div>
     </wwEditorFormRow>
-    <wwEditorInputRow
-        label="Personal Access Token"
-        required
-        type="query"
-        placeholder="sbp_bdd0********4f23"
-        :model-value="settings.privateData.accessToken"
-        @update:modelValue="changeAccessToken"
-    >
+    <wwEditorFormRow label="Personal Access Token">
         <template #append-label>
             <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/account/tokens" target="_blank">
                 Find it here
             </a>
         </template>
-    </wwEditorInputRow>
+        <wwEditorInputRow
+            type="query"
+            placeholder="sbp_bdd0********4f23"
+            :model-value="settings.privateData.accessToken"
+            @update:modelValue="changeAccessToken"
+        ></wwEditorInputRow>
+    </wwEditorFormRow>
+    <wwEditorFormRow label="Database password">
+        <template #append-label>
+            <a
+                class="ww-editor-link ml-2"
+                href="https://supabase.com/dashboard/project/_/settings/database"
+                target="_blank"
+            >
+                Find it here
+            </a>
+        </template>
+        <wwEditorInputRow
+            type="query"
+            placeholder=""
+            :model-value="settings.privateData.databasePassword"
+            @update:modelValue="changeDatabasePassword"
+        ></wwEditorInputRow>
+    </wwEditorFormRow>
 </template>
 
 <script>
@@ -112,6 +128,12 @@ export default {
             this.$emit('update:settings', {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, accessToken },
+            });
+        },
+        changeDatabasePassword(databasePassword) {
+            this.$emit('update:settings', {
+                ...this.settings,
+                privateData: { ...this.settings.privateData, databasePassword },
             });
         },
     },
