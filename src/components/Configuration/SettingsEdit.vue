@@ -171,7 +171,7 @@ export default {
                 const { data } = await wwAxios.post(
                     `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
                         this.$store.getters['websiteData/getDesignInfo'].id
-                    }/supabase/projects`,
+                    }/supabase/projects/list`,
                     { accessToken: this.settings.privateData.accessToken }
                 );
                 this.projects = data?.data;
