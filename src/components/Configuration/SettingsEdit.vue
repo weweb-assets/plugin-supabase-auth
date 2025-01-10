@@ -18,17 +18,19 @@
                 :model-value="settings.publicData.projectUrl"
                 @update:modelValue="changeProjectUrl"
             />
-            <wwEditorInputRow
-                v-else
-                type="select"
-                placeholder="https://your-project.supabase.co"
-                :model-value="settings.publicData.projectUrl"
-                :options="projectsOptions"
-                @update:modelValue="changeProjectUrl"
-            />
-            <button type="button" class="ww-editor-button -primary -small -icon ml-2" @click="refreshProjects">
-                <wwEditorIcon name="refresh" medium />
-            </button>
+            <template v-else>
+                <wwEditorInputRow
+                    type="select"
+                    placeholder="https://your-project.supabase.co"
+                    :model-value="settings.publicData.projectUrl"
+                    :options="projectsOptions"
+                    @update:modelValue="changeProjectUrl"
+                    class="-full"
+                />
+                <button type="button" class="ww-editor-button -primary -small -icon ml-2 mt-1" @click="refreshProjects">
+                    <wwEditorIcon name="refresh" medium />
+                </button>
+            </template>
         </div>
     </wwEditorFormRow>
     <wwEditorInputRow
