@@ -11,25 +11,23 @@
                     Find it here
                 </a>
             </template>
-            <div class="flex items-center">
-                <wwEditorInputRow
-                    v-if="!settings.privateData.accessToken"
-                    type="query"
-                    placeholder="https://your-project.supabase.co"
-                    :model-value="settings.publicData.projectUrl"
-                    @update:modelValue="changeProjectUrl"
-                />
+            <wwEditorInputRow
+                v-if="!settings.privateData.accessToken"
+                type="query"
+                placeholder="https://your-project.supabase.co"
+                :model-value="settings.publicData.projectUrl"
+                @update:modelValue="changeProjectUrl"
+            />
 
-                <wwEditorInputRow
-                    v-else
-                    type="select"
-                    placeholder="https://your-project.supabase.co"
-                    :model-value="settings.publicData.projectUrl"
-                    :options="projectsOptions"
-                    @update:modelValue="changeProjectUrl"
-                    class="-full"
-                />
-            </div>
+            <wwEditorInputRow
+                v-else
+                type="select"
+                placeholder="https://your-project.supabase.co"
+                :model-value="settings.publicData.projectUrl"
+                :options="projectsOptions"
+                @update:modelValue="changeProjectUrl"
+                class="-full"
+            />
         </wwEditorFormRow>
         <button
             v-if="settings.privateData.accessToken"
