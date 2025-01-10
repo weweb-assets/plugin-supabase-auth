@@ -100,6 +100,7 @@ export default {
     data() {
         return {
             isKeyVisible: false,
+            projects: [],
         };
     },
     mounted() {
