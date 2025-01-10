@@ -126,7 +126,7 @@ export default {
         }
     },
     methods: {
-        changeProjectUrl(projectUrl) {
+        async changeProjectUrl(projectUrl) {
             let apiKey = this.settings.publicData.apiKey;
             let privateApiKey = this.settings.privateData.apiKey;
             if (this.settings.privateData.accessToken) {
