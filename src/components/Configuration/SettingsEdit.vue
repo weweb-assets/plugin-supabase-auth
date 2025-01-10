@@ -1,14 +1,46 @@
 <template>
-    <wwEditorFormRow required label="Project URL">
+    <wwEditorFormRow label="Personal Access Token">
         <template #append-label>
-            <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/project/_/settings/api" target="_blank">
+            <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/account/tokens" target="_blank">
                 Find it here
             </a>
         </template>
         <wwEditorInputRow
             type="query"
+            placeholder="sbp_bdd0********4f23"
+            :model-value="settings.privateData.accessToken"
+            @update:modelValue="changeAccessToken"
+        ></wwEditorInputRow>
+    </wwEditorFormRow>
+    <wwEditorFormRow required label="Project URL">
+        <template #append-label>
+            <a
+                v-if="!settings.privateData.accessToken"
+                class="ww-editor-link ml-2"
+                href="https://supabase.com/dashboard/project/_/settings/api"
+                target="_blank"
+            >
+                Find it here
+            </a>
+        </template>
+        <wwEditorInputRow
+            v-if="!settings.privateData.accessToken"
+            type="query"
             placeholder="https://your-project.supabase.co"
             :model-value="settings.publicData.projectUrl"
+            @update:modelValue="changeProjectUrl"
+        />
+        <wwEditorInputRow
+            v-else
+            type="select"
+            placeholder="https://your-project.supabase.co"
+            :model-value="settings.publicData.projectUrl"
+            :options="
+                projects.map(project => ({
+                    label: `${project.name} (${project.id}) ${project.status === 'INACTIVE' ? '#PAUSED' : ''}`,
+                    value: `https://${project.id}.supabase.co`,
+                }))
+            "
             @update:modelValue="changeProjectUrl"
         />
     </wwEditorFormRow>
@@ -38,19 +70,6 @@
                 :class="{ 'text-yellow-500': !settings.privateData.apiKey }"
             />
         </div>
-    </wwEditorFormRow>
-    <wwEditorFormRow label="Personal Access Token">
-        <template #append-label>
-            <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/account/tokens" target="_blank">
-                Find it here
-            </a>
-        </template>
-        <wwEditorInputRow
-            type="query"
-            placeholder="sbp_bdd0********4f23"
-            :model-value="settings.privateData.accessToken"
-            @update:modelValue="changeAccessToken"
-        ></wwEditorInputRow>
     </wwEditorFormRow>
     <wwEditorFormRow label="Database password">
         <template #append-label>
@@ -101,15 +120,26 @@ export default {
                 privateData: {
                     ...this.settings.privateData,
                     accessToken: wwLib.wwPlugins.supabase.settings.privateData.accessToken,
+                    databasePassword: wwLib.wwPlugins.supabase.settings.privateData.databasePassword,
                 },
             });
         }
     },
     methods: {
         changeProjectUrl(projectUrl) {
+            let apiKey = this.settings.publicData.apiKey;
+            let privateApiKey = this.settings.privateData.apiKey;
+            if (this.settings.privateData.accessToken) {
+                const { apiKeys } = await this.fetchProject(
+                    projectUrl.replace('https://', '').replace('.supabase.co', '')
+                );
+                apiKey = apiKeys.find(key => key.name === 'anon').api_key;
+                privateApiKey = apiKeys.find(key => key.name === 'service_role').api_key;
+            }
             this.$emit('update:settings', {
                 ...this.settings,
-                publicData: { ...this.settings.publicData, projectUrl },
+                publicData: { ...this.settings.publicData, projectUrl, apiKey },
+                privateData: { ...this.settings.privateData, apiKey: privateApiKey },
             });
         },
         changePublicApiKey(apiKey) {
@@ -135,6 +165,22 @@ export default {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, databasePassword },
             });
+        },
+        async fetchProjects() {
+            const { data } = await wwAxios.get(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    this.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/projects`
+            );
+            this.projects = data?.data;
+        },
+        async fetchProject(projectId) {
+            const { data } = await wwAxios.get(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    this.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/projects/${projectId}`
+            );
+            return data?.data;
         },
     },
 };
