@@ -88,6 +88,7 @@
             @update:modelValue="changeDatabasePassword"
         ></wwEditorInputRow>
     </wwEditorFormRow>
+    <wwLoader :loading="isLoading" />
 </template>
 
 <script>
@@ -101,9 +102,13 @@ export default {
         return {
             isKeyVisible: false,
             projects: [],
+            isLoading: false,
         };
     },
     mounted() {
+        if (this.settings.privateData.accessToken) {
+            this.fetchProjects();
+        }
         const isSettingsValid =
             this.settings.publicData.projectUrl && this.settings.publicData.apiKey && this.settings.privateData.apiKey;
         const isOtherPluginSettingsValid =
@@ -168,20 +173,34 @@ export default {
             });
         },
         async fetchProjects() {
-            const { data } = await wwAxios.get(
-                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    this.$store.getters['websiteData/getDesignInfo'].id
-                }/supabase/projects`
-            );
-            this.projects = data?.data;
+            this.isLoading = true;
+            try {
+                const { data } = await wwAxios.get(
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                        this.$store.getters['websiteData/getDesignInfo'].id
+                    }/supabase/projects`
+                );
+                this.projects = data?.data;
+                this.isLoading = false;
+            } catch (error) {
+                this.isLoading = false;
+                throw error;
+            }
         },
         async fetchProject(projectId) {
-            const { data } = await wwAxios.get(
-                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    this.$store.getters['websiteData/getDesignInfo'].id
-                }/supabase/projects/${projectId}`
-            );
-            return data?.data;
+            this.isLoading = true;
+            try {
+                const { data } = await wwAxios.get(
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                        this.$store.getters['websiteData/getDesignInfo'].id
+                    }/supabase/projects/${projectId}`
+                );
+                this.isLoading = false;
+                return data?.data;
+            } catch (error) {
+                this.isLoading = false;
+                throw error;
+            }
         },
     },
 };
