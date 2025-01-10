@@ -171,6 +171,7 @@ export default {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, accessToken },
             });
+            this.$nextTick(this.fetchProjects);
         },
         changeDatabasePassword(databasePassword) {
             this.$emit('update:settings', {
