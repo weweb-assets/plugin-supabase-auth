@@ -5,6 +5,15 @@ export default {
     editor: {
         settings: [
             {
+                label: 'Connection',
+                icon: 'advanced',
+                edit: () => import('./src/components/Configuration/ConnectionEdit.vue'),
+                summary: () => import('./src/components/Configuration/ConnectionSummary.vue'),
+                getIsValid(settings) {
+                    return !!settings.privateData.accessToken;
+                },
+            },
+            {
                 label: 'Configuration',
                 icon: 'advanced',
                 edit: () => import('./src/components/Configuration/SettingsEdit.vue'),

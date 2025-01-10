@@ -1,4 +1,6 @@
 /* wwEditor:start */
+import './components/Configuration/ConnectionEdit.vue';
+import './components/Configuration/ConnectionSummary.vue';
 import './components/Configuration/SettingsEdit.vue';
 import './components/Configuration/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
