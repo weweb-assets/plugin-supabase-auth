@@ -108,7 +108,7 @@ export default {
     },
     computed: {
         projectRef() {
-            return this.settings.publicData.projectUrl.replace('https://', '').replace('.supabase.co', '');
+            return this.settings?.publicData?.projectUrl?.replace('https://', '').replace('.supabase.co', '');
         },
     },
     mounted() {
