@@ -1,25 +1,27 @@
 <template>
-    <wwEditorFormRow required label="Project URL">
-        <template #append-label>
-            <a
-                v-if="!settings.privateData.accessToken"
-                class="ww-editor-link ml-2"
-                href="https://supabase.com/dashboard/project/_/settings/api"
-                target="_blank"
-            >
-                Find it here
-            </a>
-        </template>
-        <div class="flex items-center">
-            <wwEditorInputRow
-                v-if="!settings.privateData.accessToken"
-                type="query"
-                placeholder="https://your-project.supabase.co"
-                :model-value="settings.publicData.projectUrl"
-                @update:modelValue="changeProjectUrl"
-            />
-            <template v-else>
+    <div class="flex items-center">
+        <wwEditorFormRow required label="Project URL" class="w-100">
+            <template #append-label>
+                <a
+                    v-if="!settings.privateData.accessToken"
+                    class="ww-editor-link ml-2"
+                    href="https://supabase.com/dashboard/project/_/settings/api"
+                    target="_blank"
+                >
+                    Find it here
+                </a>
+            </template>
+            <div class="flex items-center">
                 <wwEditorInputRow
+                    v-if="!settings.privateData.accessToken"
+                    type="query"
+                    placeholder="https://your-project.supabase.co"
+                    :model-value="settings.publicData.projectUrl"
+                    @update:modelValue="changeProjectUrl"
+                />
+
+                <wwEditorInputRow
+                    v-else
                     type="select"
                     placeholder="https://your-project.supabase.co"
                     :model-value="settings.publicData.projectUrl"
@@ -27,12 +29,17 @@
                     @update:modelValue="changeProjectUrl"
                     class="-full"
                 />
-                <button type="button" class="ww-editor-button -primary -small -icon ml-2 mt-1" @click="refreshProjects">
-                    <wwEditorIcon name="refresh" medium />
-                </button>
-            </template>
-        </div>
-    </wwEditorFormRow>
+            </div>
+        </wwEditorFormRow>
+        <button
+            v-if="settings.privateData.accessToken"
+            type="button"
+            class="ww-editor-button -primary -small -icon ml-2"
+            @click="refreshProjects"
+        >
+            <wwEditorIcon name="refresh" medium />
+        </button>
+    </div>
     <wwEditorInputRow
         label="Public API key"
         required
