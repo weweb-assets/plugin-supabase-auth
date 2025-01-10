@@ -28,6 +28,7 @@ export default {
     publicInstance: null,
     /* wwEditor:start */
     doc: null,
+    projects: [],
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
         Plugin API
@@ -38,6 +39,7 @@ export default {
         /* wwFront:end */
         /* wwEditor:start */
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.fetchProjects();
         /* wwEditor:end */
     },
     async _initAuth() {
@@ -82,6 +84,19 @@ export default {
                 'Please add your service role key in the supabase auth plugin configuration to manage users here.';
             this._adminGetRoles =
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
+        }
+    },
+    async fetchProjects() {
+        try {
+            const { data } = await wwAxios.get(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/projects`
+            );
+            this.projects = data?.data;
+            return data?.data;
+        } catch (error) {
+            console.log(error);
         }
     },
     /* wwEditor:end */

@@ -12,6 +12,7 @@ export default {
                 getIsValid(settings) {
                     return !!settings.privateData.accessToken;
                 },
+                onSave: '_onLoad',
             },
             {
                 label: 'Configuration',
