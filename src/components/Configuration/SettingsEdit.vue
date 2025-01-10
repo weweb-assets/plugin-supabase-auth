@@ -23,7 +23,7 @@
                 type="select"
                 placeholder="https://your-project.supabase.co"
                 :model-value="settings.publicData.projectUrl"
-                :options="projects"
+                :options="projectsOptions"
                 @update:modelValue="changeProjectUrl"
             />
             <button type="button" class="ww-editor-button -primary -small -icon ml-2" @click="refreshProjects">
@@ -89,6 +89,7 @@ export default {
     data() {
         return {
             isKeyVisible: false,
+            projects: [],
             isLoading: false,
         };
     },
@@ -96,15 +97,17 @@ export default {
         projectRef() {
             return this.settings?.publicData?.projectUrl?.replace('https://', '').replace('.supabase.co', '');
         },
-        projects() {
-            return this.plugin.projects.map(project => ({
+        projectsOptions() {
+            return this.projects.map(project => ({
                 label: `${project.name} (${project.id}) ${project.status === 'INACTIVE' ? '#PAUSED' : ''}`,
                 value: `https://${project.id}.supabase.co`,
             }));
         },
     },
     mounted() {
-        this.projects = this.plugin.projects;
+        if (this.settings.privateData.accessToken) {
+            this.refreshProjects();
+        }
         const isSettingsValid =
             this.settings.publicData.projectUrl && this.settings.publicData.apiKey && this.settings.privateData.apiKey;
         const isOtherPluginSettingsValid =
@@ -165,7 +168,13 @@ export default {
         async refreshProjects() {
             this.isLoading = true;
             try {
-                this.projects = await this.plugin.fetchProjects();
+                const { data } = await wwAxios.post(
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                        this.$store.getters['websiteData/getDesignInfo'].id
+                    }/supabase/projects`,
+                    { accessToken: this.settings.privateData.accessToken }
+                );
+                this.projects = data?.data;
                 this.isLoading = false;
             } catch (error) {
                 this.isLoading = false;
