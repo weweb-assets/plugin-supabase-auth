@@ -107,8 +107,18 @@ export default {
             { source: 'supabaseAuth', settings }
         );
     },
+    async install() {
+        await wwAxios.post(
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            }/supabase/install`
+        );
+    },
     async onSave(settings) {
         await this.syncSettings(settings);
+        if (settings.privateData.accessToken && settings.publicData.projectUrl) {
+            await this.install();
+        }
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
     },
     /* wwEditor:end */
