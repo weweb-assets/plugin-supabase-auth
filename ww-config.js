@@ -12,7 +12,7 @@ export default {
                 getIsValid(settings) {
                     return !!settings.privateData.accessToken;
                 },
-                onSave: '_onLoad',
+                onSave: 'onSave',
             },
             {
                 label: 'Configuration',
@@ -20,9 +20,14 @@ export default {
                 edit: () => import('./src/components/Configuration/SettingsEdit.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
-                    return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
+                    return (
+                        !!settings.publicData.projectUrl &&
+                        !!settings.publicData.apiKey &&
+                        !!settings.privateData.apiKey &&
+                        !!settings.privateData.databasePassword
+                    );
                 },
-                onSave: '_onLoad',
+                onSave: 'onSave',
             },
             {
                 label: 'Roles tables (optional)',

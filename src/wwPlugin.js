@@ -37,6 +37,21 @@ export default {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
+        // check oauth in local storage
+        const isConnecting = window.localStorage.getItem('supabaseAuth_oauth');
+        // get code params from url
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (isConnecting && code) {
+            window.localStorage.removeItem('supabaseAuth_oauth');
+            await wwAxios.post(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/connect`,
+                { code, redirectUri: window.location.origin + window.location.pathname }
+            );
+            wwLib.wwNotification.open({ text: 'Your supabase account has been linked.', color: 'green' });
+        }
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
     },
@@ -83,6 +98,18 @@ export default {
             this._adminGetRoles =
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
+    },
+    async syncSettings(settings) {
+        await wwAxios.post(
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            }/supabase/sync`,
+            { source: 'supabaseAuth', settings }
+        );
+    },
+    async onSave(settings) {
+        await this.syncSettings(settings);
+        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
