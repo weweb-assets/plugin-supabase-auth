@@ -4,7 +4,7 @@
         <div class="mr-2 content-secondary">project</div>
         <div class="text-ellipsis">{{ settings.publicData.projectUrl }}</div>
     </div>
-    <div class="flex items-center body-2">
+    <div class="flex items-center body-2 mb-2">
         <wwEditorIcon name="key" class="mr-2" />
         <div class="mr-2 content-secondary">public</div>
         <div class="text-ellipsis">{{ settings.publicData.apiKey }}</div>
