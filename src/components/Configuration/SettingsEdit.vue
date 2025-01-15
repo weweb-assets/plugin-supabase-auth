@@ -46,16 +46,17 @@
         :model-value="settings.publicData.apiKey"
         @update:modelValue="changePublicApiKey"
     />
-    <wwEditorFormRow label="Service role key (optional)">
+    <wwEditorFormRow label="Service role key (optional)" required>
         <div class="flex items-center">
             <wwEditorInputText
-                :type="isKeyVisible ? 'text' : 'password'"
+                type="password"
                 placeholder="ey********"
-                :model-value="settings.privateData.apiKey"
-                :style="{ '-webkit-text-security': isKeyVisible ? 'none' : 'disc' }"
                 large
-                @update:modelValue="changePrivateApiKey"
                 class="w-full"
+                :style="{ '-webkit-text-security': 'disc' }"
+                :disabled="settings.privateData.accessToken"
+                :model-value="settings.privateData.apiKey"
+                @update:modelValue="changePrivateApiKey"
             />
             <wwEditorQuestionMark
                 tooltip-position="top-left"
@@ -65,7 +66,7 @@
             />
         </div>
     </wwEditorFormRow>
-    <wwEditorFormRow label="Database password">
+    <wwEditorFormRow label="Database password" required>
         <template #append-label>
             <a
                 class="ww-editor-link ml-2"
@@ -75,13 +76,16 @@
                 Find it here
             </a>
         </template>
-        <wwEditorInputRow
-            type="query"
-            placeholder=""
+        <wwEditorInputText
+            type="password"
+            placeholder="**********"
+            :style="{ '-webkit-text-security': 'disc' }"
+            large
             :tooltip="`Required if you want Copilot to be able to update your database.`"
             :model-value="settings.privateData.databasePassword"
             @update:modelValue="changeDatabasePassword"
-        ></wwEditorInputRow>
+            class="w-full"
+        />
     </wwEditorFormRow>
     <wwLoader :loading="isLoading" />
 </template>
@@ -95,7 +99,6 @@ export default {
     emits: ['update:settings'],
     data() {
         return {
-            isKeyVisible: false,
             projects: [],
             isLoading: false,
         };
@@ -132,6 +135,7 @@ export default {
                 privateData: {
                     ...this.settings.privateData,
                     accessToken: wwLib.wwPlugins.supabase.settings.privateData.accessToken,
+                    apiKey: wwLib.wwPlugins.supabase.settings.privateData.apiKey,
                     databasePassword: wwLib.wwPlugins.supabase.settings.privateData.databasePassword,
                 },
             });
