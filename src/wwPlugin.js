@@ -48,7 +48,7 @@ export default {
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
                     wwLib.$store.getters['websiteData/getDesignInfo'].id
                 }/supabase/connect`,
-                { code, redirectUri: window.location.origin + window.location.pathname }
+                { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
             wwLib.wwNotification.open({ text: 'Your supabase account has been linked.', color: 'green' });
         }

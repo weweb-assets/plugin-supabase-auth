@@ -61,7 +61,9 @@ export default {
             const clientId = '609eb9b4-60cb-462f-92ab-5a5eb180f666';
             const redirectUri = window.location.origin + window.location.pathname;
             window.localStorage.setItem('supabaseAuth_oauth', true);
-            window.location.href = `https://api.supabase.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
+            window.location.href = `https://api.supabase.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${
+                wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect'
+            }&state=${redirectUri}&response_type=code`;
         },
         unlink() {
             this.changeAccessToken('');
