@@ -56,14 +56,18 @@ export default {
                 privateData: { ...this.settings.privateData, accessToken },
             });
         },
-        connect() {
+        async connect() {
             this.isLoading = true;
-            const clientId = '609eb9b4-60cb-462f-92ab-5a5eb180f666';
             const redirectUri = window.location.origin + window.location.pathname;
-            window.localStorage.setItem('supabaseAuth_oauth', true);
-            window.location.href = `https://api.supabase.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${
-                wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect'
-            }&state=${redirectUri}&response_type=code`;
+            window.localStorage.setItem('supabase_oauth', true);
+            const { data } = await wwAxios.post(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/authorize`,
+                { redirectUri, oauthRedirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
+            );
+            if (!data?.data) throw new Error('No authorization URL returned');
+            window.location.href = data?.data;
         },
         unlink() {
             this.changeAccessToken('');
