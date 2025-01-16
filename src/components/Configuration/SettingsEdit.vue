@@ -1,26 +1,7 @@
 <template>
     <div class="flex items-center">
-        <wwEditorFormRow required label="Project URL" class="w-100">
-            <template #append-label>
-                <a
-                    v-if="!settings.privateData.accessToken"
-                    class="ww-editor-link ml-2"
-                    href="https://supabase.com/dashboard/project/_/settings/api"
-                    target="_blank"
-                >
-                    Find it here
-                </a>
-            </template>
+        <wwEditorFormRow v-if="settings.privateData.accessToken" required label="Project URL" class="w-100">
             <wwEditorInputRow
-                v-if="!settings.privateData.accessToken"
-                type="query"
-                placeholder="https://your-project.supabase.co"
-                :model-value="settings.publicData.projectUrl"
-                @update:modelValue="changeProjectUrl"
-            />
-
-            <wwEditorInputRow
-                v-else
                 type="select"
                 placeholder="https://your-project.supabase.co"
                 :model-value="settings.publicData.projectUrl"
@@ -32,12 +13,20 @@
         <button
             v-if="settings.privateData.accessToken"
             type="button"
-            class="ww-editor-button -primary -small -icon ml-2"
+            class="ww-editor-button -primary -small -icon ml-2 mt-1"
             @click="refreshProjects"
         >
             <wwEditorIcon name="refresh" medium />
         </button>
     </div>
+    <wwEditorInputRow
+        label="Project URL"
+        type="query"
+        placeholder="https://your-project.supabase.co"
+        :disabled="settings.privateData.accessToken"
+        :model-value="settings.publicData.projectUrl"
+        @update:modelValue="changeProjectUrl"
+    />
     <wwEditorInputRow
         label="Public API key"
         required
@@ -66,6 +55,15 @@
             />
         </div>
     </wwEditorFormRow>
+    <wwEditorInputRow
+        label="Connection string"
+        required
+        type="query"
+        placeholder="postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:6543/postgres"
+        :disabled="settings.privateData.accessToken"
+        :model-value="settings.privateData.connectionString"
+        @update:modelValue="changeConnectionString"
+    />
     <wwEditorFormRow label="Database password" required>
         <template #append-label>
             <a
@@ -137,6 +135,7 @@ export default {
                     accessToken: wwLib.wwPlugins.supabase.settings.privateData.accessToken,
                     apiKey: wwLib.wwPlugins.supabase.settings.privateData.apiKey,
                     databasePassword: wwLib.wwPlugins.supabase.settings.privateData.databasePassword,
+                    connectionString: wwLib.wwPlugins.supabase.settings.privateData.connectionString,
                 },
             });
         }
@@ -145,17 +144,23 @@ export default {
         async changeProjectUrl(projectUrl) {
             let apiKey = this.settings.publicData.apiKey;
             let privateApiKey = this.settings.privateData.apiKey;
+            let connectionString = this.settings.privateData.connectionString;
             if (this.settings.privateData.accessToken) {
-                const { apiKeys } = await this.fetchProject(
+                const { apiKeys, pgbouncer } = await this.fetchProject(
                     projectUrl.replace('https://', '').replace('.supabase.co', '')
                 );
                 apiKey = apiKeys.find(key => key.name === 'anon').api_key;
                 privateApiKey = apiKeys.find(key => key.name === 'service_role').api_key;
+                connectionString = pgbouncer.connection_string;
             }
             this.$emit('update:settings', {
                 ...this.settings,
                 publicData: { ...this.settings.publicData, projectUrl, apiKey },
-                privateData: { ...this.settings.privateData, apiKey: privateApiKey },
+                privateData: {
+                    ...this.settings.privateData,
+                    apiKey: privateApiKey,
+                    connectionString: connectionString,
+                },
             });
         },
         changePublicApiKey(apiKey) {
@@ -168,6 +173,12 @@ export default {
             this.$emit('update:settings', {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, apiKey },
+            });
+        },
+        changeConnectionString(connectionString) {
+            this.$emit('update:settings', {
+                ...this.settings,
+                privateData: { ...this.settings.privateData, connectionString },
             });
         },
         changeDatabasePassword(databasePassword) {
