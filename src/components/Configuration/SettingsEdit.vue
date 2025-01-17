@@ -145,14 +145,23 @@
                 ]"
             />
             <wwEditorFormRow label="Database password" required>
-                <wwEditorInputText
-                    type="password"
-                    placeholder="Enter your database password"
-                    :style="{ '-webkit-text-security': 'disc' }"
-                    large
-                    v-model="newProject.dbPass"
-                    class="w-full"
-                />
+                <div class="flex items-center">
+                    <wwEditorInputText
+                        :type="showDbPass ? 'text' : 'password'"
+                        placeholder="Enter your database password"
+                        :style="{ '-webkit-text-security': showDbPass ? 'none' : 'disc' }"
+                        large
+                        v-model="newProject.dbPass"
+                        class="w-full"
+                    />
+                    <button
+                        type="button"
+                        class="ww-editor-button -secondary -small -icon ml-2"
+                        @click="showDbPass = !showDbPass"
+                    >
+                        <wwEditorIcon :name="showDbPass ? '16/eye' : '16/eye-off'" medium />
+                    </button>
+                </div>
             </wwEditorFormRow>
             <button class="ww-editor-button -primary" @click="createProject" type="button">Create project</button>
         </template>
@@ -173,6 +182,7 @@ export default {
             isLoading: false,
             isComingUp: false,
             showSettings: false,
+            showDbPass: false,
             selectMode: 'select',
             newProject: {
                 name: '',
