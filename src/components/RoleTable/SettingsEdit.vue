@@ -110,6 +110,7 @@ export default {
             if (!table) return false;
             const properties = Object.keys(table.properties);
             return properties.includes('id');
+        },
     },
     mounted() {
         this.definitions = this.plugin.doc.definitions || {};
