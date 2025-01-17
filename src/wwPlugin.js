@@ -427,8 +427,8 @@ export default {
             ? (
                   await this.publicInstance
                       .from(this.settings.publicData.userRoleTable)
-                      .select('role:roleId(*)')
-                      .eq('userId', userId)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
               ).data.map(({ role }) => role)
             : [];
         return roles;
@@ -556,8 +556,8 @@ const adminFunctions = {
             ? (
                   await this.privateInstance
                       .from(this.settings.publicData.userRoleTable)
-                      .select('role:roleId(*)')
-                      .eq('userId', userId)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
               ).data.map(({ role }) => role)
             : [];
         return roles;
@@ -619,12 +619,13 @@ const adminFunctions = {
         const response = await this.privateInstance
             .from(this.settings.publicData.userRoleTable)
             .delete()
-            .match({ userId: user.id });
+            .match({ [this.settings.publicData.userRoleTableUserColumn || 'userId']: user.id });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         for (const role of roles) {
-            const { error } = await this.privateInstance
-                .from(this.settings.publicData.userRoleTable)
-                .insert({ roleId: role.id, userId: user.id });
+            const { error } = await this.privateInstance.from(this.settings.publicData.userRoleTable).insert({
+                [this.settings.publicData.userRoleTableRoleColumn || 'roleId']: role.id,
+                [this.settings.publicData.userRoleTableUserColumn || 'userId']: user.id,
+            });
             if (error) throw new Error(error.message, { cause: error });
         }
     },

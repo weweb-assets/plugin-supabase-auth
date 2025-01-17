@@ -1,38 +1,51 @@
 <template>
-    <wwEditorFormRow label="Role table">
+    <wwEditorFormRow label="Roles table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
                 placeholder="Select a table"
+                :options="tablesOptions"
                 :model-value="settings.publicData.roleTable"
-                :options="tablesOptions"
-                @update:modelValue="changePrivateSettings('roleTable', $event)"
+                @update:modelValue="changePublicSettings('roleTable', $event)"
             />
             <button type="button" class="ww-editor-button -primary -small -icon ml-2" @click="fetchTables">
                 <wwEditorIcon name="refresh" medium />
             </button>
         </div>
     </wwEditorFormRow>
-    <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-2 text-error mb-2">
-        Table must have columns "id" and "name".
+    <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-sm content-warning mb-2">
+        This table must have columns "id" and "name".
     </div>
-    <wwEditorFormRow label="User role table">
+    <wwEditorFormRow label="Users-Roles table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
                 class="w-100"
                 placeholder="Select a table"
-                :model-value="settings.publicData.userRoleTable"
                 :options="tablesOptions"
-                @update:modelValue="changePrivateSettings('userRoleTable', $event)"
+                :model-value="settings.publicData.userRoleTable"
+                @update:modelValue="changePublicSettings('userRoleTable', $event)"
             />
             <button type="button" class="ww-editor-button -primary -small -icon ml-2" @click="fetchTables">
                 <wwEditorIcon name="refresh" medium />
             </button>
         </div>
     </wwEditorFormRow>
-    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-2 text-red mb-2">
-        Table must have column "id", "roleId" and "userId".
-    </div>
+    <wwEditorInputRow
+        label="Role ID column"
+        type="select"
+        placeholder="roleId"
+        :options="roleTablePropertiesOptions"
+        :model-value="settings.publicData.userRoleTableRoleColumn"
+        @update:modelValue="changePublicSettings('userRoleTableRoleColumn', $event)"
+    />
+    <wwEditorInputRow
+        label="User ID column"
+        type="select"
+        placeholder="userId"
+        :options="roleTablePropertiesOptions"
+        :model-value="settings.publicData.userRoleTableUserColumn"
+        @update:modelValue="changePublicSettings('userRoleTableUserColumn', $event)"
+    />
     <wwLoader :loading="isLoading" />
 </template>
 
@@ -59,17 +72,27 @@ export default {
                 })),
             ];
         },
+        roleTablePropertiesOptions() {
+            const table = this.definitions?.[this.settings.publicData?.roleTable];
+            if (!table) return [];
+            return Object.keys(table.properties).map(propName => ({
+                label: propName,
+                value: propName,
+            }));
+        },
+        userRoleTablePropertiesOptions() {
+            const table = this.definitions?.[this.settings.publicData?.userRoleTable];
+            if (!table) return [];
+            return Object.keys(table.properties).map(propName => ({
+                label: propName,
+                value: propName,
+            }));
+        },
         isRoleTableValid() {
             const table = this.definitions[this.settings.publicData.roleTable];
             if (!table) return false;
             const properties = Object.keys(table.properties);
             return properties.includes('id') && properties.includes('name');
-        },
-        isUserRoleTableValid() {
-            const table = this.definitions[this.settings.publicData.userRoleTable];
-            if (!table) return false;
-            const properties = Object.keys(table.properties);
-            return properties.includes('id') && properties.includes('roleId') && properties.includes('userId');
         },
     },
     mounted() {
@@ -87,7 +110,7 @@ export default {
                 this.isLoading = false;
             }
         },
-        changePrivateSettings(key, value) {
+        changePublicSettings(key, value) {
             this.$emit('update:settings', {
                 ...this.settings,
                 publicData: { ...this.settings.publicData, [key]: value },
