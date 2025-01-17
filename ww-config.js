@@ -23,8 +23,7 @@ export default {
                     return (
                         !!settings.publicData.projectUrl &&
                         !!settings.publicData.apiKey &&
-                        !!settings.privateData.apiKey &&
-                        !!settings.privateData.databasePassword
+                        !!settings.privateData.apiKey
                     );
                 },
                 onSave: 'onSave',

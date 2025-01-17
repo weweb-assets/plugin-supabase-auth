@@ -26,71 +26,75 @@
                 <wwEditorIcon name="refresh" medium />
             </button>
         </div>
-        <wwEditorInputRow
-            label="Project URL"
-            type="query"
-            placeholder="https://your-project.supabase.co"
-            :disabled="settings.privateData.accessToken"
-            :model-value="settings.publicData.projectUrl"
-            @update:modelValue="changeProjectUrl"
-        />
-        <wwEditorInputRow
-            label="Public API key"
-            required
-            type="query"
-            placeholder="ey********"
-            :model-value="settings.publicData.apiKey"
-            @update:modelValue="changePublicApiKey"
-        />
-        <wwEditorFormRow label="Service role key (optional)" required>
-            <div class="flex items-center">
-                <wwEditorInputText
-                    type="password"
-                    placeholder="ey********"
-                    large
-                    class="w-full"
-                    :style="{ '-webkit-text-security': 'disc' }"
-                    :disabled="settings.privateData.accessToken"
-                    :model-value="settings.privateData.apiKey"
-                    @update:modelValue="changePrivateApiKey"
-                />
-                <wwEditorQuestionMark
-                    tooltip-position="top-left"
-                    forced-content="Required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
-                    class="ml-2"
-                    :class="{ 'text-yellow-500': !settings.privateData.apiKey }"
-                />
-            </div>
-        </wwEditorFormRow>
-        <wwEditorInputRow
-            label="Connection string"
-            type="query"
-            placeholder="postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:6543/postgres"
-            :disabled="settings.privateData.accessToken"
-            :model-value="settings.privateData.connectionString"
-            @update:modelValue="changeConnectionString"
-        />
-        <wwEditorFormRow label="Database password">
-            <template #append-label>
-                <a
-                    class="ww-editor-link ml-2"
-                    :href="`https://supabase.com/dashboard/project/${projectRef}/settings/database`"
-                    target="_blank"
-                >
-                    Find it here
-                </a>
-            </template>
-            <wwEditorInputText
-                type="password"
-                placeholder="Enter your database password"
-                :style="{ '-webkit-text-security': 'disc' }"
-                large
-                :tooltip="`Required if you want Copilot to be able to update your database.`"
-                :model-value="settings.privateData.databasePassword"
-                @update:modelValue="changeDatabasePassword"
-                class="w-full"
+        <button @click="showSettings = !showSettings" class="ww-editor-button -primary -small mb-2" type="button">
+            {{ showSettings ? 'Close' : 'Edit' }} advanced settings
+        </button>
+        <template v-if="showSettings">
+            <wwEditorInputRow
+                label="Project URL"
+                type="query"
+                placeholder="https://your-project.supabase.co"
+                :model-value="settings.publicData.projectUrl"
+                @update:modelValue="changeProjectUrl"
             />
-        </wwEditorFormRow>
+            <wwEditorInputRow
+                label="Public API key"
+                required
+                type="query"
+                placeholder="ey********"
+                :model-value="settings.publicData.apiKey"
+                @update:modelValue="changeApiKey"
+            />
+            <wwEditorFormRow label="Service role key" required>
+                <div class="flex items-center">
+                    <wwEditorInputText
+                        type="password"
+                        placeholder="ey********"
+                        large
+                        class="w-full"
+                        :style="{ '-webkit-text-security': 'disc' }"
+                        :model-value="settings.privateData.apiKey"
+                        @update:modelValue="changePrivateApiKey"
+                    />
+                    <wwEditorQuestionMark
+                        tooltip-position="top-left"
+                        forced-content="Required if you want to manage your users and roles from the Editor or restrict access to a page for a specific role."
+                        class="ml-2"
+                        :class="{ 'text-yellow-500': !settings.privateData.apiKey }"
+                    />
+                </div>
+            </wwEditorFormRow>
+            <wwEditorInputRow
+                label="Connection string"
+                type="query"
+                placeholder="postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:6543/postgres"
+                :model-value="settings.privateData.connectionString"
+                @update:modelValue="changeConnectionString"
+            />
+            <wwEditorFormRow label="Database password">
+                <template #append-label>
+                    <a
+                        class="ww-editor-link ml-2"
+                        :href="`https://supabase.com/dashboard/project/${projectRef}/settings/database`"
+                        target="_blank"
+                    >
+                        Find it here
+                    </a>
+                </template>
+                <div class="flex items-center">
+                    <wwEditorInputText
+                        type="password"
+                        placeholder="Enter your database password"
+                        :style="{ '-webkit-text-security': 'disc' }"
+                        large
+                        :tooltip="`Required if you want Copilot to be able to update your database.`"
+                        :model-value="settings.privateData.databasePassword"
+                        @update:modelValue="changeDatabasePassword"
+                        class="w-full"
+                    />
+                </div>
+            </wwEditorFormRow>
+        </template>
     </template>
     <template v-if="selectMode === 'create'">
         <div v-if="isComingUp" class="body-md flex items-center p-2">
@@ -102,19 +106,22 @@
                 label="Project name"
                 type="query"
                 placeholder="My new project"
+                required
                 v-model="newProject.name"
             />
             <wwEditorInputRow
                 label="Organization"
                 type="select"
-                placeholder="us-east-1"
+                placeholder="Select an organization"
+                required
                 v-model="newProject.organizationId"
                 :options="organizations.map(org => ({ label: org.name, value: org.id }))"
             />
             <wwEditorInputRow
-                label="Region"
+                label="Hosting region"
                 type="select"
                 placeholder="us-east-1"
+                required
                 v-model="newProject.region"
                 :options="[
                     { label: 'us-east-1', value: 'us-east-1' },
@@ -137,12 +144,16 @@
                     { label: 'sa-east-1', value: 'sa-east-1' },
                 ]"
             />
-            <wwEditorInputRow
-                label="Database password"
-                type="query"
-                placeholder="Enter a database password"
-                v-model="newProject.dbPass"
-            />
+            <wwEditorFormRow label="Database password" required>
+                <wwEditorInputText
+                    type="password"
+                    placeholder="Enter your database password"
+                    :style="{ '-webkit-text-security': 'disc' }"
+                    large
+                    v-model="newProject.dbPass"
+                    class="w-full"
+                />
+            </wwEditorFormRow>
             <button class="ww-editor-button -primary" @click="createProject" type="button">Create project</button>
         </template>
     </template>
@@ -161,6 +172,7 @@ export default {
             projects: [],
             isLoading: false,
             isComingUp: false,
+            showSettings: false,
             selectMode: 'select',
             newProject: {
                 name: '',
@@ -198,6 +210,8 @@ export default {
     mounted() {
         if (this.settings.privateData.accessToken) {
             this.refreshProjects();
+        } else {
+            this.showSettings = true;
         }
         const isSettingsValid =
             this.settings.publicData.projectUrl && this.settings.publicData.apiKey && this.settings.privateData.apiKey;
