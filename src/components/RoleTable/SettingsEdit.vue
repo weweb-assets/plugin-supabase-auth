@@ -14,8 +14,16 @@
         </div>
     </wwEditorFormRow>
     <div v-if="settings.publicData.roleTable && !isRoleTableValid" class="body-sm content-warning mb-2">
-        This table must have columns "id" and "name".
+        This table must have an "id" column.
     </div>
+    <wwEditorInputRow
+        label="Name column"
+        type="select"
+        placeholder="name"
+        :options="roleTablePropertiesOptions"
+        :model-value="settings.publicData.roleTableNameColumn"
+        @update:modelValue="changePublicSettings('roleTableNameColumn', $event)"
+    />
     <wwEditorFormRow label="Users-Roles table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
@@ -30,11 +38,14 @@
             </button>
         </div>
     </wwEditorFormRow>
+    <div v-if="settings.publicData.userRoleTable && !isUserRoleTableValid" class="body-sm content-warning mb-2">
+        This table must have an "id" column.
+    </div>
     <wwEditorInputRow
         label="Role ID column"
         type="select"
         placeholder="roleId"
-        :options="roleTablePropertiesOptions"
+        :options="userRoleTablePropertiesOptions"
         :model-value="settings.publicData.userRoleTableRoleColumn"
         @update:modelValue="changePublicSettings('userRoleTableRoleColumn', $event)"
     />
@@ -42,7 +53,7 @@
         label="User ID column"
         type="select"
         placeholder="userId"
-        :options="roleTablePropertiesOptions"
+        :options="userRoleTablePropertiesOptions"
         :model-value="settings.publicData.userRoleTableUserColumn"
         @update:modelValue="changePublicSettings('userRoleTableUserColumn', $event)"
     />
@@ -92,8 +103,13 @@ export default {
             const table = this.definitions[this.settings.publicData.roleTable];
             if (!table) return false;
             const properties = Object.keys(table.properties);
-            return properties.includes('id') && properties.includes('name');
+            return properties.includes('id');
         },
+        isUserRoleTableValid() {
+            const table = this.definitions[this.settings.publicData.userRoleTable];
+            if (!table) return false;
+            const properties = Object.keys(table.properties);
+            return properties.includes('id');
     },
     mounted() {
         this.definitions = this.plugin.doc.definitions || {};

@@ -638,7 +638,11 @@ const adminFunctions = {
         if (!this.settings.publicData.roleTable) return [];
         const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
-        return roles.map(role => ({ ...role, createdAt: role.created_at }));
+        return roles.map(role => ({
+            ...role,
+            name: role[this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: role.created_at,
+        }));
     },
     async _adminCreateRole(name) {
         if (!this.settings.publicData.roleTable) {
@@ -648,10 +652,14 @@ const adminFunctions = {
         }
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
-            .insert([{ name }])
+            .insert([{ [this.settings.publicData.roleTableNameColumn || 'name']: name }])
             .select();
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
+        return {
+            ...roles[0],
+            name: roles[0][this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: roles[0].created_at,
+        };
     },
     async _adminUpdateRole(roleId, name) {
         const { data: roles, error } = await this.privateInstance
@@ -660,7 +668,11 @@ const adminFunctions = {
             .match({ id: roleId })
             .select();
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
+        return {
+            ...roles[0],
+            name: roles[0][this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: roles[0].created_at,
+        };
     },
     async _adminDeleteRole(roleId) {
         const { error } = await this.privateInstance
