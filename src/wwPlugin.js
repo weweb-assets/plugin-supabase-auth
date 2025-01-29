@@ -1,4 +1,6 @@
 /* wwEditor:start */
+import './components/Configuration/ConnectionEdit.vue';
+import './components/Configuration/ConnectionSummary.vue';
 import './components/Configuration/SettingsEdit.vue';
 import './components/Configuration/SettingsSummary.vue';
 import './components/RoleTable/SettingsEdit.vue';
@@ -35,6 +37,21 @@ export default {
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
+        // check oauth in local storage
+        const isConnecting = window.localStorage.getItem('supabaseAuth_oauth');
+        // get code params from url
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (isConnecting && code) {
+            window.localStorage.removeItem('supabaseAuth_oauth');
+            await wwAxios.post(
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                }/supabase/connect`,
+                { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
+            );
+            wwLib.wwNotification.open({ text: 'Your supabase account has been linked.', color: 'green' });
+        }
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
     },
@@ -81,6 +98,28 @@ export default {
             this._adminGetRoles =
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
+    },
+    async syncSettings(settings) {
+        await wwAxios.post(
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            }/supabase/sync`,
+            { source: 'supabaseAuth', settings }
+        );
+    },
+    async install() {
+        await wwAxios.post(
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            }/supabase/install`
+        );
+    },
+    async onSave(settings) {
+        await this.syncSettings(settings);
+        if (settings.privateData.accessToken && settings.publicData.projectUrl) {
+            await this.install();
+        }
+        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -388,8 +427,8 @@ export default {
             ? (
                   await this.publicInstance
                       .from(this.settings.publicData.userRoleTable)
-                      .select('role:roleId(*)')
-                      .eq('userId', userId)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
               ).data.map(({ role }) => role)
             : [];
         return roles;
@@ -517,8 +556,8 @@ const adminFunctions = {
             ? (
                   await this.privateInstance
                       .from(this.settings.publicData.userRoleTable)
-                      .select('role:roleId(*)')
-                      .eq('userId', userId)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
               ).data.map(({ role }) => role)
             : [];
         return roles;
@@ -580,12 +619,13 @@ const adminFunctions = {
         const response = await this.privateInstance
             .from(this.settings.publicData.userRoleTable)
             .delete()
-            .match({ userId: user.id });
+            .match({ [this.settings.publicData.userRoleTableUserColumn || 'userId']: user.id });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         for (const role of roles) {
-            const { error } = await this.privateInstance
-                .from(this.settings.publicData.userRoleTable)
-                .insert({ roleId: role.id, userId: user.id });
+            const { error } = await this.privateInstance.from(this.settings.publicData.userRoleTable).insert({
+                [this.settings.publicData.userRoleTableRoleColumn || 'roleId']: role.id,
+                [this.settings.publicData.userRoleTableUserColumn || 'userId']: user.id,
+            });
             if (error) throw new Error(error.message, { cause: error });
         }
     },
@@ -598,7 +638,11 @@ const adminFunctions = {
         if (!this.settings.publicData.roleTable) return [];
         const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
-        return roles.map(role => ({ ...role, createdAt: role.created_at }));
+        return roles.map(role => ({
+            ...role,
+            name: role[this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: role.created_at,
+        }));
     },
     async _adminCreateRole(name) {
         if (!this.settings.publicData.roleTable) {
@@ -608,10 +652,14 @@ const adminFunctions = {
         }
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
-            .insert([{ name }])
+            .insert([{ [this.settings.publicData.roleTableNameColumn || 'name']: name }])
             .select();
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
+        return {
+            ...roles[0],
+            name: roles[0][this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: roles[0].created_at,
+        };
     },
     async _adminUpdateRole(roleId, name) {
         const { data: roles, error } = await this.privateInstance
@@ -620,7 +668,11 @@ const adminFunctions = {
             .match({ id: roleId })
             .select();
         if (error) throw new Error(error.message, { cause: error });
-        return { ...roles[0], createdAt: roles[0].created_at };
+        return {
+            ...roles[0],
+            name: roles[0][this.settings.publicData.roleTableNameColumn || 'name'],
+            createdAt: roles[0].created_at,
+        };
     },
     async _adminDeleteRole(roleId) {
         const { error } = await this.privateInstance

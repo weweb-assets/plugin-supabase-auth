@@ -5,14 +5,28 @@ export default {
     editor: {
         settings: [
             {
+                label: 'Connection',
+                icon: 'advanced',
+                edit: () => import('./src/components/Configuration/ConnectionEdit.vue'),
+                summary: () => import('./src/components/Configuration/ConnectionSummary.vue'),
+                getIsValid(settings) {
+                    return !!settings.privateData.accessToken;
+                },
+                onSave: 'onSave',
+            },
+            {
                 label: 'Configuration',
                 icon: 'advanced',
                 edit: () => import('./src/components/Configuration/SettingsEdit.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
-                    return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
+                    return (
+                        !!settings.publicData.projectUrl &&
+                        !!settings.publicData.apiKey &&
+                        !!settings.privateData.apiKey
+                    );
                 },
-                onSave: '_onLoad',
+                onSave: 'onSave',
             },
             {
                 label: 'Roles tables (optional)',
