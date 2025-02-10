@@ -1,4 +1,16 @@
 <template>
+    <div class="p-3 border-brand-secondary content-brand-secondary rounded-02 flex flex-row body-sm mb-2 items-center">
+        You don't have roles and users_roles tables yet? We can generate them for you.
+        <button
+            v-if="canGenerate"
+            type="button"
+            class="ww-editor-button -secondary -small"
+            @click="generateTables"
+            :disabled="isLoading"
+        >
+            Generate
+        </button>
+    </div>
     <wwEditorFormRow label="Roles table">
         <div class="flex items-center">
             <wwEditorInputTextSelect
@@ -57,15 +69,7 @@
         :model-value="settings.publicData.userRoleTableUserColumn"
         @update:modelValue="changePublicSettings('userRoleTableUserColumn', $event)"
     />
-    <button
-        v-if="canGenerate"
-        type="button"
-        class="ww-editor-button -secondary -small mt-3"
-        @click="generateTables"
-        :disabled="isLoading"
-    >
-        Generate roles and user_roles tables
-    </button>
+
     <wwLoader :loading="isLoading" />
 </template>
 
@@ -121,7 +125,12 @@ export default {
             return properties.includes('id');
         },
         canGenerate() {
-            return wwLib.wwPlugins.supabase && this.settings.privateData.accessToken;
+            return (
+                wwLib.wwPlugins.supabase &&
+                this.settings.privateData.accessToken &&
+                !this.settings.publicData.roleTable &&
+                !this.settings.publicData.userRoleTable
+            );
         },
     },
     mounted() {
@@ -149,12 +158,13 @@ export default {
             this.isLoading = true;
             try {
                 await wwLib.wwPlugins.supabase.install('roles');
+                await this.fetchTables();
                 this.$emit('update:settings', {
                     ...this.settings,
                     publicData: {
                         ...this.settings.publicData,
                         roleTable: 'roles',
-                        userRoleTable: 'user_roles',
+                        userRoleTable: 'users_roles',
                         roleTableNameColumn: 'name',
                         userRoleTableRoleColumn: 'role_id',
                         userRoleTableUserColumn: 'user_id',
