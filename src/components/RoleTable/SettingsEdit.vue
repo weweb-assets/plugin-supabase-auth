@@ -1,13 +1,10 @@
 <template>
-    <div class="p-3 border-brand-secondary content-brand-secondary rounded-02 flex flex-row body-sm mb-2 items-center">
+    <div
+        v-if="canGenerate"
+        class="p-3 border-brand-secondary content-brand-secondary rounded-02 flex flex-row body-sm mb-2 items-center"
+    >
         You don't have roles and users_roles tables yet? We can generate them for you.
-        <button
-            v-if="canGenerate"
-            type="button"
-            class="ww-editor-button -secondary -small"
-            @click="generateTables"
-            :disabled="isLoading"
-        >
+        <button type="button" class="ww-editor-button -secondary -small" @click="generateTables" :disabled="isLoading">
             Generate
         </button>
     </div>
