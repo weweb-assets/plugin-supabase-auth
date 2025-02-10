@@ -51,6 +51,8 @@ export default {
                 { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
             wwLib.wwNotification.open({ text: 'Your supabase account has been linked.', color: 'green' });
+            wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
+            wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
         await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
