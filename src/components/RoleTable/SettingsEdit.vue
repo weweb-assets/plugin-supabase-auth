@@ -155,6 +155,8 @@ export default {
             this.isLoading = true;
             try {
                 await wwLib.wwPlugins.supabase.install('roles');
+                // wait 3 seconds for the table to be created
+                await new Promise(resolve => setTimeout(resolve, 3000));
                 await this.fetchTables();
                 this.$emit('update:settings', {
                     ...this.settings,
