@@ -44,7 +44,7 @@
     <wwEditorInputRow
         label="Role ID column"
         type="select"
-        placeholder="roleId"
+        placeholder="role_id"
         :options="userRoleTablePropertiesOptions"
         :model-value="settings.publicData.userRoleTableRoleColumn"
         @update:modelValue="changePublicSettings('userRoleTableRoleColumn', $event)"
@@ -52,11 +52,20 @@
     <wwEditorInputRow
         label="User ID column"
         type="select"
-        placeholder="userId"
+        placeholder="user_id"
         :options="userRoleTablePropertiesOptions"
         :model-value="settings.publicData.userRoleTableUserColumn"
         @update:modelValue="changePublicSettings('userRoleTableUserColumn', $event)"
     />
+    <button
+        v-if="canGenerate"
+        type="button"
+        class="ww-editor-button -secondary -small mt-3"
+        @click="generateTables"
+        :disabled="isLoading"
+    >
+        Generate roles and user_roles tables
+    </button>
     <wwLoader :loading="isLoading" />
 </template>
 
@@ -111,6 +120,9 @@ export default {
             const properties = Object.keys(table.properties);
             return properties.includes('id');
         },
+        canGenerate() {
+            return wwLib.wwPlugins.supabase && this.settings.privateData.accessToken;
+        },
     },
     mounted() {
         this.definitions = this.plugin.doc.definitions || {};
@@ -132,6 +144,27 @@ export default {
                 ...this.settings,
                 publicData: { ...this.settings.publicData, [key]: value },
             });
+        },
+        async generateTables() {
+            this.isLoading = true;
+            try {
+                await wwLib.wwPlugins.supabase.install('roles');
+                this.$emit('update:settings', {
+                    ...this.settings,
+                    publicData: {
+                        ...this.settings.publicData,
+                        roleTable: 'roles',
+                        userRoleTable: 'user_roles',
+                        roleTableNameColumn: 'name',
+                        userRoleTableRoleColumn: 'role_id',
+                        userRoleTableUserColumn: 'user_id',
+                    },
+                });
+            } catch (err) {
+                wwLib.wwLog.error(err);
+            } finally {
+                this.isLoading = false;
+            }
         },
     },
 };
