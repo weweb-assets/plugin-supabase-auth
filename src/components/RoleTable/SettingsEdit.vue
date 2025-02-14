@@ -131,14 +131,14 @@ export default {
         },
     },
     mounted() {
-        this.definitions = this.plugin.doc.definitions || {};
+        this.definitions = this.plugin?.doc?.definitions || {};
     },
     methods: {
         async fetchTables() {
             try {
                 this.isLoading = true;
                 await this.plugin.fetchDoc();
-                this.definitions = this.plugin.doc.definitions || {};
+                this.definitions = this.plugin?.doc?.definitions || {};
             } catch (err) {
                 wwLib.wwLog.error(err);
             } finally {
