@@ -4,7 +4,7 @@
             class="mb-2"
             :model-value="connectionMode"
             :choices="[
-                { label: 'Cloud (recommended)', value: 'oauth', default: true },
+                { label: 'Guided (recommended)', value: 'oauth', default: true },
                 { label: 'Custom', value: 'custom' },
             ]"
             @update:modelValue="changeConnectionMode"
