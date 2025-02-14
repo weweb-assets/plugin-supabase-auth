@@ -70,13 +70,14 @@
                 </div>
             </wwEditorFormRow>
             <wwEditorInputRow
+                v-show="false"
                 label="Connection string"
                 type="query"
                 placeholder="postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:6543/postgres"
                 :model-value="settings.privateData.connectionString"
                 @update:modelValue="changeConnectionString"
             />
-            <wwEditorFormRow label="Database password">
+            <wwEditorFormRow label="Database password" v-show="false">
                 <template #append-label>
                     <a
                         class="ww-editor-link ml-2"
