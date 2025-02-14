@@ -109,11 +109,13 @@ export default {
             { source: 'supabaseAuth', settings }
         );
     },
-    async install() {
+    // driver: core, roles
+    async install(driver = 'core') {
         await wwAxios.post(
             `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
                 wwLib.$store.getters['websiteData/getDesignInfo'].id
-            }/supabase/install`
+            }/supabase/install`,
+            { driver }
         );
     },
     async onSave(settings) {
