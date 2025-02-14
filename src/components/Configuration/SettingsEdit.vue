@@ -1,7 +1,7 @@
 <template>
     <wwEditorFormRow class="w-100">
         <wwEditorInputRadio
-            v-if="settings.privateData.accessToken"
+            v-if="isConnected"
             v-model="selectMode"
             :disabled="isComingUp"
             :choices="[
@@ -10,10 +10,10 @@
             ]"
         />
     </wwEditorFormRow>
-    <template v-if="selectMode === 'select'">
-        <div class="flex items-center" v-if="settings.privateData.accessToken">
+    <template v-if="selectMode === 'select' || !isConnected">
+        <div class="flex items-center" v-if="isConnected">
             <wwEditorFormRow required label="Project URL" class="w-100">
-                <wwEditorInputRow
+                <wwEditorInput
                     type="select"
                     placeholder="https://your-project.supabase.co"
                     :model-value="settings.publicData.projectUrl"
@@ -26,10 +26,15 @@
                 <wwEditorIcon name="refresh" medium />
             </button>
         </div>
-        <button @click="showSettings = !showSettings" class="ww-editor-button -primary -small mb-2" type="button">
-            {{ showSettings ? 'Close' : 'Edit' }} advanced settings
+        <button
+            v-if="isConnected"
+            @click="showSettings = !showSettings"
+            class="ww-editor-button -secondary -small mb-2"
+            type="button"
+        >
+            {{ showSettings ? 'Close' : 'Open' }} settings
         </button>
-        <template v-if="showSettings">
+        <template v-if="showSettings || !isConnected">
             <wwEditorInputRow
                 label="Project URL"
                 type="query"
@@ -96,7 +101,7 @@
             </wwEditorFormRow>
         </template>
     </template>
-    <template v-if="selectMode === 'create'">
+    <template v-else-if="selectMode === 'create'">
         <div v-if="isComingUp" class="body-md flex items-center p-2">
             <wwLoaderSmall loading class="mr-2" />
             <div>We're now preparing your database. Please wait a few moments, it may take up to 1 minute.</div>
@@ -166,7 +171,7 @@
             <button class="ww-editor-button -primary" @click="createProject" type="button">Create project</button>
         </template>
     </template>
-    <wwLoader :loading="isLoading" />
+    <wwLoader :loading="isLoading && !isComingUp" />
 </template>
 
 <script>
@@ -216,9 +221,12 @@ export default {
                 value: `https://${project.id}.supabase.co`,
             }));
         },
+        isConnected() {
+            return this.settings.privateData.accessToken;
+        },
     },
     mounted() {
-        if (this.settings.privateData.accessToken) {
+        if (this.isConnected) {
             this.refreshProjects();
         } else {
             this.showSettings = true;
@@ -252,7 +260,7 @@ export default {
             let apiKey = this.settings.publicData.apiKey;
             let privateApiKey = this.settings.privateData.apiKey;
             let connectionString = this.settings.privateData.connectionString;
-            if (this.settings.privateData.accessToken) {
+            if (this.isConnected) {
                 const { apiKeys, pgbouncer } = await this.fetchProject(
                     projectUrl.replace('https://', '').replace('.supabase.co', '')
                 );

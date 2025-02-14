@@ -1,28 +1,49 @@
 <template>
-    <button v-if="!isOauth" class="ww-editor-button -secondary" @click="connect" type="button">
-        <wwEditorIcon name="logos/supabase" class="ww-editor-button-icon -left" />
-        Connect Supabase
-    </button>
-    <span v-if="!isOauth" class="my-4 border-top-primary"></span>
-    <div class="flex items-center">
-        <wwEditorFormRow :label="isOauth ? 'Access token' : 'Personal Access Token'" class="w-100">
-            <template #append-label>
-                <a class="ww-editor-link ml-2" href="https://supabase.com/dashboard/account/tokens" target="_blank">
-                    Find it here
-                </a>
-            </template>
-            <wwEditorInput
-                type="query"
-                placeholder="sbp_bdd0********4f23"
-                :model-value="settings.privateData.accessToken"
-                :disabled="isOauth"
-                @update:modelValue="changeAccessToken"
-            ></wwEditorInput>
-        </wwEditorFormRow>
-        <button v-if="isOauth" type="button" class="ww-editor-button -secondary -small -icon ml-2 mt-2" @click="unlink">
-            <wwEditorIcon name="unbind" medium />
-        </button>
-    </div>
+    <wwEditorFormRow class="w-100">
+        <wwEditorInputRadio
+            class="mb-2"
+            :model-value="connectionMode"
+            :choices="[
+                { label: 'Cloud (recommended)', value: 'cloud', default: true },
+                { label: 'Custom', value: 'custom' },
+            ]"
+            @update:modelValue="changeConnectionMode"
+        />
+    </wwEditorFormRow>
+
+    <template v-if="connectionMode !== 'custom'">
+        <div
+            v-if="!accessToken"
+            class="body-sm content-brand-secondary bg-brand-secondary border-brand-secondary p-2 mb-2 rounded-02"
+        >
+            <span>New! Connect or create an account to enable the Back-end panel and AI assistance.</span>
+        </div>
+        <div class="flex items-center">
+            <button class="ww-editor-button -secondary" @click="connect" type="button" :disabled="!!accessToken">
+                <wwEditorIcon name="logos/supabase" class="ww-editor-button-icon -left" />
+                {{ accessToken ? 'Account connected' : 'Connect Supabase' }}
+            </button>
+            <button
+                v-if="accessToken"
+                type="button"
+                class="ww-editor-button -secondary -small -icon ml-2"
+                @click="unlink"
+            >
+                <wwEditorIcon name="unbind" medium />
+            </button>
+        </div>
+    </template>
+    <template v-else>
+        <div class="body-sm content-secondary bg-secondary border-secondary p-2 rounded-02 mb-2">
+            <span
+                >Use this mode if you wish to connect to a self-hosted project, a local development project or don't
+                want to connect your account</span
+            >
+        </div>
+        <div class="body-sm content-warning-secondary bg-warning-secondary p-2 rounded-02">
+            <span>Using this mode to connect your project disables the Back-end panel and AI assistance.</span>
+        </div>
+    </template>
 </template>
 
 <script>
@@ -37,11 +58,19 @@ export default {
             isKeyVisible: false,
             projects: [],
             isLoading: false,
+            // keep track of the access token when switching mode
+            storedAccessToken: '',
         };
     },
     computed: {
         isOauth() {
             return this.settings.privateData.accessToken?.startsWith('sbp_oauth');
+        },
+        connectionMode() {
+            return this.settings.privateData.connectionMode;
+        },
+        accessToken() {
+            return this.settings.privateData.accessToken;
         },
     },
     mounted() {
@@ -50,11 +79,22 @@ export default {
         }
     },
     methods: {
+        changeConnectionMode(connectionMode) {
+            this.$emit('update:settings', {
+                ...this.settings,
+                privateData: {
+                    ...this.settings.privateData,
+                    connectionMode,
+                    accessToken: connectionMode === 'custom' ? '' : this.storedAccessToken,
+                },
+            });
+        },
         changeAccessToken(accessToken) {
             this.$emit('update:settings', {
                 ...this.settings,
                 privateData: { ...this.settings.privateData, accessToken },
             });
+            this.storedAccessToken = accessToken;
         },
         async connect() {
             this.isLoading = true;
