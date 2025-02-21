@@ -20,11 +20,7 @@ export default {
                 edit: () => import('./src/components/Configuration/SettingsEdit.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
-                    return (
-                        !!settings.publicData.projectUrl &&
-                        !!settings.publicData.apiKey &&
-                        !!settings.privateData.apiKey
-                    );
+                    return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
                 },
                 onSave: 'onSave',
             },
