@@ -50,7 +50,7 @@
                 :model-value="settings.publicData.apiKey"
                 @update:modelValue="changeApiKey"
             />
-            <wwEditorFormRow label="Service role key" required>
+            <wwEditorFormRow label="Service role key">
                 <div class="flex items-center">
                     <wwEditorInputText
                         type="password"
@@ -232,8 +232,7 @@ export default {
         } else {
             this.showSettings = true;
         }
-        const isSettingsValid =
-            this.settings.publicData.projectUrl && this.settings.publicData.apiKey && this.settings.privateData.apiKey;
+        const isSettingsValid = this.settings.publicData.projectUrl && this.settings.publicData.apiKey;
         const isOtherPluginSettingsValid =
             wwLib.wwPlugins.supabase &&
             wwLib.wwPlugins.supabase.settings.publicData.projectUrl &&
@@ -249,7 +248,7 @@ export default {
                 privateData: {
                     ...this.settings.privateData,
                     accessToken: wwLib.wwPlugins.supabase.settings.privateData.accessToken,
-                    apiKey: wwLib.wwPlugins.supabase.settings.privateData.apiKey,
+                    apiKey: this.settings.privateData.apiKey || wwLib.wwPlugins.supabase.settings.privateData.apiKey,
                     databasePassword: wwLib.wwPlugins.supabase.settings.privateData.databasePassword,
                     connectionString: wwLib.wwPlugins.supabase.settings.privateData.connectionString,
                 },
