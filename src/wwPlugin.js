@@ -34,7 +34,7 @@ export default {
     \================================================================================================*/
     async _onLoad(settings) {
         /* wwFront:start */
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
         // check oauth in local storage
@@ -45,8 +45,7 @@ export default {
         if (isConnecting && code) {
             window.localStorage.removeItem('supabaseAuth_oauth');
             await wwAxios.post(
-                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
                 }/supabase/connect`,
                 { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
@@ -54,7 +53,7 @@ export default {
             wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
             wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
     },
     async _initAuth() {
@@ -103,8 +102,7 @@ export default {
     },
     async syncSettings(settings) {
         await wwAxios.post(
-            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
             }/supabase/sync`,
             { source: 'supabaseAuth', settings }
         );
@@ -112,8 +110,7 @@ export default {
     // driver: core, roles
     async install(driver = 'core') {
         await wwAxios.post(
-            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
             }/supabase/install`,
             { driver }
         );
@@ -123,7 +120,7 @@ export default {
         if (settings.privateData.accessToken && settings.publicData.projectUrl) {
             await this.install();
         }
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -429,11 +426,11 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
-                  await this.publicInstance
-                      .from(this.settings.publicData.userRoleTable)
-                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
-                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
-              ).data.map(({ role }) => role)
+                await this.publicInstance
+                    .from(this.settings.publicData.userRoleTable)
+                    .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                    .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
+            ).data.map(({ role }) => role)
             : [];
         return roles;
     },
@@ -558,11 +555,11 @@ const adminFunctions = {
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
-                  await this.privateInstance
-                      .from(this.settings.publicData.userRoleTable)
-                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
-                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
-              ).data.map(({ role }) => role)
+                await this.privateInstance
+                    .from(this.settings.publicData.userRoleTable)
+                    .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                    .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
+            ).data.map(({ role }) => role)
             : [];
         return roles;
     },
