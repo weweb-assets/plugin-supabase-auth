@@ -1,21 +1,14 @@
 <template>
     <wwEditorFormRow class="w-100">
-        <wwEditorInputRadio
-            class="mb-2"
-            :model-value="connectionMode"
-            :choices="[
-                { label: 'Guided (recommended)', value: 'oauth', default: true },
-                { label: 'Custom', value: 'custom' },
-            ]"
-            @update:modelValue="changeConnectionMode"
-        />
+        <wwEditorInputRadio class="mb-2" :model-value="connectionMode" :choices="[
+            { label: 'Guided (recommended)', value: 'oauth', default: true },
+            { label: 'Custom', value: 'custom' },
+        ]" @update:modelValue="changeConnectionMode" />
     </wwEditorFormRow>
 
     <template v-if="connectionMode !== 'custom'">
-        <div
-            v-if="!accessToken"
-            class="body-sm content-brand-secondary bg-brand-secondary border-brand-secondary p-2 mb-2 rounded-02"
-        >
+        <div v-if="!accessToken"
+            class="body-sm content-brand-secondary bg-brand-secondary border-brand-secondary p-2 mb-2 rounded-02">
             <span>New! Connect or create an account to enable the Back-end panel and AI assistance.</span>
         </div>
         <div class="flex items-center">
@@ -23,22 +16,16 @@
                 <wwEditorIcon name="logos/supabase" class="ww-editor-button-icon -left" />
                 {{ accessToken ? 'Account connected' : 'Connect Supabase' }}
             </button>
-            <button
-                v-if="accessToken"
-                type="button"
-                class="ww-editor-button -secondary -small -icon ml-2"
-                @click="unlink"
-            >
+            <button v-if="accessToken" type="button" class="ww-editor-button -secondary -small -icon ml-2"
+                @click="unlink">
                 <wwEditorIcon name="unbind" medium />
             </button>
         </div>
     </template>
     <template v-else>
         <div class="body-sm content-secondary bg-secondary border-secondary p-2 rounded-02 mb-2">
-            <span
-                >Use this mode if you wish to connect to a self-hosted project, a local development project or don't
-                want to connect your account</span
-            >
+            <span>Use this mode if you wish to connect to a self-hosted project, a local development project or don't
+                want to connect your account</span>
         </div>
         <div class="body-sm content-warning-secondary bg-warning-secondary p-2 rounded-02">
             <span>Using this mode to connect your project disables the Back-end panel and AI assistance.</span>
@@ -101,13 +88,12 @@ export default {
             const redirectUri = window.location.origin + window.location.pathname;
             window.localStorage.setItem('supabase_oauth', true);
             const { data } = await wwAxios.post(
-                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
                 }/supabase/authorize`,
                 { redirectUri, oauthRedirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
             if (!data?.data) throw new Error('No authorization URL returned');
-            window.location.href = data?.data;
+            window.open(data?.data, '_blank');
         },
         unlink() {
             this.changeAccessToken('');
