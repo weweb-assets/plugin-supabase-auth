@@ -524,7 +524,7 @@ const setCookies = session => {
         sameSite: 'Lax',
     });
     window.vm.config.globalProperties.$cookie.setCookie('sb-refresh-token', session.refresh_token, {
-        expire: session.expires_in,
+        expire: '1y',
         path,
         domain: window.location.hostname,
         secure: true,
