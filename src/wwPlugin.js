@@ -34,7 +34,7 @@ export default {
     \================================================================================================*/
     async _onLoad(settings) {
         /* wwFront:start */
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey);
         /* wwFront:end */
         /* wwEditor:start */
         // check oauth in local storage
@@ -53,7 +53,7 @@ export default {
             wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
             wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
         /* wwEditor:end */
     },
     async _initAuth() {
@@ -120,7 +120,7 @@ export default {
         if (settings.privateData.accessToken && settings.publicData.projectUrl) {
             await this.install();
         }
-        await this.load(settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
