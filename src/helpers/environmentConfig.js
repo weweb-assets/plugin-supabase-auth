@@ -1,50 +1,104 @@
 /**
- * Gets the configuration for a specific environment with fallback support
- * @param {Object} settings - Plugin settings
- * @param {string} requestedEnv - The environment to get config for ('production', 'staging', 'editor')
- * @returns {Object|null} - Environment configuration or null
+ * Gets the current Supabase settings for the active environment
+ * Automatically detects the environment and returns the appropriate configuration
+ * with intelligent fallback based on what's configured:
+ * - If only production is configured: all environments use production
+ * - If production + staging: editor uses staging, staging uses staging, production uses production
+ * - If production + editor: editor uses editor, staging uses production, production uses production
+ * - If all three: each uses its own configuration
+ * 
+ * @param {string} [pluginName='supabaseAuth'] - The plugin to get settings for ('supabase' or 'supabaseAuth')
+ * @returns {Object} - Object with projectUrl, publicApiKey, privateApiKey, and other settings
  */
-export function getEnvironmentConfig(settings, requestedEnv = 'production') {
-    const envPriority = {
-        'editor': ['editor', 'staging', 'production'],
-        'staging': ['staging', 'production'],
-        'production': ['production']
-    };
-    
-    const fallbackChain = envPriority[requestedEnv] || ['production'];
-    
-    // Try new multi-environment format first
-    if (settings?.publicData?.environments) {
-        for (const env of fallbackChain) {
-            if (settings.publicData.environments[env]) {
-                return {
-                    publicData: settings.publicData.environments[env],
-                    privateData: settings.privateData?.environments?.[env] || {}
-                };
-            }
-        }
-    }
-    
-    // Fallback to legacy format (acts as production)
-    if (settings?.publicData?.projectUrl) {
-        return {
-            publicData: {
-                projectUrl: settings.publicData.projectUrl,
-                apiKey: settings.publicData.apiKey,
-                customDomain: settings.publicData.customDomain
-            },
-            privateData: {
-                connectionMode: settings.privateData?.connectionMode,
-                accessToken: settings.privateData?.accessToken,
-                refreshToken: settings.privateData?.refreshToken,
-                apiKey: settings.privateData?.apiKey,
-                databasePassword: settings.privateData?.databasePassword,
-                connectionString: settings.privateData?.connectionString
-            }
+export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
+    // Get the plugin settings
+    const plugin = wwLib.wwPlugins[pluginName];
+    if (!plugin?.settings) {
+        return { 
+            projectUrl: null, 
+            publicApiKey: null, 
+            privateApiKey: null,
+            customDomain: null,
+            environment: getCurrentEnvironment()
         };
     }
     
-    return null;
+    const settings = plugin.settings;
+    const currentEnv = getCurrentEnvironment();
+    
+    // Try new multi-environment format first
+    if (settings?.publicData?.environments) {
+        const envs = settings.publicData.environments;
+        
+        // Check which environments are configured
+        const hasProduction = !!(envs.production?.projectUrl && envs.production?.apiKey);
+        const hasStaging = !!(envs.staging?.projectUrl && envs.staging?.apiKey);
+        const hasEditor = !!(envs.editor?.projectUrl && envs.editor?.apiKey);
+        
+        // Determine which environment config to use based on what's available
+        let targetEnv = null;
+        
+        if (currentEnv === 'production') {
+            // Production always uses production (if configured)
+            if (hasProduction) targetEnv = 'production';
+        } else if (currentEnv === 'staging') {
+            // Staging prefers staging, falls back to production
+            if (hasStaging) targetEnv = 'staging';
+            else if (hasProduction) targetEnv = 'production';
+        } else if (currentEnv === 'editor') {
+            // Editor prefers editor, then staging, then production
+            if (hasEditor) targetEnv = 'editor';
+            else if (hasStaging) targetEnv = 'staging';
+            else if (hasProduction) targetEnv = 'production';
+        }
+        
+        // Return the configuration for the target environment
+        if (targetEnv) {
+            const envConfig = envs[targetEnv];
+            const privateEnvConfig = settings.privateData?.environments?.[targetEnv];
+            
+            return {
+                projectUrl: envConfig.customDomain || envConfig.projectUrl,
+                publicApiKey: envConfig.apiKey,
+                privateApiKey: privateEnvConfig?.apiKey || null,
+                customDomain: envConfig.customDomain || null,
+                connectionMode: privateEnvConfig?.connectionMode || null,
+                accessToken: privateEnvConfig?.accessToken || null,
+                refreshToken: privateEnvConfig?.refreshToken || null,
+                databasePassword: privateEnvConfig?.databasePassword || null,
+                connectionString: privateEnvConfig?.connectionString || null,
+                environment: currentEnv,
+                resolvedEnvironment: targetEnv // The actual environment config being used after fallback
+            };
+        }
+    }
+    
+    // Fallback to legacy format (acts as production for all environments)
+    if (settings?.publicData?.projectUrl && settings?.publicData?.apiKey) {
+        return {
+            projectUrl: settings.publicData.customDomain || settings.publicData.projectUrl,
+            publicApiKey: settings.publicData.apiKey,
+            privateApiKey: settings.privateData?.apiKey || null,
+            customDomain: settings.publicData.customDomain || null,
+            connectionMode: settings.privateData?.connectionMode || null,
+            accessToken: settings.privateData?.accessToken || null,
+            refreshToken: settings.privateData?.refreshToken || null,
+            databasePassword: settings.privateData?.databasePassword || null,
+            connectionString: settings.privateData?.connectionString || null,
+            environment: currentEnv,
+            resolvedEnvironment: 'production' // Legacy format is treated as production
+        };
+    }
+    
+    // No configuration found
+    return { 
+        projectUrl: null, 
+        publicApiKey: null, 
+        privateApiKey: null,
+        customDomain: null,
+        environment: currentEnv,
+        resolvedEnvironment: null
+    };
 }
 
 /**
@@ -52,58 +106,14 @@ export function getEnvironmentConfig(settings, requestedEnv = 'production') {
  * @returns {string} - 'production', 'staging', or 'editor'
  */
 export function getCurrentEnvironment() {
-    // In the editor
-    if (window.location.hostname === 'editor.weweb.io' || 
-        window.location.hostname === 'editor-staging.weweb.io' ||
-        window.location.hostname.includes('localhost')) {
-        return 'editor';
-    }
+    // Use WeWeb's official environment detection
+    const env = wwLib.getEnvironment();
     
-    // Check for staging indicators
-    if (window.location.hostname.includes('-staging') ||
-        window.location.hostname.includes('weweb-preview.io')) {
-        return 'staging';
-    }
-    
-    // Default to production
+    // Map WeWeb's environment values to our three-environment model
+    // 'preview' refers to apps hosted on weweb-preview.io (WeWeb's default hosting)
+    // These are production apps without custom domains, so we map to 'production'
+    if (env === 'editor') return 'editor';
+    if (env === 'staging') return 'staging';
+    // 'preview' and 'production' both map to production
     return 'production';
-}
-
-/**
- * Checks if an environment is configured
- * @param {Object} settings - Plugin settings
- * @param {string} env - Environment to check
- * @returns {boolean}
- */
-export function isEnvironmentConfigured(settings, env) {
-    if (!settings?.publicData?.environments?.[env]) {
-        return false;
-    }
-    
-    const envConfig = settings.publicData.environments[env];
-    return !!(envConfig.projectUrl && envConfig.apiKey);
-}
-
-/**
- * Gets all configured environments
- * @param {Object} settings - Plugin settings
- * @returns {Array<string>} - Array of configured environment names
- */
-export function getConfiguredEnvironments(settings) {
-    const environments = [];
-    
-    // Check new format
-    if (settings?.publicData?.environments) {
-        for (const env of ['production', 'staging', 'editor']) {
-            if (isEnvironmentConfigured(settings, env)) {
-                environments.push(env);
-            }
-        }
-    }
-    // Check legacy format (counts as production)
-    else if (settings?.publicData?.projectUrl && settings?.publicData?.apiKey) {
-        environments.push('production');
-    }
-    
-    return environments;
 }

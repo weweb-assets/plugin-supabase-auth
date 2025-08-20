@@ -22,6 +22,7 @@ import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
 /* wwEditor:end */
 import { createClient } from '@supabase/supabase-js';
+import { getCurrentSupabaseSettings } from './helpers/environmentConfig';
 
 export default {
     privateInstance: null,
@@ -34,7 +35,8 @@ export default {
     \================================================================================================*/
     async _onLoad(settings) {
         /* wwFront:start */
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey);
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        await this.load(config.projectUrl, config.publicApiKey);
         /* wwFront:end */
         /* wwEditor:start */
         // check oauth in local storage
@@ -53,7 +55,8 @@ export default {
             wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
             wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        await this.load(config.projectUrl, config.publicApiKey, config.privateApiKey);
         /* wwEditor:end */
     },
     async _initAuth() {
@@ -120,7 +123,8 @@ export default {
         if (settings.privateData.accessToken && settings.publicData.projectUrl) {
             await this.install();
         }
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        await this.load(config.projectUrl, config.publicApiKey, config.privateApiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -501,8 +505,11 @@ export default {
         setCookies(session);
     },
     /* wwEditor:start */
-    async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
-        this.doc = await getDoc(projectUrl, apiKey);
+    async fetchDoc() {
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        if (config.projectUrl && config.publicApiKey) {
+            this.doc = await getDoc(config.projectUrl, config.publicApiKey);
+        }
     },
     /* wwEditor:end */
 };
