@@ -117,3 +117,18 @@ export function getCurrentEnvironment() {
     // 'preview' and 'production' both map to production
     return 'production';
 }
+
+/**
+ * Checks if an environment is configured
+ * @param {Object} settings - Plugin settings
+ * @param {string} env - Environment to check
+ * @returns {boolean}
+ */
+export function isEnvironmentConfigured(settings, env) {
+    if (!settings?.publicData?.environments?.[env]) {
+        return false;
+    }
+    
+    const envConfig = settings.publicData.environments[env];
+    return !!(envConfig.projectUrl && envConfig.apiKey);
+}
