@@ -34,8 +34,9 @@ export default {
         Plugin API
     \================================================================================================*/
     async _onLoad(settings) {
-        /* wwFront:start */
         const config = getCurrentSupabaseSettings('supabaseAuth');
+        
+        /* wwFront:start */
         await this.load(config.projectUrl, config.publicApiKey);
         /* wwFront:end */
         /* wwEditor:start */
@@ -55,7 +56,6 @@ export default {
             wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
             wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
-        const config = getCurrentSupabaseSettings('supabaseAuth');
         await this.load(config.projectUrl, config.publicApiKey, config.privateApiKey);
         /* wwEditor:end */
     },
