@@ -57,14 +57,19 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
             const envConfig = envs[targetEnv];
             const privateEnvConfig = settings.privateData?.environments?.[targetEnv];
             
+            // OAuth tokens are global (shared across all environments)
+            // Use environment-specific tokens if available, otherwise fall back to global OAuth tokens
+            const connectionMode = privateEnvConfig?.connectionMode || null;
+            const isOAuth = connectionMode === 'oauth';
+            
             return {
                 projectUrl: envConfig.customDomain || envConfig.projectUrl,
                 publicApiKey: envConfig.apiKey,
                 privateApiKey: privateEnvConfig?.apiKey || null,
                 customDomain: envConfig.customDomain || null,
-                connectionMode: privateEnvConfig?.connectionMode || null,
-                accessToken: privateEnvConfig?.accessToken || null,
-                refreshToken: privateEnvConfig?.refreshToken || null,
+                connectionMode: connectionMode,
+                accessToken: privateEnvConfig?.accessToken || (isOAuth ? settings.privateData?.accessToken : null),
+                refreshToken: privateEnvConfig?.refreshToken || (isOAuth ? settings.privateData?.refreshToken : null),
                 databasePassword: privateEnvConfig?.databasePassword || null,
                 connectionString: privateEnvConfig?.connectionString || null,
                 environment: currentEnv,
