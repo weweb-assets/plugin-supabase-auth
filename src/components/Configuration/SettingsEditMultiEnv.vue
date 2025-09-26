@@ -370,7 +370,19 @@ export default {
                 }
             },
             deep: true
-        }
+        },
+        // When environments config changes (e.g., settings loaded/updated), ensure branches are loaded
+        'settings.publicData.environments': {
+            handler() {
+                this.$nextTick(async () => {
+                    for (const env of this.environments) {
+                        const url = this.getCurrentEnvConfig(env)?.projectUrl;
+                        if (url) await this.loadBranches(env);
+                    }
+                });
+            },
+            deep: true,
+        },
     },
     computed: {
         projectRef() {
