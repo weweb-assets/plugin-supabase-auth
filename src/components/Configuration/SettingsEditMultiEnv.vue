@@ -483,6 +483,12 @@ export default {
             this.isLoading = true;
             const redirectUri = window.location.origin + window.location.pathname;
             window.localStorage.setItem('supabase_oauth', true);
+            try {
+                const env = this.activeEnvironment || (wwLib.getEnvironment ? wwLib.getEnvironment() : 'production') || 'production';
+                window.localStorage.setItem('supabase_oauth_env', env);
+            } catch (e) {
+                // Best-effort; server will still infer env from Referer if missing
+            }
             const { data } = await wwAxios.post(
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
                     wwLib.$store.getters['websiteData/getDesignInfo'].id
