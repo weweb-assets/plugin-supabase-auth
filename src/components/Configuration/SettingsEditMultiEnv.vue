@@ -397,11 +397,21 @@ export default {
         if (!this.settings.publicData?.environments) {
             this.migrateToMultiEnv();
         }
-        
+
         // Check if OAuth is connected and refresh projects
         if (this.hasOAuthToken()) {
             this.refreshProjects();
         }
+
+        // Proactively check branching availability for existing project URLs
+        this.$nextTick(async () => {
+            try {
+                for (const env of this.environments) {
+                    const url = this.getCurrentEnvConfig(env)?.projectUrl;
+                    if (url) await this.checkBranching(env);
+                }
+            } catch (_) {}
+        });
     },
     methods: {
         capitalize(str) {
