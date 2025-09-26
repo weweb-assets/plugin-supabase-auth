@@ -89,8 +89,8 @@
                         </button>
                     </div>
 
-                    <!-- Branch selection (guided, optional) -->
-                    <div v-if="branchingSupported?.[env]" class="flex items-center mt-2">
+                    <!-- Branch selection (guided) -->
+                    <div v-if="hasOAuthToken() && getCurrentEnvConfig(env).projectUrl" class="flex items-center mt-2">
                         <wwEditorFormRow label="Branch" class="w-100">
                             <wwEditorInput
                                 type="select"
@@ -104,6 +104,9 @@
                         <button type="button" class="ww-editor-button -secondary -small -icon ml-2 mt-1" @click="loadBranches(env)">
                             <wwEditorIcon name="refresh" medium />
                         </button>
+                        <div v-if="branchErrors?.[env]" class="body-xs content-tertiary ml-2 mt-1">
+                            {{ branchErrors[env] }}
+                        </div>
                     </div>
                     
                     <button
@@ -346,7 +349,7 @@ export default {
             },
             branches: {},
             selectedBranches: {},
-            branchingSupported: {},
+            branchErrors: {},
         };
     },
     watch: {
@@ -403,12 +406,12 @@ export default {
             this.refreshProjects();
         }
 
-        // Proactively check branching availability for existing project URLs
+        // Proactively load branches for existing project URLs
         this.$nextTick(async () => {
             try {
                 for (const env of this.environments) {
                     const url = this.getCurrentEnvConfig(env)?.projectUrl;
-                    if (url) await this.checkBranching(env);
+                    if (url) await this.loadBranches(env);
                 }
             } catch (_) {}
         });
@@ -583,8 +586,8 @@ export default {
                 privateData: { apiKey: privateApiKey, connectionString }
             });
 
-            // Check capabilities; if branching is available, load branches
-            await this.checkBranching(env);
+            // Load branches (do not gate UI on success)
+            await this.loadBranches(env);
         },
 
         async loadBranches(env) {
@@ -593,23 +596,15 @@ export default {
                 if (!ref || !this.hasOAuthToken()) return;
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches` });
                 this.$set(this.branches, env, data?.data || []);
+                this.$set(this.branchErrors, env, '');
             } catch (e) {
-                // Ignore if branches not available
+                this.$set(this.branches, env, []);
+                const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
+                this.$set(this.branchErrors, env, msg);
             }
         },
 
-        async checkBranching(env) {
-            try {
-                const ref = this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
-                if (!ref || !this.hasOAuthToken()) return this.$set(this.branchingSupported, env, false);
-                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/features` });
-                const available = !!data?.data?.branchingAvailable;
-                this.$set(this.branchingSupported, env, available);
-                if (available) await this.loadBranches(env);
-            } catch (e) {
-                this.$set(this.branchingSupported, env, false);
-            }
-        },
+        // removed features gating; we call /branches directly
 
         async changeBranch(branchValue, env) {
             this.$set(this.selectedBranches, env, branchValue || '');
