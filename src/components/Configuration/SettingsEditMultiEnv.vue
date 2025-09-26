@@ -90,7 +90,7 @@
                     </div>
 
                     <!-- Branch selection (guided, optional) -->
-                    <div class="flex items-center mt-2">
+                    <div v-if="branchingSupported?.[env]" class="flex items-center mt-2">
                         <wwEditorFormRow label="Branch" class="w-100">
                             <wwEditorInput
                                 type="select"
@@ -346,6 +346,7 @@ export default {
             },
             branches: {},
             selectedBranches: {},
+            branchingSupported: {},
         };
     },
     watch: {
@@ -572,8 +573,8 @@ export default {
                 privateData: { apiKey: privateApiKey, connectionString }
             });
 
-            // Load branches for the selected project (best-effort)
-            this.loadBranches(env);
+            // Check capabilities; if branching is available, load branches
+            await this.checkBranching(env);
         },
 
         async loadBranches(env) {
@@ -584,6 +585,19 @@ export default {
                 this.$set(this.branches, env, data?.data || []);
             } catch (e) {
                 // Ignore if branches not available
+            }
+        },
+
+        async checkBranching(env) {
+            try {
+                const ref = this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                if (!ref || !this.hasOAuthToken()) return this.$set(this.branchingSupported, env, false);
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/features` });
+                const available = !!data?.data?.branchingAvailable;
+                this.$set(this.branchingSupported, env, available);
+                if (available) await this.loadBranches(env);
+            } catch (e) {
+                this.$set(this.branchingSupported, env, false);
             }
         },
 
