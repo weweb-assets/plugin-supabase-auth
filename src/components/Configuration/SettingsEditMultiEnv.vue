@@ -88,6 +88,23 @@
                             <wwEditorIcon name="refresh" medium />
                         </button>
                     </div>
+
+                    <!-- Branch selection (guided, optional) -->
+                    <div class="flex items-center mt-2">
+                        <wwEditorFormRow label="Branch" class="w-100">
+                            <wwEditorInput
+                                type="select"
+                                placeholder="Default (main)"
+                                :model-value="selectedBranches?.[env] || ''"
+                                :options="branchOptions(env)"
+                                @update:modelValue="(val) => changeBranch(val, env)"
+                                class="-full"
+                            />
+                        </wwEditorFormRow>
+                        <button type="button" class="ww-editor-button -secondary -small -icon ml-2 mt-1" @click="loadBranches(env)">
+                            <wwEditorIcon name="refresh" medium />
+                        </button>
+                    </div>
                     
                     <button
                         @click="showSettings[env] = !showSettings[env]"
@@ -327,6 +344,8 @@ export default {
                     dbPass: '',
                 }
             },
+            branches: {},
+            selectedBranches: {},
         };
     },
     watch: {
@@ -363,6 +382,13 @@ export default {
                     }))
                     .sort((a, b) => (a.label.includes('#PAUSED') ? 1 : 0) - (b.label.includes('#PAUSED') ? 1 : 0))
             );
+        },
+        branchOptions() {
+            return (env) => {
+                const items = this.branches?.[env] || [];
+                const base = [{ label: 'Default (main)', value: '' }];
+                return base.concat(items.map(b => ({ label: `${b.name}${b.is_default ? ' (default)' : ''}`, value: b.project_ref || b.ref || b.id || b.name })));
+            }
         },
     },
     mounted() {
@@ -544,6 +570,46 @@ export default {
             this.updateEnvironmentConfig(env, {
                 publicData: { projectUrl, apiKey },
                 privateData: { apiKey: privateApiKey, connectionString }
+            });
+
+            // Load branches for the selected project (best-effort)
+            this.loadBranches(env);
+        },
+
+        async loadBranches(env) {
+            try {
+                const ref = this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                if (!ref || !this.hasOAuthToken()) return;
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches` });
+                this.$set(this.branches, env, data?.data || []);
+            } catch (e) {
+                // Ignore if branches not available
+            }
+        },
+
+        async changeBranch(branchValue, env) {
+            this.$set(this.selectedBranches, env, branchValue || '');
+            const baseUrl = this.getCurrentEnvConfig(env).projectUrl;
+            if (!baseUrl) return;
+
+            const baseRef = baseUrl.replace('https://', '').replace('.supabase.co', '');
+            let targetRef = baseRef;
+            if (branchValue) {
+                const list = this.branches?.[env] || [];
+                const b = list.find(it => (it.project_ref || it.ref || it.id || it.name) === branchValue);
+                targetRef = b?.project_ref || b?.ref || branchValue;
+            }
+
+            const projectUrl = `https://${targetRef}.supabase.co`;
+            // Update env config with branch project URL and refresh keys/conn string from that ref
+            const projectData = await this.fetchProject(targetRef);
+            const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
+            const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
+            const connectionString = projectData?.pgbouncer?.connection_string;
+
+            this.updateEnvironmentConfig(env, {
+                publicData: { projectUrl, apiKey: apiKey || this.getCurrentEnvConfig(env).apiKey, branch: branchValue || null },
+                privateData: { apiKey: privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey, connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString }
             });
         },
         
