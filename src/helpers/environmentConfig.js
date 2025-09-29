@@ -62,6 +62,10 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
             
             return {
                 projectUrl: envConfig.customDomain || envConfig.projectUrl,
+                projectRef: envConfig.projectUrl?.replace('https://', '').replace('.supabase.co', '') || envConfig.baseProjectRef || null,
+                baseProjectRef: envConfig.baseProjectRef || null,
+                branch: envConfig.branch || null,
+                branchSlug: envConfig.branchSlug || null,
                 publicApiKey: envConfig.apiKey,
                 privateApiKey: privateEnvConfig?.apiKey || null,
                 customDomain: envConfig.customDomain || null,
@@ -78,8 +82,13 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
     
     // Fallback to legacy format (acts as production for all environments)
     if (settings?.publicData?.projectUrl && settings?.publicData?.apiKey) {
+        const url = settings.publicData.projectUrl;
         return {
-            projectUrl: settings.publicData.customDomain || settings.publicData.projectUrl,
+            projectUrl: settings.publicData.customDomain || url,
+            projectRef: url?.replace('https://', '').replace('.supabase.co', '') || null,
+            baseProjectRef: url?.replace('https://', '').replace('.supabase.co', '') || null,
+            branch: null,
+            branchSlug: null,
             publicApiKey: settings.publicData.apiKey,
             privateApiKey: settings.privateData?.apiKey || null,
             customDomain: settings.publicData.customDomain || null,
@@ -92,10 +101,14 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
             resolvedEnvironment: 'production' // Legacy format is treated as production
         };
     }
-    
+
     // No configuration found
     return { 
         projectUrl: null, 
+        projectRef: null,
+        baseProjectRef: null,
+        branch: null,
+        branchSlug: null,
         publicApiKey: null, 
         privateApiKey: null,
         customDomain: null,
