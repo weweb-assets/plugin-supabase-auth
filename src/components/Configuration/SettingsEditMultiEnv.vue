@@ -636,16 +636,25 @@ export default {
                     path: `/projects/${ref}/branches`,
                     params: { baseProjectRef: cfg.baseProjectRef || overrideRef || '' },
                 });
+                const branches = data?.data || [];
                 if (this.$set) {
-                    this.$set(this.branches, env, data?.data || []);
+                    this.$set(this.branches, env, branches);
                     this.$set(this.branchErrors, env, '');
                 } else {
-                    this.branches = { ...(this.branches || {}), [env]: data?.data || [] };
+                    this.branches = { ...(this.branches || {}), [env]: branches };
                     const errors = { ...(this.branchErrors || {}) };
                     delete errors[env];
                     this.branchErrors = errors;
                 }
-                console.info('[Supabase auth plugin] loadBranches success', { env, count: data?.data?.length || 0 });
+
+                const defaultBranch = branches.find(b => b.is_default);
+                const defaultValue = defaultBranch?.project_ref || defaultBranch?.ref || defaultBranch?.id || '';
+                if (defaultValue) {
+                    if (this.$set) this.$set(this.selectedBranches, env, defaultValue);
+                    else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: defaultValue };
+                }
+
+                console.info('[Supabase auth plugin] loadBranches success', { env, count: branches.length, defaultValue });
             } catch (e) {
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
                 if (this.$set) {
