@@ -580,7 +580,24 @@ export default {
             let privateApiKey = this.getCurrentEnvPrivateConfig(env).apiKey;
             let connectionString = this.getCurrentEnvPrivateConfig(env).connectionString;
             let baseProjectRef = projectUrl.replace('https://', '').replace('.supabase.co', '');
-            
+
+            // Reset branch state while loading new project data (prevents showing stale options)
+            if (this.$set) {
+                this.$set(this.branches, env, []);
+                this.$set(this.branchErrors, env, '');
+                this.$set(this.selectedBranches, env, '');
+            } else {
+                const branchCopy = { ...(this.branches || {}) };
+                branchCopy[env] = [];
+                this.branches = branchCopy;
+                const errorCopy = { ...(this.branchErrors || {}) };
+                delete errorCopy[env];
+                this.branchErrors = errorCopy;
+                const selectedCopy = { ...(this.selectedBranches || {}) };
+                selectedCopy[env] = '';
+                this.selectedBranches = selectedCopy;
+            }
+
             if (this.hasOAuthToken() && this.getConnectionMode(env) === 'oauth') {
                 const projectData = await this.fetchProject(
                     projectUrl.replace('https://', '').replace('.supabase.co', '')
