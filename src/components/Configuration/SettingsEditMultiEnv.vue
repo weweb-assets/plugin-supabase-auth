@@ -648,7 +648,6 @@ export default {
                 const cfg = this.getCurrentEnvConfig(env);
                 const baseRef = overrideRef || cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 const ref = baseRef;
-                console.info('[Supabase auth plugin] loadBranches', { env, baseProjectRef: cfg.baseProjectRef, overrideRef, projectUrl: cfg.projectUrl, ref, hasOAuth: this.hasOAuthToken() });
                 if (!ref || !this.hasOAuthToken()) return;
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
                     method: 'GET',
@@ -685,7 +684,6 @@ export default {
                     else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: nextSelection };
                 }
 
-                console.info('[Supabase auth plugin] loadBranches success', { env, count: branches.length, defaultValue });
             } catch (e) {
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
                 if (this.$set) {

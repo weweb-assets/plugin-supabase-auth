@@ -532,8 +532,6 @@ export default {
             hasApiKey: !!config.publicApiKey,
             apiKeyPreview: maskForLog(config.publicApiKey),
         };
-        console.info('[Supabase auth plugin] fetchDoc config', logContext);
-
         if (!runtimeProjectUrl || !config.publicApiKey) {
             console.warn('[Supabase auth plugin] fetchDoc skipped', {
                 reason: 'Missing projectUrl or publicApiKey',
@@ -548,10 +546,6 @@ export default {
             });
             this.doc = doc;
             const rowCount = Array.isArray(doc) ? doc.length : undefined;
-            console.info('[Supabase auth plugin] fetchDoc success', {
-                projectUrl: runtimeProjectUrl,
-                rowCount,
-            });
         } catch (error) {
             console.warn('[Supabase auth plugin] fetchDoc failed', {
                 projectUrl: runtimeProjectUrl,
@@ -567,11 +561,6 @@ export default {
 
 /* wwEditor:start */
 const getDoc = async (url, apiKey, { branchSlug } = {}) => {
-    console.info('[Supabase auth plugin] fetchDoc request', {
-        url,
-        headerPreview: maskForLog(apiKey),
-        branchSlug,
-    });
     try {
         const headers = {
             apikey: apiKey,
