@@ -22,7 +22,7 @@ import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
 /* wwEditor:end */
 import { createClient } from '@supabase/supabase-js';
-import { getCurrentSupabaseSettings } from './helpers/environmentConfig';
+import { getCurrentSupabaseSettings, resolveRuntimeProjectUrl } from './helpers/environmentConfig';
 
 const maskForLog = value => {
     if (!value) return null;
@@ -131,7 +131,8 @@ export default {
             await this.install();
         }
         const config = getCurrentSupabaseSettings('supabaseAuth');
-        await this.load(config.projectUrl, config.publicApiKey, config.privateApiKey);
+        const runtimeProjectUrl = resolveRuntimeProjectUrl(config);
+        await this.load(runtimeProjectUrl, config.publicApiKey, config.privateApiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -139,14 +140,18 @@ export default {
     \================================================================================================*/
     async load(projectUrl, publicApiKey, privateApiKey = null) {
         try {
-            if (!projectUrl || !publicApiKey) return;
+            const config = getCurrentSupabaseSettings('supabaseAuth');
+            const runtimeProjectUrl = resolveRuntimeProjectUrl(config) || projectUrl;
+            const effectivePublicKey = config?.publicApiKey || publicApiKey;
+            const effectivePrivateKey = config?.privateApiKey || privateApiKey;
+            if (!runtimeProjectUrl || !effectivePublicKey) return;
 
             /* wwEditor:start */
-            if (privateApiKey) this.privateInstance = createClient(projectUrl, privateApiKey);
-            this.switchAdmin(!!privateApiKey);
+            if (effectivePrivateKey) this.privateInstance = createClient(runtimeProjectUrl, effectivePrivateKey);
+            this.switchAdmin(!!effectivePrivateKey);
             /* wwEditor:end */
 
-            this.publicInstance = createClient(projectUrl, publicApiKey, {
+            this.publicInstance = createClient(runtimeProjectUrl, effectivePublicKey, {
                 auth: {
                     storageKey: wwLib.wwWebsiteData.getInfo().id,
                 },
@@ -155,7 +160,7 @@ export default {
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
             /* wwEditor:start */
-            await this.fetchDoc(projectUrl, privateApiKey || publicApiKey);
+            await this.fetchDoc();
             /* wwEditor:end */
             if (!this.privateInstance && !this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
             this.publicInstance.auth.onAuthStateChange(async (event, session) => {
@@ -514,10 +519,12 @@ export default {
     /* wwEditor:start */
     async fetchDoc() {
         const config = getCurrentSupabaseSettings('supabaseAuth');
+        const runtimeProjectUrl = resolveRuntimeProjectUrl(config);
         const logContext = {
             env: config.environment,
             resolvedEnv: config.resolvedEnvironment,
             projectUrl: config.projectUrl,
+            runtimeProjectUrl,
             projectRef: config.projectRef,
             baseProjectRef: config.baseProjectRef,
             branch: config.branch,
@@ -527,7 +534,7 @@ export default {
         };
         console.info('[Supabase auth plugin] fetchDoc config', logContext);
 
-        if (!config.projectUrl || !config.publicApiKey) {
+        if (!runtimeProjectUrl || !config.publicApiKey) {
             console.warn('[Supabase auth plugin] fetchDoc skipped', {
                 reason: 'Missing projectUrl or publicApiKey',
                 ...logContext,
@@ -536,16 +543,18 @@ export default {
         }
 
         try {
-            const doc = await getDoc(config.projectUrl, config.publicApiKey);
+            const doc = await getDoc(runtimeProjectUrl, config.publicApiKey, {
+                branchSlug: config.branchSlug,
+            });
             this.doc = doc;
             const rowCount = Array.isArray(doc) ? doc.length : undefined;
             console.info('[Supabase auth plugin] fetchDoc success', {
-                projectUrl: config.projectUrl,
+                projectUrl: runtimeProjectUrl,
                 rowCount,
             });
         } catch (error) {
             console.warn('[Supabase auth plugin] fetchDoc failed', {
-                projectUrl: config.projectUrl,
+                projectUrl: runtimeProjectUrl,
                 status: error?.response?.status,
                 message: error?.message,
                 responseError: error?.response?.data?.message,
@@ -557,13 +566,19 @@ export default {
 };
 
 /* wwEditor:start */
-const getDoc = async (url, apiKey) => {
+const getDoc = async (url, apiKey, { branchSlug } = {}) => {
     console.info('[Supabase auth plugin] fetchDoc request', {
         url,
         headerPreview: maskForLog(apiKey),
+        branchSlug,
     });
     try {
-        const { data } = await axios.get(`${url}/rest/v1/`, { headers: { apiKey } });
+        const headers = {
+            apikey: apiKey,
+            Authorization: `Bearer ${apiKey}`,
+        };
+        const params = branchSlug ? { branch: branchSlug } : undefined;
+        const { data } = await axios.get(`${url}/rest/v1/`, { headers, params });
         return data;
     } catch (error) {
         console.warn('[Supabase auth plugin] fetchDoc request error', {

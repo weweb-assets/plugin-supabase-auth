@@ -60,10 +60,17 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
             // Single OAuth across environments: use global tokens only
             const connectionMode = settings.privateData?.connectionMode || privateEnvConfig?.connectionMode || null;
             
+            const inferredProjectRef =
+                envConfig.projectUrl?.replace('https://', '').replace('.supabase.co', '') || envConfig.baseProjectRef || null;
+
             return {
                 projectUrl: envConfig.customDomain || envConfig.projectUrl,
-                projectRef: envConfig.projectUrl?.replace('https://', '').replace('.supabase.co', '') || envConfig.baseProjectRef || null,
-                baseProjectRef: envConfig.baseProjectRef || null,
+                projectRef: inferredProjectRef,
+                baseProjectRef:
+                    envConfig.baseProjectRef ||
+                    inferredProjectRef ||
+                    settings?.publicData?.projectUrl?.replace('https://', '').replace('.supabase.co', '') ||
+                    null,
                 branch: envConfig.branch || null,
                 branchSlug: envConfig.branchSlug || null,
                 publicApiKey: envConfig.apiKey,
@@ -83,10 +90,11 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
     // Fallback to legacy format (acts as production for all environments)
     if (settings?.publicData?.projectUrl && settings?.publicData?.apiKey) {
         const url = settings.publicData.projectUrl;
+        const projectRef = url?.replace('https://', '').replace('.supabase.co', '') || null;
         return {
             projectUrl: settings.publicData.customDomain || url,
-            projectRef: url?.replace('https://', '').replace('.supabase.co', '') || null,
-            baseProjectRef: url?.replace('https://', '').replace('.supabase.co', '') || null,
+            projectRef,
+            baseProjectRef: projectRef,
             branch: null,
             branchSlug: null,
             publicApiKey: settings.publicData.apiKey,
@@ -132,6 +140,15 @@ export function getCurrentEnvironment() {
     if (env === 'staging') return 'staging';
     // 'preview' and 'production' both map to production
     return 'production';
+}
+
+export function resolveRuntimeProjectUrl(config) {
+    if (!config) return null;
+    if (config.customDomain) return config.customDomain;
+    if (config.branch) return `https://${config.branch}.supabase.co`;
+    if (config.projectUrl) return config.projectUrl;
+    if (config.projectRef) return `https://${config.projectRef}.supabase.co`;
+    return null;
 }
 
 /**
