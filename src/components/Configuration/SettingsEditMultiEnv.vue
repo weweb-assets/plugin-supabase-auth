@@ -605,16 +605,20 @@ export default {
 
         async loadBranches(env) {
             try {
-                const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                const cfg = this.getCurrentEnvConfig(env);
+                const baseRef = cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 const ref = baseRef;
+                console.info('[Supabase auth plugin] loadBranches', { env, baseProjectRef: cfg.baseProjectRef, projectUrl: cfg.projectUrl, ref, hasOAuth: this.hasOAuthToken() });
                 if (!ref || !this.hasOAuthToken()) return;
-                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches` });
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches`, params: { baseProjectRef: cfg.baseProjectRef || '' } });
                 this.$set(this.branches, env, data?.data || []);
                 this.$set(this.branchErrors, env, '');
+                console.info('[Supabase auth plugin] loadBranches success', { env, count: data?.data?.length || 0 });
             } catch (e) {
                 this.$set(this.branches, env, []);
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
                 this.$set(this.branchErrors, env, msg);
+                console.warn('[Supabase auth plugin] loadBranches error', { env, status: e?.response?.status, msg });
             }
         },
 
