@@ -96,7 +96,7 @@
                     </div>
 
                     <!-- Branch selection (guided) -->
-                    <div v-if="hasOAuthToken() && getCurrentEnvConfig(env).projectUrl" class="flex items-center mt-2">
+                    <div v-if="shouldShowBranchSelect(env)" class="flex items-center mt-2">
                         <wwEditorFormRow label="Branch" class="w-100">
                             <wwEditorInput
                                 type="select"
