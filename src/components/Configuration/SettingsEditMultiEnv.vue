@@ -671,7 +671,8 @@ export default {
         // removed features gating; we call /branches directly
 
         async changeBranch(branchValue, env) {
-            this.$set(this.selectedBranches, env, branchValue || '');
+            if (this.$set) this.$set(this.selectedBranches, env, branchValue || '');
+            else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: branchValue || '' };
             const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
             if (!baseRef) return;
             let targetRef = baseRef;
