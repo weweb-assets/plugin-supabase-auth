@@ -590,7 +590,11 @@ export default {
                     apiKey = projectData.apiKeys?.find(key => key.name === 'anon')?.api_key || apiKey;
                     privateApiKey = projectData.apiKeys?.find(key => key.name === 'service_role')?.api_key || privateApiKey;
                     connectionString = projectData.pgbouncer?.connection_string || connectionString;
-                    baseProjectRef = projectData.project?.parent_project_ref || projectData.project?.id || baseProjectRef;
+                    baseProjectRef =
+                        projectData.project?.parent_project_ref ||
+                        projectData.project?.ref ||
+                        projectData.project?.id ||
+                        baseProjectRef;
                 }
             }
             
@@ -610,14 +614,30 @@ export default {
                 const ref = baseRef;
                 console.info('[Supabase auth plugin] loadBranches', { env, baseProjectRef: cfg.baseProjectRef, overrideRef, projectUrl: cfg.projectUrl, ref, hasOAuth: this.hasOAuthToken() });
                 if (!ref || !this.hasOAuthToken()) return;
-                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches`, params: { baseProjectRef: cfg.baseProjectRef || overrideRef || '' } });
-                this.$set(this.branches, env, data?.data || []);
-                this.$set(this.branchErrors, env, '');
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({
+                    method: 'GET',
+                    path: `/projects/${ref}/branches`,
+                    params: { baseProjectRef: cfg.baseProjectRef || overrideRef || '' },
+                });
+                if (this.$set) {
+                    this.$set(this.branches, env, data?.data || []);
+                    this.$set(this.branchErrors, env, '');
+                } else {
+                    this.branches = { ...(this.branches || {}), [env]: data?.data || [] };
+                    const errors = { ...(this.branchErrors || {}) };
+                    delete errors[env];
+                    this.branchErrors = errors;
+                }
                 console.info('[Supabase auth plugin] loadBranches success', { env, count: data?.data?.length || 0 });
             } catch (e) {
-                this.$set(this.branches, env, []);
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
-                this.$set(this.branchErrors, env, msg);
+                if (this.$set) {
+                    this.$set(this.branches, env, []);
+                    this.$set(this.branchErrors, env, msg);
+                } else {
+                    this.branches = { ...(this.branches || {}), [env]: [] };
+                    this.branchErrors = { ...(this.branchErrors || {}), [env]: msg };
+                }
                 console.warn('[Supabase auth plugin] loadBranches error', { env, status: e?.response?.status, msg });
             }
         },
