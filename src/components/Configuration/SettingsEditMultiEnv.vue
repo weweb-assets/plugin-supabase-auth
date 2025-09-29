@@ -84,7 +84,7 @@
                             <wwEditorInput
                                 type="select"
                                 placeholder="https://your-project.supabase.co"
-                                :model-value="getCurrentEnvConfig(env).projectUrl"
+                                :model-value="getProjectSelectValue(env)"
                                 :options="projectsOptions"
                                 @update:modelValue="(val) => changeProjectUrl(val, env)"
                                 class="-full"
@@ -445,7 +445,14 @@ export default {
             const config = this.getCurrentEnvConfig(env);
             return !!config?.projectUrl;
         },
-        
+
+        getProjectSelectValue(env) {
+            const config = this.getCurrentEnvConfig(env);
+            if (!config) return '';
+            const baseRef = config.baseProjectRef || config.projectUrl?.replace('https://', '').replace('.supabase.co', '');
+            return baseRef ? `https://${baseRef}.supabase.co` : config.projectUrl;
+        },
+
         getCurrentEnvConfig(env = this.activeEnvironment) {
             if (this.settings.publicData?.environments?.[env]) {
                 return this.settings.publicData.environments[env];
