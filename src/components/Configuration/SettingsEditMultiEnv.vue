@@ -453,6 +453,12 @@ export default {
             return baseRef ? `https://${baseRef}.supabase.co` : config.projectUrl;
         },
 
+        shouldShowBranchSelect(env) {
+            const config = this.getCurrentEnvConfig(env);
+            const branchCount = this.branches?.[env]?.length || 0;
+            return this.hasOAuthToken() && !!config?.projectUrl && branchCount > 0;
+        },
+
         getCurrentEnvConfig(env = this.activeEnvironment) {
             if (this.settings.publicData?.environments?.[env]) {
                 return this.settings.publicData.environments[env];
