@@ -684,7 +684,12 @@ export default {
 
             const projectUrl = `https://${targetRef}.supabase.co`;
             // Update env config with branch project URL and refresh keys/conn string from that ref
-            const projectData = await this.fetchProject(targetRef);
+            let projectData;
+            if (branchValue) {
+                projectData = await this.fetchProjectBranch(baseRef, targetRef);
+            } else {
+                projectData = await this.fetchProject(targetRef);
+            }
             const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
             const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
             const connectionString = projectData?.pgbouncer?.connection_string;
@@ -857,6 +862,26 @@ export default {
             } catch (error) {
                 this.isLoading = false;
                 console.warn(`Failed to fetch project ${projectId}:`, error);
+                return null;
+            }
+        },
+
+        async fetchProjectBranch(baseProjectId, branchId) {
+            if (!baseProjectId || !branchId) {
+                return null;
+            }
+
+            this.isLoading = true;
+            try {
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({
+                    method: 'GET',
+                    path: `/projects/${baseProjectId}/branches/${branchId}`,
+                });
+                this.isLoading = false;
+                return data?.data;
+            } catch (error) {
+                this.isLoading = false;
+                console.warn(`Failed to fetch branch ${branchId} of ${baseProjectId}:`, error);
                 return null;
             }
         },
