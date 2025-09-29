@@ -577,8 +577,7 @@ const getDoc = async (url, apiKey, { branchSlug } = {}) => {
             apikey: apiKey,
             Authorization: `Bearer ${apiKey}`,
         };
-        const params = branchSlug ? { branch: branchSlug } : undefined;
-        const { data } = await axios.get(`${url}/rest/v1/`, { headers, params });
+        const { data } = await axios.get(`${url}/rest/v1/`, { headers });
         return data;
     } catch (error) {
         console.warn('[Supabase auth plugin] fetchDoc request error', {

@@ -723,20 +723,26 @@ export default {
             const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
             const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
             const connectionString = projectData?.pgbouncer?.connection_string;
-            const resolvedRef = branchValue
-                ? (projectData?.project?.project_ref || projectData?.project?.ref || projectData?.project?.id || targetRef)
-                : targetRef;
-            const projectUrl = `https://${resolvedRef}.supabase.co`;
+            const resolvedBranchRef = branchValue
+                ? projectData?.branchRef || projectData?.project?.project_ref || projectData?.project?.ref || targetRef
+                : '';
+            const runtimeRef = resolvedBranchRef || baseRef;
+            const projectUrl = `https://${runtimeRef}.supabase.co`;
+            const displayAnonKey = apiKey || this.getCurrentEnvConfig(env).apiKey;
+            const displayServiceKey = privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey;
 
             this.updateEnvironmentConfig(env, {
                 publicData: {
                     projectUrl,
-                    apiKey: apiKey || this.getCurrentEnvConfig(env).apiKey,
-                    branch: branchValue || null,
+                    apiKey: displayAnonKey,
+                    branch: resolvedBranchRef || null,
                     branchSlug: effectiveBranchSlug || null,
                     baseProjectRef: baseRef,
                 },
-                privateData: { apiKey: privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey, connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString }
+                privateData: {
+                    apiKey: displayServiceKey,
+                    connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString,
+                }
             });
 
             await this.loadBranches(env, baseRef);
