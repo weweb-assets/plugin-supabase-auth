@@ -579,6 +579,7 @@ export default {
             let apiKey = this.getCurrentEnvConfig(env).apiKey;
             let privateApiKey = this.getCurrentEnvPrivateConfig(env).apiKey;
             let connectionString = this.getCurrentEnvPrivateConfig(env).connectionString;
+            let baseProjectRef = projectUrl.replace('https://', '').replace('.supabase.co', '');
             
             if (this.hasOAuthToken() && this.getConnectionMode(env) === 'oauth') {
                 const projectData = await this.fetchProject(
@@ -589,11 +590,12 @@ export default {
                     apiKey = projectData.apiKeys?.find(key => key.name === 'anon')?.api_key || apiKey;
                     privateApiKey = projectData.apiKeys?.find(key => key.name === 'service_role')?.api_key || privateApiKey;
                     connectionString = projectData.pgbouncer?.connection_string || connectionString;
+                    baseProjectRef = projectData.project?.parent_project_ref || projectData.project?.id || baseProjectRef;
                 }
             }
             
             this.updateEnvironmentConfig(env, {
-                publicData: { projectUrl, apiKey },
+                publicData: { projectUrl, apiKey, baseProjectRef },
                 privateData: { apiKey: privateApiKey, connectionString }
             });
 
@@ -603,7 +605,8 @@ export default {
 
         async loadBranches(env) {
             try {
-                const ref = this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                const ref = baseRef;
                 if (!ref || !this.hasOAuthToken()) return;
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches` });
                 this.$set(this.branches, env, data?.data || []);
@@ -619,10 +622,8 @@ export default {
 
         async changeBranch(branchValue, env) {
             this.$set(this.selectedBranches, env, branchValue || '');
-            const baseUrl = this.getCurrentEnvConfig(env).projectUrl;
-            if (!baseUrl) return;
-
-            const baseRef = baseUrl.replace('https://', '').replace('.supabase.co', '');
+            const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+            if (!baseRef) return;
             let targetRef = baseRef;
             if (branchValue) {
                 const list = this.branches?.[env] || [];
@@ -638,7 +639,12 @@ export default {
             const connectionString = projectData?.pgbouncer?.connection_string;
 
             this.updateEnvironmentConfig(env, {
-                publicData: { projectUrl, apiKey: apiKey || this.getCurrentEnvConfig(env).apiKey, branch: branchValue || null },
+                publicData: {
+                    projectUrl,
+                    apiKey: apiKey || this.getCurrentEnvConfig(env).apiKey,
+                    branch: branchValue || null,
+                    baseProjectRef: baseRef,
+                },
                 privateData: { apiKey: privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey, connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString }
             });
         },
