@@ -582,7 +582,13 @@ export default {
                 });
                 return;
             }
-            
+
+            const currentConfig = this.getCurrentEnvConfig(env);
+            if ((currentConfig?.projectUrl || '') === projectUrl) {
+                // No change detected; avoid re-fetching
+                return;
+            }
+
             let apiKey = this.getCurrentEnvConfig(env).apiKey;
             let privateApiKey = this.getCurrentEnvPrivateConfig(env).apiKey;
             let connectionString = this.getCurrentEnvPrivateConfig(env).connectionString;
