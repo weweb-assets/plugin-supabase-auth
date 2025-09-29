@@ -396,8 +396,8 @@ export default {
         branchOptions() {
             return (env) => {
                 const items = this.branches?.[env] || [];
-                const base = [{ label: 'Default (main)', value: '' }];
-                return base.concat(items.map(b => ({ label: `${b.name}${b.is_default ? ' (default)' : ''}`, value: b.project_ref || b.ref || b.id || b.name })));
+                if (items.length === 0) return [];
+                return items.map(b => ({ label: `${b.name}${b.is_default ? ' (default)' : ''}`, value: b.project_ref || b.ref || b.id || b.name }));
             }
         },
     },
