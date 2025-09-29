@@ -96,7 +96,7 @@
                     </div>
 
                     <!-- Branch selection (guided) -->
-                    <div v-if="shouldShowBranchSelect(env)" class="flex items-center mt-2">
+                    <div v-if="hasOAuthToken() && getCurrentEnvConfig(env).projectUrl" class="flex items-center mt-2">
                         <wwEditorFormRow label="Branch" class="w-100">
                             <wwEditorInput
                                 type="select"
@@ -445,13 +445,7 @@ export default {
             const config = this.getCurrentEnvConfig(env);
             return !!config?.projectUrl;
         },
-
-        shouldShowBranchSelect(env) {
-            const config = this.getCurrentEnvConfig(env);
-            const branchCount = this.branches?.[env]?.length || 0;
-            return this.hasOAuthToken() && !!config?.projectUrl && branchCount > 0;
-        },
-
+        
         getCurrentEnvConfig(env = this.activeEnvironment) {
             if (this.settings.publicData?.environments?.[env]) {
                 return this.settings.publicData.environments[env];
