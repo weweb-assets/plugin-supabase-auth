@@ -649,7 +649,9 @@ export default {
 
                 const defaultBranch = branches.find(b => b.is_default);
                 const defaultValue = defaultBranch?.project_ref || defaultBranch?.ref || defaultBranch?.id || '';
-                if (defaultValue) {
+                const currentSelection = this.selectedBranches?.[env];
+                const selectionExistsInList = branches.some(b => (b.project_ref || b.ref || b.id || b.name) === currentSelection);
+                if (defaultValue && (!currentSelection || !selectionExistsInList)) {
                     if (this.$set) this.$set(this.selectedBranches, env, defaultValue);
                     else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: defaultValue };
                 }
