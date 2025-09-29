@@ -603,19 +603,16 @@ export default {
         },
 
         async loadBranches(env) {
-            console.info('[Supabase auth plugin] loadBranches start', { env, hasOAuth: this.hasOAuthToken(), projectUrl: this.getCurrentEnvConfig(env).projectUrl });
             try {
                 const ref = this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 if (!ref || !this.hasOAuthToken()) return;
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches` });
                 this.$set(this.branches, env, data?.data || []);
                 this.$set(this.branchErrors, env, '');
-                console.info('[Supabase auth plugin] loadBranches success', { env, branches: (data?.data || []).map(b => b?.name), count: data?.data?.length || 0 });
             } catch (e) {
                 this.$set(this.branches, env, []);
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
                 this.$set(this.branchErrors, env, msg);
-                console.warn('[Supabase auth plugin] loadBranches error', { env, status: e?.response?.status, error: msg, response: e?.response?.data });
             }
         },
 
