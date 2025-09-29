@@ -600,17 +600,17 @@ export default {
             });
 
             // Load branches (do not gate UI on success)
-            await this.loadBranches(env);
+            await this.loadBranches(env, baseProjectRef);
         },
 
-        async loadBranches(env) {
+        async loadBranches(env, overrideRef = '') {
             try {
                 const cfg = this.getCurrentEnvConfig(env);
-                const baseRef = cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                const baseRef = overrideRef || cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 const ref = baseRef;
-                console.info('[Supabase auth plugin] loadBranches', { env, baseProjectRef: cfg.baseProjectRef, projectUrl: cfg.projectUrl, ref, hasOAuth: this.hasOAuthToken() });
+                console.info('[Supabase auth plugin] loadBranches', { env, baseProjectRef: cfg.baseProjectRef, overrideRef, projectUrl: cfg.projectUrl, ref, hasOAuth: this.hasOAuthToken() });
                 if (!ref || !this.hasOAuthToken()) return;
-                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches`, params: { baseProjectRef: cfg.baseProjectRef || '' } });
+                const { data } = await wwLib.wwPlugins.supabase.requestAPI({ method: 'GET', path: `/projects/${ref}/branches`, params: { baseProjectRef: cfg.baseProjectRef || overrideRef || '' } });
                 this.$set(this.branches, env, data?.data || []);
                 this.$set(this.branchErrors, env, '');
                 console.info('[Supabase auth plugin] loadBranches success', { env, count: data?.data?.length || 0 });
@@ -651,6 +651,8 @@ export default {
                 },
                 privateData: { apiKey: privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey, connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString }
             });
+
+            await this.loadBranches(env, baseRef);
         },
         
         changeApiKey(apiKey, env) {
