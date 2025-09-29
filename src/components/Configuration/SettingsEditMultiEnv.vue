@@ -73,6 +73,12 @@
 
                 <!-- Select Project -->
                 <template v-if="selectModes[env] === 'select'">
+                    <div
+                        v-if="hasOAuthToken() && !hasProjectConfig(env)"
+                        class="body-sm content-secondary bg-secondary border-secondary p-2 rounded-02 mb-2"
+                    >
+                        Select a Supabase project to finish configuring this environment.
+                    </div>
                     <div class="flex items-center">
                         <wwEditorFormRow :required="env === 'production'" label="Project URL" class="w-100">
                             <wwEditorInput
@@ -433,6 +439,11 @@ export default {
         hasOAuthToken() {
             // Single OAuth across environments: rely on global token only
             return this.settings.privateData?.accessToken?.startsWith('sbp_oauth');
+        },
+        
+        hasProjectConfig(env) {
+            const config = this.getCurrentEnvConfig(env);
+            return !!config?.projectUrl;
         },
         
         getCurrentEnvConfig(env = this.activeEnvironment) {
