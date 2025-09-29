@@ -716,7 +716,10 @@ export default {
             }
 
             const effectiveBranchSlug = branchValue ? (branchSlug || this.getCurrentEnvConfig(env)?.branchSlug || '') : '';
-            const projectData = await this.fetchProject(branchValue ? baseRef : targetRef, effectiveBranchSlug);
+            const projectData = await this.fetchProject(baseRef, {
+                branchSlug: effectiveBranchSlug,
+                branchRef: branchValue ? targetRef : '',
+            });
             const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
             const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
             const connectionString = projectData?.pgbouncer?.connection_string;
@@ -878,7 +881,7 @@ export default {
             }
         },
         
-        async fetchProject(projectId, branchSlug = '') {
+        async fetchProject(projectId, { branchSlug = '', branchRef = '' } = {}) {
             if (!projectId) {
                 return null;
             }
@@ -888,7 +891,13 @@ export default {
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
                     method: 'GET',
                     path: '/projects/' + projectId,
-                    params: branchSlug ? { branch: branchSlug } : undefined,
+                    params:
+                        branchSlug || branchRef
+                            ? {
+                                  ...(branchSlug ? { branch: branchSlug } : {}),
+                                  ...(branchRef ? { branchRef } : {}),
+                              }
+                            : undefined,
                 });
                 this.isLoading = false;
                 return data?.data;
