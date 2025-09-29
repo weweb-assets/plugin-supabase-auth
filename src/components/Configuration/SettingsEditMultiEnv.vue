@@ -676,19 +676,19 @@ export default {
             const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
             if (!baseRef) return;
             let targetRef = baseRef;
-            let branchId = '';
+            let branchSlug = '';
             if (branchValue) {
                 const list = this.branches?.[env] || [];
                 const b = list.find(it => (it.project_ref || it.ref || it.id || it.name) === branchValue);
                 targetRef = b?.project_ref || b?.ref || branchValue;
-                branchId = b?.id || '';
+                branchSlug = b?.name || '';
             }
 
             const projectUrl = `https://${targetRef}.supabase.co`;
             // Update env config with branch project URL and refresh keys/conn string from that ref
             let projectData;
             if (branchValue) {
-                projectData = await this.fetchProjectBranch(baseRef, branchId || targetRef);
+                projectData = await this.fetchProjectBranch(baseRef, branchSlug || branchValue);
             } else {
                 projectData = await this.fetchProject(targetRef);
             }
@@ -868,17 +868,17 @@ export default {
             }
         },
 
-        async fetchProjectBranch(baseProjectId, branchId) {
-            if (!baseProjectId || !branchId) {
+        async fetchProjectBranch(baseProjectId, branchSlug) {
+            if (!baseProjectId || !branchSlug) {
                 return null;
             }
 
             this.isLoading = true;
             try {
-                console.info('[Supabase auth plugin] fetchProjectBranch', { baseProjectId, branchId });
+                console.info('[Supabase auth plugin] fetchProjectBranch', { baseProjectId, branch: branchSlug });
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
                     method: 'GET',
-                    path: `/projects/${baseProjectId}/branches/${branchId}`,
+                    path: `/projects/${baseProjectId}/branches/${branchSlug}`,
                 });
                 this.isLoading = false;
                 return data?.data;
