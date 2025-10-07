@@ -407,6 +407,8 @@ export default {
             this.migrateToMultiEnv();
         }
 
+        this.sanitizeEnvironmentTokens();
+
         // Check if OAuth is connected and refresh projects
         if (this.hasOAuthToken()) {
             this.refreshProjects();
@@ -423,6 +425,41 @@ export default {
         });
     },
     methods: {
+        sanitizeEnvironmentTokens() {
+            const envConfigs = this.settings.privateData?.environments;
+            if (!envConfigs) return;
+
+            let hasChanges = false;
+            const sanitizedEnvs = {};
+
+            this.environments.forEach(env => {
+                const config = envConfigs[env];
+                if (!config) return;
+                if (
+                    Object.prototype.hasOwnProperty.call(config, 'accessToken') ||
+                    Object.prototype.hasOwnProperty.call(config, 'refreshToken')
+                ) {
+                    const { accessToken: _legacyAccess, refreshToken: _legacyRefresh, ...rest } = config;
+                    sanitizedEnvs[env] = rest;
+                    hasChanges = true;
+                }
+            });
+
+            if (!hasChanges) return;
+
+            const newSettings = {
+                ...this.settings,
+                privateData: {
+                    ...this.settings.privateData,
+                    environments: {
+                        ...envConfigs,
+                        ...sanitizedEnvs,
+                    },
+                },
+            };
+
+            this.$emit('update:settings', newSettings);
+        },
         capitalize(str) {
             return str.charAt(0).toUpperCase() + str.slice(1);
         },
@@ -476,14 +513,14 @@ export default {
         
         getCurrentEnvPrivateConfig(env = this.activeEnvironment) {
             if (this.settings.privateData?.environments?.[env]) {
-                return this.settings.privateData.environments[env];
+                const { accessToken: _legacyAccess, refreshToken: _legacyRefresh, ...rest } =
+                    this.settings.privateData.environments[env] || {};
+                return rest;
             }
             // Fallback to legacy format for production
             if (env === 'production' && this.settings.privateData) {
                 return {
                     connectionMode: this.settings.privateData.connectionMode || 'custom',
-                    accessToken: this.settings.privateData.accessToken,
-                    refreshToken: this.settings.privateData.refreshToken,
                     apiKey: this.settings.privateData.apiKey,
                     databasePassword: this.settings.privateData.databasePassword,
                     connectionString: this.settings.privateData.connectionString
@@ -512,8 +549,6 @@ export default {
                     environments: {
                         production: {
                             connectionMode: connectionMode,
-                            accessToken: this.settings.privateData?.accessToken || '',
-                            refreshToken: this.settings.privateData?.refreshToken || '',
                             apiKey: this.settings.privateData?.apiKey || '',
                             databasePassword: this.settings.privateData?.databasePassword || '',
                             connectionString: this.settings.privateData?.connectionString || ''
@@ -567,15 +602,15 @@ export default {
                     }
                 }
             };
-            
+
             // Clear tokens from all environments
             this.environments.forEach(env => {
                 if (newSettings.privateData.environments?.[env]) {
-                    newSettings.privateData.environments[env].accessToken = '';
-                    newSettings.privateData.environments[env].refreshToken = '';
+                    delete newSettings.privateData.environments[env].accessToken;
+                    delete newSettings.privateData.environments[env].refreshToken;
                 }
             });
-            
+
             this.$emit('update:settings', newSettings);
         },
         
@@ -764,10 +799,27 @@ export default {
             });
         },
         
-        updateEnvironmentConfig(env, updates) {
-            const currentPrivateConfig = this.getCurrentEnvPrivateConfig(env);
+        updateEnvironmentConfig(env, updates = {}) {
+            const currentPrivateConfig = this.getCurrentEnvPrivateConfig(env) || {};
             const currentPublicConfig = this.getCurrentEnvConfig(env);
-            
+            const previousGlobalAccess = this.settings.privateData?.accessToken;
+            const previousGlobalRefresh = this.settings.privateData?.refreshToken;
+
+            const privateUpdates = { ...(updates.privateData || {}) };
+            const updateAccessToken = Object.prototype.hasOwnProperty.call(privateUpdates, 'accessToken')
+                ? privateUpdates.accessToken
+                : undefined;
+            const updateRefreshToken = Object.prototype.hasOwnProperty.call(privateUpdates, 'refreshToken')
+                ? privateUpdates.refreshToken
+                : undefined;
+
+            if (Object.prototype.hasOwnProperty.call(privateUpdates, 'accessToken')) delete privateUpdates.accessToken;
+            if (Object.prototype.hasOwnProperty.call(privateUpdates, 'refreshToken')) delete privateUpdates.refreshToken;
+
+            const sanitizedCurrentPrivate = { ...currentPrivateConfig };
+            delete sanitizedCurrentPrivate.accessToken;
+            delete sanitizedCurrentPrivate.refreshToken;
+
             const newSettings = {
                 ...this.settings,
                 publicData: {
@@ -785,33 +837,41 @@ export default {
                     environments: {
                         ...this.settings.privateData?.environments,
                         [env]: {
-                            ...currentPrivateConfig,
-                            ...(updates.privateData || {})
+                            ...sanitizedCurrentPrivate,
+                            ...privateUpdates,
                         }
                     }
                 }
             };
             
-            // Keep legacy fields in sync for production (backward compatibility)
             if (env === 'production') {
+                const productionPublic = newSettings.publicData.environments.production || {};
+                const productionPrivate = newSettings.privateData.environments.production || {};
                 newSettings.publicData = {
                     ...newSettings.publicData,
-                    projectUrl: newSettings.publicData.environments.production.projectUrl,
-                    apiKey: newSettings.publicData.environments.production.apiKey,
-                    customDomain: newSettings.publicData.environments.production.customDomain
+                    projectUrl: productionPublic.projectUrl ?? newSettings.publicData.projectUrl,
+                    apiKey: productionPublic.apiKey ?? newSettings.publicData.apiKey,
+                    customDomain: productionPublic.customDomain ?? newSettings.publicData.customDomain,
                 };
                 newSettings.privateData = {
                     ...newSettings.privateData,
-                    ...newSettings.privateData.environments.production
+                    connectionMode: productionPrivate.connectionMode ?? newSettings.privateData.connectionMode,
+                    apiKey: productionPrivate.apiKey ?? newSettings.privateData.apiKey,
+                    databasePassword: productionPrivate.databasePassword ?? newSettings.privateData.databasePassword,
+                    connectionString: productionPrivate.connectionString ?? newSettings.privateData.connectionString,
+                    environments: newSettings.privateData.environments,
                 };
             }
-            
-            // Store OAuth tokens globally for sharing across environments
-            if (updates.privateData?.accessToken) {
-                newSettings.privateData.accessToken = updates.privateData.accessToken;
-                newSettings.privateData.refreshToken = updates.privateData.refreshToken;
-            }
-            
+
+            const nextAccessToken = updateAccessToken !== undefined ? updateAccessToken : previousGlobalAccess;
+            const nextRefreshToken = updateRefreshToken !== undefined ? updateRefreshToken : previousGlobalRefresh;
+
+            if (nextAccessToken !== undefined) newSettings.privateData.accessToken = nextAccessToken;
+            else delete newSettings.privateData.accessToken;
+
+            if (nextRefreshToken !== undefined) newSettings.privateData.refreshToken = nextRefreshToken;
+            else delete newSettings.privateData.refreshToken;
+
             this.$emit('update:settings', newSettings);
         },
         
@@ -843,8 +903,6 @@ export default {
                         ...this.settings.privateData?.environments,
                         [env]: {
                             connectionMode: 'custom',
-                            accessToken: '',
-                            refreshToken: '',
                             apiKey: '',
                             databasePassword: '',
                             connectionString: ''
@@ -861,10 +919,7 @@ export default {
         
         async refreshProjects() {
             // Use OAuth token (shared across environments)
-            const accessToken = this.settings.privateData?.accessToken || 
-                               this.environments
-                                   .map(env => this.getCurrentEnvPrivateConfig(env).accessToken)
-                                   .find(token => token?.startsWith('sbp_oauth'));
+            const accessToken = this.settings.privateData?.accessToken;
                 
             if (!accessToken) {
                 return;
