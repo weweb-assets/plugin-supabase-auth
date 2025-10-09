@@ -527,7 +527,7 @@ export default {
             // Fallback to legacy format for production
             if (env === 'production' && this.settings.privateData) {
                 return {
-                    connectionMode: this.settings.privateData.connectionMode || 'custom',
+                    connectionMode: this.settings.privateData.connectionMode || 'oauth',
                     apiKey: this.settings.privateData.apiKey,
                     databasePassword: this.settings.privateData.databasePassword,
                     connectionString: this.settings.privateData.connectionString
@@ -535,10 +535,10 @@ export default {
             }
             return {};
         },
-        
+
         migrateToMultiEnv() {
             // Migrate legacy config to multi-environment structure
-            const connectionMode = this.settings.privateData?.connectionMode || 'custom';
+            const connectionMode = this.settings.privateData?.connectionMode || 'oauth';
             const newSettings = {
                 ...this.settings,
                 publicData: {
