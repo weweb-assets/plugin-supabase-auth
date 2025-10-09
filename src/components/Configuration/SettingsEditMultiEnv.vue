@@ -470,7 +470,7 @@ export default {
         
         getConnectionMode(env) {
             const privateConfig = this.getCurrentEnvPrivateConfig(env);
-            return privateConfig?.connectionMode || 'custom';
+            return privateConfig?.connectionMode || 'oauth';
         },
         
         hasOAuthToken() {
