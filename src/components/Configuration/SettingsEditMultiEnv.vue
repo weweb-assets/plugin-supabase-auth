@@ -401,7 +401,16 @@ export default {
             }
         },
     },
-    mounted() {
+    async mounted() {
+        // Check if this is a fresh install and try to sync from Supabase plugin
+        const isFreshInstall = !this.settings.publicData?.environments &&
+                               !this.settings.publicData?.projectUrl &&
+                               !this.settings.privateData?.accessToken;
+
+        if (isFreshInstall) {
+            await this.syncFromOtherPlugin('supabase');
+        }
+
         // Initialize multi-environment structure if needed
         if (!this.settings.publicData?.environments) {
             this.migrateToMultiEnv();
@@ -876,11 +885,11 @@ export default {
             if (env === 'production') {
                 return;
             }
-            
+
             if (!confirm(`Are you sure you want to clear the ${env} environment configuration? This will remove all settings for this environment.`)) {
                 return;
             }
-            
+
             const newSettings = {
                 ...this.settings,
                 publicData: {
@@ -907,11 +916,19 @@ export default {
                     }
                 }
             };
-            
+
             this.selectModes[env] = 'select';
             this.showSettings[env] = false;
-            
+
             this.$emit('update:settings', newSettings);
+        },
+
+        async syncFromOtherPlugin(source) {
+            try {
+                await wwLib.wwPlugins.supabase.syncSettings(source);
+            } catch (error) {
+                console.warn('Failed to sync from other plugin:', error);
+            }
         },
         
         async refreshProjects() {
