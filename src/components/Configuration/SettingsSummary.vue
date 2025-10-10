@@ -8,7 +8,7 @@
                 <div class="text-ellipsis">{{ env.projectUrl }}</div>
             </div>
             <div v-if="env.branchSlug" class="flex items-center body-2 mb-1">
-                <wwEditorIcon name="branch" class="mr-2" small />
+                <wwEditorIcon name="16/branch" class="mr-2" small />
                 <div class="text-ellipsis">{{ env.branchSlug }}</div>
             </div>
             <div v-if="env.customDomain" class="flex items-center body-2 mb-1">
