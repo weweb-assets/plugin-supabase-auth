@@ -616,6 +616,8 @@ export default {
         },
         
         async changeProjectUrl(projectUrl, env) {
+            console.log('[Supabase Auth] changeProjectUrl START', { projectUrl, env });
+
             // Skip if no project URL is provided
             if (!projectUrl) {
                 this.updateEnvironmentConfig(env, {
@@ -672,12 +674,22 @@ export default {
                     }
                 }
 
+                console.log('[Supabase Auth] About to updateEnvironmentConfig', { env, baseProjectRef });
                 this.updateEnvironmentConfig(env, {
                     publicData: { projectUrl, apiKey, baseProjectRef, branch: null, branchSlug: null },
                     privateData: { apiKey: privateApiKey, connectionString }
                 });
+                console.log('[Supabase Auth] After updateEnvironmentConfig, before nextTick', {
+                    env,
+                    'cfg.baseProjectRef': this.getCurrentEnvConfig(env)?.baseProjectRef
+                });
 
                 // Load branches
+                await this.$nextTick();
+                console.log('[Supabase Auth] After nextTick, before loadBranches', {
+                    env,
+                    'cfg.baseProjectRef': this.getCurrentEnvConfig(env)?.baseProjectRef
+                });
                 await this.loadBranches(env, baseProjectRef);
             } finally {
                 this.isLoading = false;
