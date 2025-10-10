@@ -107,7 +107,7 @@
                                 class="-full"
                             />
                         </wwEditorFormRow>
-                        <button type="button" class="ww-editor-button -secondary -small -icon ml-2 mt-1" @click="loadBranches(env)">
+                        <button type="button" class="ww-editor-button -primary -small -icon ml-2 mt-1" @click="loadBranches(env)">
                             <wwEditorIcon name="refresh" medium />
                         </button>
                         <div v-if="branchErrors?.[env]" class="body-xs content-tertiary ml-2 mt-1">
