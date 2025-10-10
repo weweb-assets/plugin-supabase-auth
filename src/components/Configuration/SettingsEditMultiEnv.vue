@@ -560,19 +560,11 @@ export default {
         },
         
         changeConnectionMode(env, mode) {
-            const updates = {
+            this.updateEnvironmentConfig(env, {
                 privateData: {
                     connectionMode: mode
                 }
-            };
-            
-            // Clear access tokens when switching to custom mode
-            if (mode === 'custom') {
-                updates.privateData.accessToken = '';
-                updates.privateData.refreshToken = '';
-            }
-            
-            this.updateEnvironmentConfig(env, updates);
+            });
         },
         
         async connect() {
