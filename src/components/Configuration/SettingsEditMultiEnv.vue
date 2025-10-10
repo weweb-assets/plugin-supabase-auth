@@ -689,11 +689,20 @@ export default {
                 const cfg = this.getCurrentEnvConfig(env);
                 const baseRef = overrideRef || cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 const ref = baseRef;
+                const paramsBaseRef = cfg.baseProjectRef || overrideRef || '';
+                console.log('[Supabase Auth] loadBranches', {
+                    env,
+                    overrideRef,
+                    'cfg.baseProjectRef': cfg.baseProjectRef,
+                    baseRef,
+                    ref,
+                    paramsBaseRef
+                });
                 if (!ref || !this.hasOAuthToken()) return;
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
                     method: 'GET',
                     path: `/projects/${ref}/branches`,
-                    params: { baseProjectRef: cfg.baseProjectRef || overrideRef || '' },
+                    params: { baseProjectRef: paramsBaseRef },
                 });
                 const branches = data?.data || [];
                 if (this.$set) {
