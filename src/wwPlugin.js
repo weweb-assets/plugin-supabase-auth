@@ -22,6 +22,14 @@ import './components/Functions/ConfirmPassword.vue';
 import './components/Functions/ForgotPassword.vue';
 /* wwEditor:end */
 import { createClient } from '@supabase/supabase-js';
+import { getCurrentSupabaseSettings, resolveRuntimeProjectUrl } from './helpers/environmentConfig';
+
+const maskForLog = value => {
+    if (!value) return null;
+    const str = String(value);
+    if (str.length <= 8) return str;
+    return `${str.slice(0, 4)}...${str.slice(-4)}`;
+};
 
 export default {
     privateInstance: null,
@@ -33,8 +41,10 @@ export default {
         Plugin API
     \================================================================================================*/
     async _onLoad(settings) {
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        
         /* wwFront:start */
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey);
+        await this.load(config.projectUrl, config.publicApiKey);
         /* wwFront:end */
         /* wwEditor:start */
         // check oauth in local storage
@@ -53,7 +63,7 @@ export default {
             wwLib.$emit('wwTopBar:open', 'WEBSITE_PLUGINS');
             wwLib.$emit('wwTopBar:plugins:setPlugin', wwLib.wwPlugins.supabaseAuth.id);
         }
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        await this.load(config.projectUrl, config.publicApiKey, config.privateApiKey);
         /* wwEditor:end */
     },
     async _initAuth() {
@@ -120,7 +130,9 @@ export default {
         if (settings.privateData.accessToken && settings.publicData.projectUrl) {
             await this.install();
         }
-        await this.load(settings.publicData.customDomain || settings.publicData.projectUrl, settings.publicData.apiKey, settings.privateData.apiKey);
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        const runtimeProjectUrl = resolveRuntimeProjectUrl(config);
+        await this.load(runtimeProjectUrl, config.publicApiKey, config.privateApiKey);
     },
     /* wwEditor:end */
     /*=============================================m_ÔÔ_m=============================================\
@@ -128,14 +140,18 @@ export default {
     \================================================================================================*/
     async load(projectUrl, publicApiKey, privateApiKey = null) {
         try {
-            if (!projectUrl || !publicApiKey) return;
+            const config = getCurrentSupabaseSettings('supabaseAuth');
+            const runtimeProjectUrl = resolveRuntimeProjectUrl(config) || projectUrl;
+            const effectivePublicKey = config?.publicApiKey || publicApiKey;
+            const effectivePrivateKey = config?.privateApiKey || privateApiKey;
+            if (!runtimeProjectUrl || !effectivePublicKey) return;
 
             /* wwEditor:start */
-            if (privateApiKey) this.privateInstance = createClient(projectUrl, privateApiKey);
-            this.switchAdmin(!!privateApiKey);
+            if (effectivePrivateKey) this.privateInstance = createClient(runtimeProjectUrl, effectivePrivateKey);
+            this.switchAdmin(!!effectivePrivateKey);
             /* wwEditor:end */
 
-            this.publicInstance = createClient(projectUrl, publicApiKey, {
+            this.publicInstance = createClient(runtimeProjectUrl, effectivePublicKey, {
                 auth: {
                     storageKey: wwLib.wwWebsiteData.getInfo().id,
                 },
@@ -144,7 +160,7 @@ export default {
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
             /* wwEditor:start */
-            await this.fetchDoc(projectUrl, privateApiKey || publicApiKey);
+            await this.fetchDoc();
             /* wwEditor:end */
             if (!this.privateInstance && !this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
             this.publicInstance.auth.onAuthStateChange(async (event, session) => {
@@ -501,16 +517,66 @@ export default {
         setCookies(session);
     },
     /* wwEditor:start */
-    async fetchDoc(projectUrl = this.settings.publicData.projectUrl, apiKey = this.settings.publicData.apiKey) {
-        this.doc = await getDoc(projectUrl, apiKey);
+    async fetchDoc() {
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        const runtimeProjectUrl = resolveRuntimeProjectUrl(config);
+        const logContext = {
+            env: config.environment,
+            resolvedEnv: config.resolvedEnvironment,
+            projectUrl: config.projectUrl,
+            runtimeProjectUrl,
+            projectRef: config.projectRef,
+            baseProjectRef: config.baseProjectRef,
+            branch: config.branch,
+            branchSlug: config.branchSlug,
+            hasApiKey: !!config.publicApiKey,
+            apiKeyPreview: maskForLog(config.publicApiKey),
+        };
+        if (!runtimeProjectUrl || !config.publicApiKey) {
+            console.warn('[Supabase auth plugin] fetchDoc skipped', {
+                reason: 'Missing projectUrl or publicApiKey',
+                ...logContext,
+            });
+            return;
+        }
+
+        try {
+            const doc = await getDoc(runtimeProjectUrl, config.publicApiKey, {
+                branchSlug: config.branchSlug,
+            });
+            this.doc = doc;
+            const rowCount = Array.isArray(doc) ? doc.length : undefined;
+        } catch (error) {
+            console.warn('[Supabase auth plugin] fetchDoc failed', {
+                projectUrl: runtimeProjectUrl,
+                status: error?.response?.status,
+                message: error?.message,
+                responseError: error?.response?.data?.message,
+            });
+            throw error;
+        }
     },
     /* wwEditor:end */
 };
 
 /* wwEditor:start */
-const getDoc = async (url, apiKey) => {
-    const { data } = await axios.get(`${url}/rest/v1/`, { headers: { apiKey } });
-    return data;
+const getDoc = async (url, apiKey, { branchSlug } = {}) => {
+    try {
+        const headers = {
+            apikey: apiKey,
+            Authorization: `Bearer ${apiKey}`,
+        };
+        const { data } = await axios.get(`${url}/rest/v1/`, { headers });
+        return data;
+    } catch (error) {
+        console.warn('[Supabase auth plugin] fetchDoc request error', {
+            url,
+            status: error?.response?.status,
+            message: error?.message,
+            responseError: error?.response?.data?.message,
+        });
+        throw error;
+    }
 };
 /* wwEditor:end */
 

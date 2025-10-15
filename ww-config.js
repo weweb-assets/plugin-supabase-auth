@@ -5,21 +5,18 @@ export default {
     editor: {
         settings: [
             {
-                label: 'Connection',
-                icon: 'advanced',
-                edit: () => import('./src/components/Configuration/ConnectionEdit.vue'),
-                summary: () => import('./src/components/Configuration/ConnectionSummary.vue'),
-                getIsValid(settings) {
-                    return !!settings.privateData.accessToken || settings.privateData.connectionMode === 'custom';
-                },
-                onSave: 'onSave',
-            },
-            {
                 label: 'Configuration',
                 icon: 'advanced',
-                edit: () => import('./src/components/Configuration/SettingsEdit.vue'),
+                edit: () => import('./src/components/Configuration/SettingsEditMultiEnv.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
+                    // Check if using new multi-environment format
+                    if (settings.publicData?.environments) {
+                        // Production environment is required
+                        return !!(settings.publicData.environments.production?.projectUrl && 
+                                 settings.publicData.environments.production?.apiKey);
+                    }
+                    // Legacy format validation
                     return !!settings.publicData.projectUrl && !!settings.publicData.apiKey;
                 },
                 onSave: 'onSave',
