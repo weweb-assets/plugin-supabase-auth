@@ -110,20 +110,40 @@ export default {
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
     },
+    async requestAPI({ method, path, data, params }) {
+        // Get current environment and send it explicitly
+        const config = getCurrentSupabaseSettings('supabaseAuth');
+        const currentEnv = config.environment; // 'editor', 'staging', or 'production'
+
+        return await wwAxios({
+            method,
+            url: `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                wwLib.$store.getters['websiteData/getDesignInfo'].id
+            }/supabase${path}`,
+            data,
+            params: {
+                ...params,
+                wwEnv: currentEnv, // Send environment explicitly
+            },
+        });
+    },
     async syncSettings(settings) {
-        await wwAxios.post(
-            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
-            }/supabase/sync`,
-            { source: 'supabaseAuth', settings }
-        );
+        await this.requestAPI({
+            method: 'POST',
+            path: '/sync',
+            data: { source: 'supabaseAuth', settings }
+        });
     },
     // driver: core, roles
     async install(driver = 'core') {
-        await wwAxios.post(
-            `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
-            }/supabase/install`,
-            { driver }
-        );
+        await this.requestAPI({
+            method: 'POST',
+            path: '/install',
+            data: { driver }
+        });
+    },
+    getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
+        return getCurrentSupabaseSettings(pluginName);
     },
     async onSave(settings) {
         await this.syncSettings(settings);
