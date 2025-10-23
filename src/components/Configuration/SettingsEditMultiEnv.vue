@@ -356,6 +356,7 @@ export default {
             branches: {},
             selectedBranches: {},
             branchErrors: {},
+            branchChangeAbortController: null, // AbortController for cancelling in-flight requests
         };
     },
     watch: {
@@ -379,6 +380,10 @@ export default {
         }
     },
     computed: {
+        isValid() {
+            // Prevent saving while branch change is in progress
+            return !this.branchChangeAbortController;
+        },
         projectRef() {
             const config = this.getCurrentEnvConfig();
             return config?.projectUrl?.replace('https://', '').replace('.supabase.co', '');
@@ -716,15 +721,24 @@ export default {
                 const selectionExistsInList = targetSelection && branches.some(b => (b.project_ref || b.ref || b.id || b.name) === targetSelection);
 
                 let nextSelection = '';
+                let shouldFetchBranchData = false;
+
                 if (selectionExistsInList) {
                     nextSelection = targetSelection;
                 } else if (defaultValue) {
                     nextSelection = defaultValue;
+                    // Auto-selected default branch needs data fetched
+                    shouldFetchBranchData = !savedSelection;
                 }
 
                 if (nextSelection || currentSelection || savedSelection) {
                     if (this.$set) this.$set(this.selectedBranches, env, nextSelection);
                     else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: nextSelection };
+
+                    // If we auto-selected a default branch, fetch its data
+                    if (shouldFetchBranchData && nextSelection) {
+                        await this.changeBranch(nextSelection, env);
+                    }
                 }
 
             } catch (e) {
@@ -743,50 +757,102 @@ export default {
         // removed features gating; we call /branches directly
 
         async changeBranch(branchValue, env) {
-            if (this.$set) this.$set(this.selectedBranches, env, branchValue || '');
-            else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: branchValue || '' };
-            const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
-            if (!baseRef) return;
-            let targetRef = baseRef;
-            let branchSlug = '';
-            if (branchValue) {
-                const list = this.branches?.[env] || [];
-                const b = list.find(it => (it.project_ref || it.ref || it.id || it.name) === branchValue);
-                targetRef = b?.project_ref || b?.ref || branchValue;
-                branchSlug = b?.name || '';
+            // Cancel any in-flight branch change request
+            if (this.branchChangeAbortController) {
+                this.branchChangeAbortController.abort();
             }
 
-            const effectiveBranchSlug = branchValue ? (branchSlug || this.getCurrentEnvConfig(env)?.branchSlug || '') : '';
-            const projectData = await this.fetchProject(baseRef, {
-                branchSlug: effectiveBranchSlug,
-                branchRef: branchValue ? targetRef : '',
-            });
-            const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
-            const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
-            const connectionString = projectData?.pgbouncer?.connection_string;
-            const resolvedBranchRef = branchValue
-                ? projectData?.branchRef || projectData?.project?.project_ref || projectData?.project?.ref || targetRef
-                : '';
-            const runtimeRef = resolvedBranchRef || baseRef;
-            const projectUrl = `https://${runtimeRef}.supabase.co`;
-            const displayAnonKey = apiKey || this.getCurrentEnvConfig(env).apiKey;
-            const displayServiceKey = privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey;
+            // Create new AbortController for this request
+            this.branchChangeAbortController = new AbortController();
+            const signal = this.branchChangeAbortController.signal;
 
-            this.updateEnvironmentConfig(env, {
-                publicData: {
-                    projectUrl,
-                    apiKey: displayAnonKey,
-                    branch: resolvedBranchRef || null,
-                    branchSlug: effectiveBranchSlug || null,
-                    baseProjectRef: baseRef,
-                },
-                privateData: {
-                    apiKey: displayServiceKey,
-                    connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString,
+            // Set flag to prevent saving while branch change is in progress
+            this.setLoadingFlag(true);
+            this.isLoading = true;
+
+            try{
+                if (this.$set) this.$set(this.selectedBranches, env, branchValue || '');
+                else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: branchValue || '' };
+
+                const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                if (!baseRef) return;
+
+                let targetRef = baseRef;
+                let branchSlug = '';
+                if (branchValue) {
+                    const list = this.branches?.[env] || [];
+                    const b = list.find(it => (it.project_ref || it.ref || it.id || it.name) === branchValue);
+                    targetRef = b?.project_ref || b?.ref || branchValue;
+                    branchSlug = b?.name || '';
                 }
-            });
 
-            await this.loadBranches(env, baseRef);
+                const effectiveBranchSlug = branchValue ? (branchSlug || this.getCurrentEnvConfig(env)?.branchSlug || '') : '';
+                const projectData = await this.fetchProject(baseRef, {
+                    branchSlug: effectiveBranchSlug,
+                    branchRef: branchValue ? targetRef : '',
+                    signal, // Pass AbortController signal
+                });
+
+                const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
+                const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
+                const connectionString = projectData?.pgbouncer?.connection_string;
+                const resolvedBranchRef = branchValue
+                    ? projectData?.branchRef || projectData?.project?.project_ref || projectData?.project?.ref || targetRef
+                    : '';
+                const runtimeRef = resolvedBranchRef || baseRef;
+                const projectUrl = `https://${runtimeRef}.supabase.co`;
+                const displayAnonKey = apiKey || this.getCurrentEnvConfig(env).apiKey;
+                const displayServiceKey = privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey;
+
+                this.updateEnvironmentConfig(env, {
+                    publicData: {
+                        projectUrl,
+                        apiKey: displayAnonKey,
+                        branch: resolvedBranchRef || null,
+                        branchSlug: effectiveBranchSlug || null,
+                        baseProjectRef: baseRef,
+                    },
+                    privateData: {
+                        apiKey: displayServiceKey,
+                        connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString,
+                    }
+                });
+
+                await this.loadBranches(env, baseRef);
+            } catch (error) {
+                // Ignore abort errors silently
+                if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+                    return;
+                }
+                throw error;
+            } finally {
+                // Clear loading flag when complete (success or abort)
+                this.setLoadingFlag(false);
+                this.isLoading = false;
+
+                // Clear abort controller if this request completed
+                if (this.branchChangeAbortController?.signal === signal) {
+                    this.branchChangeAbortController = null;
+                }
+            }
+        },
+
+        setLoadingFlag(isLoading) {
+            // Emit settings update with loading flag
+            const newSettings = {
+                ...this.settings,
+                privateData: {
+                    ...this.settings.privateData,
+                    _isBranchChanging: isLoading || undefined, // undefined removes the key when false
+                },
+            };
+            this.$emit('update:settings', newSettings);
+        },
+
+        changeApiKey(apiKey, env) {
+            this.updateEnvironmentConfig(env, {
+                publicData: { apiKey }
+            });
         },
         
         changeApiKey(apiKey, env) {
@@ -956,7 +1022,7 @@ export default {
             }
         },
         
-        async fetchProject(projectId, { branchSlug = '', branchRef = '' } = {}) {
+        async fetchProject(projectId, { branchSlug = '', branchRef = '', signal = null } = {}) {
             if (!projectId) {
                 return null;
             }
@@ -972,10 +1038,14 @@ export default {
                                   ...(branchRef ? { branchRef } : {}),
                               }
                             : undefined,
+                    signal, // Pass AbortController signal to requestAPI
                 });
                 return data?.data;
             } catch (error) {
-                console.warn(`Failed to fetch project ${projectId}:`, error);
+                // Don't log abort errors
+                if (error.name !== 'AbortError' && error.code !== 'ERR_CANCELED') {
+                    console.warn(`Failed to fetch project ${projectId}:`, error);
+                }
                 return null;
             }
         },
