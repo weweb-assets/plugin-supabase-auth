@@ -10,10 +10,15 @@ export default {
                 edit: () => import('./src/components/Configuration/SettingsEditMultiEnv.vue'),
                 summary: () => import('./src/components/Configuration/SettingsSummary.vue'),
                 getIsValid(settings) {
+                    // Prevent saving while branch change is in progress
+                    if (settings.privateData?._isBranchChanging) {
+                        return false;
+                    }
+
                     // Check if using new multi-environment format
                     if (settings.publicData?.environments) {
                         // Production environment is required
-                        return !!(settings.publicData.environments.production?.projectUrl && 
+                        return !!(settings.publicData.environments.production?.projectUrl &&
                                  settings.publicData.environments.production?.apiKey);
                     }
                     // Legacy format validation

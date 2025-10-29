@@ -6,10 +6,7 @@
                 <div
                     v-for="env in environments"
                     :key="env"
-                    :class="[
-                        'ww-tab-item',
-                        { 'ww-tab-active': activeEnvironment === env }
-                    ]"
+                    :class="['ww-tab-item', { 'ww-tab-active': activeEnvironment === env }]"
                     @click="activeEnvironment = env"
                 >
                     <span class="ww-tab-label">
@@ -25,7 +22,6 @@
 
     <!-- Environment Configuration -->
     <div v-for="env in environments" :key="`config-${env}`" v-show="activeEnvironment === env">
-
         <!-- Connection Mode Selector -->
         <wwEditorFormRow label="Connection Mode" class="w-100 mb-3">
             <wwEditorInputRadio
@@ -34,17 +30,25 @@
                     { label: 'Guided (recommended)', value: 'oauth', default: true },
                     { label: 'Custom', value: 'custom' },
                 ]"
-                @update:modelValue="(mode) => changeConnectionMode(env, mode)"
+                @update:modelValue="mode => changeConnectionMode(env, mode)"
             />
         </wwEditorFormRow>
 
         <!-- OAuth Connection -->
         <template v-if="getConnectionMode(env) === 'oauth'">
-            <div v-if="!hasOAuthToken()" class="body-sm content-brand-secondary bg-brand-secondary border-brand-secondary p-2 mb-2 rounded-02">
+            <div
+                v-if="!hasOAuthToken()"
+                class="body-sm content-brand-secondary bg-brand-secondary border-brand-secondary p-2 mb-2 rounded-02"
+            >
                 <span>Connect to enable the Back-end panel and AI assistance.</span>
             </div>
             <div class="flex items-center justify-center mb-3">
-                <button class="ww-editor-button -secondary" @click="connect" type="button" :disabled="!!hasOAuthToken()">
+                <button
+                    class="ww-editor-button -secondary"
+                    @click="connect"
+                    type="button"
+                    :disabled="!!hasOAuthToken()"
+                >
                     <wwEditorIcon name="logos/supabase" class="ww-editor-button-icon -left" />
                     {{ hasOAuthToken() ? 'Account connected' : 'Connect Supabase' }}
                 </button>
@@ -86,11 +90,15 @@
                                 placeholder="https://your-project.supabase.co"
                                 :model-value="getProjectSelectValue(env)"
                                 :options="projectsOptions"
-                                @update:modelValue="(val) => changeProjectUrl(val, env)"
+                                @update:modelValue="val => changeProjectUrl(val, env)"
                                 class="-full"
                             />
                         </wwEditorFormRow>
-                        <button type="button" class="ww-editor-button -primary -small -icon ml-2 mt-1" @click="refreshProjects">
+                        <button
+                            type="button"
+                            class="ww-editor-button -primary -small -icon ml-2 mt-1"
+                            @click="refreshProjects"
+                        >
                             <wwEditorIcon name="refresh" medium />
                         </button>
                     </div>
@@ -103,18 +111,22 @@
                                 placeholder="Default (main)"
                                 :model-value="selectedBranches?.[env] || ''"
                                 :options="branchOptions(env)"
-                                @update:modelValue="(val) => changeBranch(val, env)"
+                                @update:modelValue="val => changeBranch(val, env)"
                                 class="-full"
                             />
                         </wwEditorFormRow>
-                        <button type="button" class="ww-editor-button -primary -small -icon ml-2 mt-1" @click="loadBranches(env)">
+                        <button
+                            type="button"
+                            class="ww-editor-button -primary -small -icon ml-2 mt-1"
+                            @click="loadBranches(env)"
+                        >
                             <wwEditorIcon name="refresh" medium />
                         </button>
                         <div v-if="branchErrors?.[env]" class="body-xs content-tertiary ml-2 mt-1">
                             {{ branchErrors[env] }}
                         </div>
                     </div>
-                    
+
                     <button
                         @click="showSettings[env] = !showSettings[env]"
                         class="ww-editor-button -secondary -small mb-2"
@@ -122,7 +134,7 @@
                     >
                         {{ showSettings[env] ? 'Close' : 'Open' }} settings
                     </button>
-                    
+
                     <template v-if="showSettings[env]">
                         <wwEditorInputRow
                             label="Project URL"
@@ -130,18 +142,18 @@
                             placeholder="https://your-project.supabase.co"
                             :required="env === 'production'"
                             :model-value="getCurrentEnvConfig(env).projectUrl"
-                            @update:modelValue="(val) => changeProjectUrl(val, env)"
+                            @update:modelValue="val => changeProjectUrl(val, env)"
                         />
-                        
+
                         <wwEditorInputRow
                             label="Public API key"
                             :required="env === 'production'"
                             type="query"
                             placeholder="Enter your public API key"
                             :model-value="getCurrentEnvConfig(env).apiKey"
-                            @update:modelValue="(val) => changeApiKey(val, env)"
+                            @update:modelValue="val => changeApiKey(val, env)"
                         />
-                        
+
                         <wwEditorFormRow label="Service role key">
                             <div class="flex items-center">
                                 <wwEditorInputText
@@ -151,7 +163,7 @@
                                     class="w-full"
                                     :style="{ '-webkit-text-security': 'disc' }"
                                     :model-value="getCurrentEnvPrivateConfig(env).apiKey"
-                                    @update:modelValue="(val) => changePrivateApiKey(val, env)"
+                                    @update:modelValue="val => changePrivateApiKey(val, env)"
                                 />
                                 <wwEditorQuestionMark
                                     tooltip-position="top-left"
@@ -168,30 +180,32 @@
                 <template v-else-if="selectModes[env] === 'create'">
                     <div v-if="isComingUp" class="body-md flex items-center p-2">
                         <wwLoaderSmall loading class="mr-2" />
-                        <div>We're now preparing your database. Please wait a few moments, it may take up to 1 minute.</div>
+                        <div>
+                            We're now preparing your database. Please wait a few moments, it may take up to 1 minute.
+                        </div>
                     </div>
                     <template v-else>
-                        <wwEditorInputRow 
-                            label="Project name" 
-                            type="query" 
-                            placeholder="My new project" 
+                        <wwEditorInputRow
+                            label="Project name"
+                            type="query"
+                            placeholder="My new project"
                             required
-                            v-model="newProjects[env].name" 
+                            v-model="newProjects[env].name"
                         />
-                        <wwEditorInputRow 
-                            label="Organization" 
-                            type="select" 
-                            placeholder="Select an organization" 
+                        <wwEditorInputRow
+                            label="Organization"
+                            type="select"
+                            placeholder="Select an organization"
                             required
                             v-model="newProjects[env].organizationId"
-                            :options="organizations.map(org => ({ label: org.name, value: org.id }))" 
+                            :options="organizations.map(org => ({ label: org.name, value: org.id }))"
                         />
-                        <wwEditorInputRow 
-                            label="Hosting region" 
-                            type="select" 
-                            placeholder="us-east-1" 
+                        <wwEditorInputRow
+                            label="Hosting region"
+                            type="select"
+                            placeholder="us-east-1"
                             required
-                            v-model="newProjects[env].region" 
+                            v-model="newProjects[env].region"
                             :options="[
                                 { label: 'us-east-1', value: 'us-east-1' },
                                 { label: 'us-west-1', value: 'us-west-1' },
@@ -199,20 +213,20 @@
                                 { label: 'eu-central-1', value: 'eu-central-1' },
                                 { label: 'ap-southeast-1', value: 'ap-southeast-1' },
                                 { label: 'ap-northeast-1', value: 'ap-northeast-1' },
-                            ]" 
+                            ]"
                         />
                         <wwEditorFormRow label="Database password" required>
                             <div class="flex items-center">
-                                <wwEditorInputText 
+                                <wwEditorInputText
                                     :type="showDbPass ? 'text' : 'password'"
                                     placeholder="Enter your database password"
-                                    :style="{ '-webkit-text-security': showDbPass ? 'none' : 'disc' }" 
+                                    :style="{ '-webkit-text-security': showDbPass ? 'none' : 'disc' }"
                                     large
-                                    v-model="newProjects[env].dbPass" 
-                                    class="w-full" 
+                                    v-model="newProjects[env].dbPass"
+                                    class="w-full"
                                 />
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     class="ww-editor-button -secondary -small -icon ml-2"
                                     @click="showDbPass = !showDbPass"
                                 >
@@ -220,11 +234,7 @@
                                 </button>
                             </div>
                         </wwEditorFormRow>
-                        <button 
-                            class="ww-editor-button -primary" 
-                            @click="createProject(env)" 
-                            type="button"
-                        >
+                        <button class="ww-editor-button -primary" @click="createProject(env)" type="button">
                             Create project for {{ capitalize(env) }}
                         </button>
                     </template>
@@ -235,7 +245,10 @@
         <!-- Custom Connection Mode -->
         <template v-else>
             <div class="body-sm content-secondary bg-secondary border-secondary p-2 rounded-02 mb-2">
-                <span>Use this mode for self-hosted projects, local development, or if you don't want to connect your account.</span>
+                <span
+                    >Use this mode for self-hosted projects, local development, or if you don't want to connect your
+                    account.</span
+                >
             </div>
             <div class="body-sm content-warning-secondary bg-warning-secondary p-2 rounded-02 mb-3">
                 <span>Using this mode disables the Back-end panel and AI assistance.</span>
@@ -247,26 +260,26 @@
                 placeholder="https://your-project.supabase.co"
                 :required="env === 'production'"
                 :model-value="getCurrentEnvConfig(env).projectUrl"
-                @update:modelValue="(val) => changeProjectUrl(val, env)"
+                @update:modelValue="val => changeProjectUrl(val, env)"
             />
-            
+
             <wwEditorInputRow
                 label="Custom Domain (optional)"
                 type="query"
                 placeholder="https://your-custom-domain.com"
                 :model-value="getCurrentEnvConfig(env).customDomain"
-                @update:modelValue="(val) => changeCustomDomain(val, env)"
+                @update:modelValue="val => changeCustomDomain(val, env)"
             />
-            
+
             <wwEditorInputRow
                 label="Public API key"
                 :required="env === 'production'"
                 type="query"
                 placeholder="Enter your public API key"
                 :model-value="getCurrentEnvConfig(env).apiKey"
-                @update:modelValue="(val) => changeApiKey(val, env)"
+                @update:modelValue="val => changeApiKey(val, env)"
             />
-            
+
             <wwEditorFormRow label="Service role key">
                 <div class="flex items-center">
                     <wwEditorInputText
@@ -276,7 +289,7 @@
                         class="w-full"
                         :style="{ '-webkit-text-security': 'disc' }"
                         :model-value="getCurrentEnvPrivateConfig(env).apiKey"
-                        @update:modelValue="(val) => changePrivateApiKey(val, env)"
+                        @update:modelValue="val => changePrivateApiKey(val, env)"
                     />
                     <wwEditorQuestionMark
                         tooltip-position="top-left"
@@ -290,8 +303,8 @@
 
         <!-- Clear Environment Button at the bottom for optional environments -->
         <div v-if="env !== 'production' && isEnvironmentConfigured(env)" class="flex justify-center mt-4 pt-4 border-t">
-            <button 
-                type="button" 
+            <button
+                type="button"
                 class="ww-editor-button -tertiary -alert"
                 @click="clearEnvironment(env)"
                 title="Clear this environment's configuration"
@@ -301,7 +314,7 @@
             </button>
         </div>
     </div>
-    
+
     <wwLoader :loading="isLoading && !isComingUp" />
 </template>
 
@@ -321,12 +334,12 @@ export default {
             selectModes: {
                 production: 'select',
                 staging: 'select',
-                editor: 'select'
+                editor: 'select',
             },
             showSettings: {
                 production: false,
                 staging: false,
-                editor: false
+                editor: false,
             },
             projects: [],
             isLoading: false,
@@ -351,11 +364,12 @@ export default {
                     region: 'us-east-1',
                     organizationId: '',
                     dbPass: '',
-                }
+                },
             },
             branches: {},
             selectedBranches: {},
             branchErrors: {},
+            branchChangeAbortController: null, // AbortController for cancelling in-flight requests
         };
     },
     watch: {
@@ -367,7 +381,9 @@ export default {
                         await this.fetchOrganizations();
                         // Initialize new project data for this environment
                         this.newProjects[env] = {
-                            name: `WeWeb - ${wwLib.$store.getters['websiteData/getDesignInfo'].name} (${this.capitalize(env)})`,
+                            name: `WeWeb - ${wwLib.$store.getters['websiteData/getDesignInfo'].name} (${this.capitalize(
+                                env
+                            )})`,
                             region: 'us-east-1',
                             organizationId: this.organizations[0]?.id || '',
                             dbPass: wwLib.wwUtils.getUid(),
@@ -375,37 +391,43 @@ export default {
                     }
                 }
             },
-            deep: true
-        }
+            deep: true,
+        },
     },
     computed: {
+        isValid() {
+            // Prevent saving while branch change is in progress
+            return !this.branchChangeAbortController;
+        },
         projectRef() {
             const config = this.getCurrentEnvConfig();
             return config?.projectUrl?.replace('https://', '').replace('.supabase.co', '');
         },
         projectsOptions() {
-            return (
-                this.projects
-                    .map(project => ({
-                        label: `${project.name} (${project.id}) ${project.status === 'INACTIVE' ? '#PAUSED' : ''}`,
-                        value: `https://${project.id}.supabase.co`,
-                    }))
-                    .sort((a, b) => (a.label.includes('#PAUSED') ? 1 : 0) - (b.label.includes('#PAUSED') ? 1 : 0))
-            );
+            return this.projects
+                .map(project => ({
+                    label: `${project.name} (${project.id}) ${project.status === 'INACTIVE' ? '#PAUSED' : ''}`,
+                    value: `https://${project.id}.supabase.co`,
+                }))
+                .sort((a, b) => (a.label.includes('#PAUSED') ? 1 : 0) - (b.label.includes('#PAUSED') ? 1 : 0));
         },
         branchOptions() {
-            return (env) => {
+            return env => {
                 const items = this.branches?.[env] || [];
                 if (items.length === 0) return [];
-                return items.map(b => ({ label: `${b.name}${b.is_default ? ' (default)' : ''}`, value: b.project_ref || b.ref || b.id || b.name }));
-            }
+                return items.map(b => ({
+                    label: `${b.name}${b.is_default ? ' (default)' : ''}`,
+                    value: b.project_ref || b.ref || b.id || b.name,
+                }));
+            };
         },
     },
     async mounted() {
         // Check if this is a fresh install and try to sync from Supabase plugin
-        const isFreshInstall = !this.settings.publicData?.environments &&
-                               !this.settings.publicData?.projectUrl &&
-                               !this.settings.privateData?.accessToken;
+        const isFreshInstall =
+            !this.settings.publicData?.environments &&
+            !this.settings.publicData?.projectUrl &&
+            !this.settings.privateData?.accessToken;
 
         if (isFreshInstall) {
             await this.syncFromOtherPlugin('supabase');
@@ -444,10 +466,9 @@ export default {
             this.environments.forEach(env => {
                 const config = envConfigs[env];
                 if (!config) return;
-                if (
-                    Object.prototype.hasOwnProperty.call(config, 'accessToken') ||
-                    Object.prototype.hasOwnProperty.call(config, 'refreshToken')
-                ) {
+                const hasLegacyAccess = Object.hasOwn(config, 'accessToken');
+                const hasLegacyRefresh = Object.hasOwn(config, 'refreshToken');
+                if (hasLegacyAccess || hasLegacyRefresh) {
                     const { accessToken: _legacyAccess, refreshToken: _legacyRefresh, ...rest } = config;
                     sanitizedEnvs[env] = rest;
                     hasChanges = true;
@@ -472,21 +493,21 @@ export default {
         capitalize(str) {
             return str.charAt(0).toUpperCase() + str.slice(1);
         },
-        
+
         isEnvironmentConfigured(env) {
             return isEnvironmentConfigured(this.settings, env);
         },
-        
+
         getConnectionMode(env) {
             const privateConfig = this.getCurrentEnvPrivateConfig(env);
             return privateConfig?.connectionMode || 'oauth';
         },
-        
+
         hasOAuthToken() {
             // Single OAuth across environments: rely on global token only
             return this.settings.privateData?.accessToken?.startsWith('sbp_oauth');
         },
-        
+
         hasProjectConfig(env) {
             const config = this.getCurrentEnvConfig(env);
             return !!config?.projectUrl;
@@ -495,7 +516,8 @@ export default {
         getProjectSelectValue(env) {
             const config = this.getCurrentEnvConfig(env);
             if (!config) return '';
-            const baseRef = config.baseProjectRef || config.projectUrl?.replace('https://', '').replace('.supabase.co', '');
+            const baseRef =
+                config.baseProjectRef || config.projectUrl?.replace('https://', '').replace('.supabase.co', '');
             return baseRef ? `https://${baseRef}.supabase.co` : config.projectUrl;
         },
 
@@ -514,16 +536,19 @@ export default {
                 return {
                     projectUrl: this.settings.publicData.projectUrl,
                     apiKey: this.settings.publicData.apiKey,
-                    customDomain: this.settings.publicData.customDomain
+                    customDomain: this.settings.publicData.customDomain,
                 };
             }
             return {};
         },
-        
+
         getCurrentEnvPrivateConfig(env = this.activeEnvironment) {
             if (this.settings.privateData?.environments?.[env]) {
-                const { accessToken: _legacyAccess, refreshToken: _legacyRefresh, ...rest } =
-                    this.settings.privateData.environments[env] || {};
+                const {
+                    accessToken: _legacyAccess,
+                    refreshToken: _legacyRefresh,
+                    ...rest
+                } = this.settings.privateData.environments[env] || {};
                 return rest;
             }
             // Fallback to legacy format for production
@@ -532,7 +557,7 @@ export default {
                     connectionMode: this.settings.privateData.connectionMode || 'oauth',
                     apiKey: this.settings.privateData.apiKey,
                     databasePassword: this.settings.privateData.databasePassword,
-                    connectionString: this.settings.privateData.connectionString
+                    connectionString: this.settings.privateData.connectionString,
                 };
             }
             return {};
@@ -549,9 +574,9 @@ export default {
                         production: {
                             projectUrl: this.settings.publicData?.projectUrl || '',
                             apiKey: this.settings.publicData?.apiKey || '',
-                            customDomain: this.settings.publicData?.customDomain || ''
-                        }
-                    }
+                            customDomain: this.settings.publicData?.customDomain || '',
+                        },
+                    },
                 },
                 privateData: {
                     ...this.settings.privateData,
@@ -560,22 +585,22 @@ export default {
                             connectionMode: connectionMode,
                             apiKey: this.settings.privateData?.apiKey || '',
                             databasePassword: this.settings.privateData?.databasePassword || '',
-                            connectionString: this.settings.privateData?.connectionString || ''
-                        }
-                    }
-                }
+                            connectionString: this.settings.privateData?.connectionString || '',
+                        },
+                    },
+                },
             };
             this.$emit('update:settings', newSettings);
         },
-        
+
         changeConnectionMode(env, mode) {
             this.updateEnvironmentConfig(env, {
                 privateData: {
-                    connectionMode: mode
-                }
+                    connectionMode: mode,
+                },
             });
         },
-        
+
         async connect() {
             this.isLoading = true;
             const redirectUri = window.location.origin + window.location.pathname;
@@ -589,7 +614,7 @@ export default {
             if (!data?.data) throw new Error('No authorization URL returned');
             window.location.href = data?.data;
         },
-        
+
         disconnect() {
             // Clear OAuth tokens from all environments
             const newSettings = {
@@ -599,9 +624,9 @@ export default {
                     accessToken: '',
                     refreshToken: '',
                     environments: {
-                        ...this.settings.privateData?.environments
-                    }
-                }
+                        ...this.settings.privateData?.environments,
+                    },
+                },
             };
 
             // Clear tokens from all environments
@@ -614,13 +639,13 @@ export default {
 
             this.$emit('update:settings', newSettings);
         },
-        
+
         async changeProjectUrl(projectUrl, env) {
             // Skip if no project URL is provided
             if (!projectUrl) {
                 this.updateEnvironmentConfig(env, {
                     publicData: { projectUrl: '', apiKey: '' },
-                    privateData: { apiKey: '', connectionString: '' }
+                    privateData: { apiKey: '', connectionString: '' },
                 });
                 return;
             }
@@ -639,21 +664,15 @@ export default {
                 let baseProjectRef = projectUrl.replace('https://', '').replace('.supabase.co', '');
 
                 // Reset branch state while loading new project data (prevents showing stale options)
-                if (this.$set) {
-                    this.$set(this.branches, env, []);
-                    this.$set(this.branchErrors, env, '');
-                    this.$set(this.selectedBranches, env, '');
-                } else {
-                    const branchCopy = { ...(this.branches || {}) };
-                    branchCopy[env] = [];
-                    this.branches = branchCopy;
-                    const errorCopy = { ...(this.branchErrors || {}) };
-                    delete errorCopy[env];
-                    this.branchErrors = errorCopy;
-                    const selectedCopy = { ...(this.selectedBranches || {}) };
-                    selectedCopy[env] = '';
-                    this.selectedBranches = selectedCopy;
-                }
+                const branchCopy = { ...(this.branches || {}) };
+                branchCopy[env] = [];
+                this.branches = branchCopy;
+                const errorCopy = { ...(this.branchErrors || {}) };
+                delete errorCopy[env];
+                this.branchErrors = errorCopy;
+                const selectedCopy = { ...(this.selectedBranches || {}) };
+                selectedCopy[env] = '';
+                this.selectedBranches = selectedCopy;
 
                 if (this.hasOAuthToken() && this.getConnectionMode(env) === 'oauth') {
                     const projectData = await this.fetchProject(
@@ -662,7 +681,8 @@ export default {
 
                     if (projectData) {
                         apiKey = projectData.apiKeys?.find(key => key.name === 'anon')?.api_key || apiKey;
-                        privateApiKey = projectData.apiKeys?.find(key => key.name === 'service_role')?.api_key || privateApiKey;
+                        privateApiKey =
+                            projectData.apiKeys?.find(key => key.name === 'service_role')?.api_key || privateApiKey;
                         connectionString = projectData.pgbouncer?.connection_string || connectionString;
                         baseProjectRef =
                             projectData.project?.parent_project_ref ||
@@ -674,7 +694,7 @@ export default {
 
                 this.updateEnvironmentConfig(env, {
                     publicData: { projectUrl, apiKey, baseProjectRef, branch: null, branchSlug: null },
-                    privateData: { apiKey: privateApiKey, connectionString }
+                    privateData: { apiKey: privateApiKey, connectionString },
                 });
 
                 // Load branches
@@ -688,7 +708,10 @@ export default {
         async loadBranches(env, overrideRef = '') {
             try {
                 const cfg = this.getCurrentEnvConfig(env);
-                const baseRef = overrideRef || cfg.baseProjectRef || cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                const baseRef =
+                    overrideRef ||
+                    cfg.baseProjectRef ||
+                    cfg.projectUrl?.replace('https://', '').replace('.supabase.co', '');
                 const ref = baseRef;
                 const paramsBaseRef = cfg.baseProjectRef || overrideRef || '';
                 if (!ref || !this.hasOAuthToken()) return;
@@ -698,44 +721,43 @@ export default {
                     params: { baseProjectRef: paramsBaseRef },
                 });
                 const branches = data?.data || [];
-                if (this.$set) {
-                    this.$set(this.branches, env, branches);
-                    this.$set(this.branchErrors, env, '');
-                } else {
-                    this.branches = { ...(this.branches || {}), [env]: branches };
-                    const errors = { ...(this.branchErrors || {}) };
-                    delete errors[env];
-                    this.branchErrors = errors;
-                }
+                this.branches = { ...(this.branches || {}), [env]: branches };
+                const errors = { ...(this.branchErrors || {}) };
+                delete errors[env];
+                this.branchErrors = errors;
 
                 const defaultBranch = branches.find(b => b.is_default);
                 const defaultValue = defaultBranch?.project_ref || defaultBranch?.ref || defaultBranch?.id || '';
                 const currentSelection = this.selectedBranches?.[env];
                 const savedSelection = this.getCurrentEnvConfig(env)?.branch || '';
                 const targetSelection = currentSelection || savedSelection || '';
-                const selectionExistsInList = targetSelection && branches.some(b => (b.project_ref || b.ref || b.id || b.name) === targetSelection);
+                const selectionExistsInList =
+                    targetSelection &&
+                    branches.some(b => (b.project_ref || b.ref || b.id || b.name) === targetSelection);
 
                 let nextSelection = '';
+                let shouldFetchBranchData = false;
+
                 if (selectionExistsInList) {
                     nextSelection = targetSelection;
                 } else if (defaultValue) {
                     nextSelection = defaultValue;
+                    // Auto-selected default branch needs data fetched
+                    shouldFetchBranchData = !savedSelection;
                 }
 
                 if (nextSelection || currentSelection || savedSelection) {
-                    if (this.$set) this.$set(this.selectedBranches, env, nextSelection);
-                    else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: nextSelection };
-                }
+                    this.selectedBranches = { ...(this.selectedBranches || {}), [env]: nextSelection };
 
+                    // If we auto-selected a default branch, fetch its data
+                    if (shouldFetchBranchData && nextSelection) {
+                        await this.changeBranch(nextSelection, env);
+                    }
+                }
             } catch (e) {
                 const msg = e?.response?.data?.error || e?.message || 'Unable to load branches';
-                if (this.$set) {
-                    this.$set(this.branches, env, []);
-                    this.$set(this.branchErrors, env, msg);
-                } else {
-                    this.branches = { ...(this.branches || {}), [env]: [] };
-                    this.branchErrors = { ...(this.branchErrors || {}), [env]: msg };
-                }
+                this.branches = { ...(this.branches || {}), [env]: [] };
+                this.branchErrors = { ...(this.branchErrors || {}), [env]: msg };
                 console.warn('[Supabase auth plugin] loadBranches error', { env, status: e?.response?.status, msg });
             }
         },
@@ -743,70 +765,130 @@ export default {
         // removed features gating; we call /branches directly
 
         async changeBranch(branchValue, env) {
-            if (this.$set) this.$set(this.selectedBranches, env, branchValue || '');
-            else this.selectedBranches = { ...(this.selectedBranches || {}), [env]: branchValue || '' };
-            const baseRef = this.getCurrentEnvConfig(env).baseProjectRef || this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
-            if (!baseRef) return;
-            let targetRef = baseRef;
-            let branchSlug = '';
-            if (branchValue) {
-                const list = this.branches?.[env] || [];
-                const b = list.find(it => (it.project_ref || it.ref || it.id || it.name) === branchValue);
-                targetRef = b?.project_ref || b?.ref || branchValue;
-                branchSlug = b?.name || '';
+            // Cancel any in-flight branch change request
+            if (this.branchChangeAbortController) {
+                this.branchChangeAbortController.abort();
             }
 
-            const effectiveBranchSlug = branchValue ? (branchSlug || this.getCurrentEnvConfig(env)?.branchSlug || '') : '';
-            const projectData = await this.fetchProject(baseRef, {
-                branchSlug: effectiveBranchSlug,
-                branchRef: branchValue ? targetRef : '',
-            });
-            const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
-            const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
-            const connectionString = projectData?.pgbouncer?.connection_string;
-            const resolvedBranchRef = branchValue
-                ? projectData?.branchRef || projectData?.project?.project_ref || projectData?.project?.ref || targetRef
-                : '';
-            const runtimeRef = resolvedBranchRef || baseRef;
-            const projectUrl = `https://${runtimeRef}.supabase.co`;
-            const displayAnonKey = apiKey || this.getCurrentEnvConfig(env).apiKey;
-            const displayServiceKey = privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey;
+            // Create new AbortController for this request
+            this.branchChangeAbortController = new AbortController();
+            const signal = this.branchChangeAbortController.signal;
 
-            this.updateEnvironmentConfig(env, {
-                publicData: {
-                    projectUrl,
-                    apiKey: displayAnonKey,
-                    branch: resolvedBranchRef || null,
-                    branchSlug: effectiveBranchSlug || null,
-                    baseProjectRef: baseRef,
-                },
-                privateData: {
-                    apiKey: displayServiceKey,
-                    connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString,
+            // Set flag to prevent saving while branch change is in progress
+            this.setLoadingFlag(true);
+            this.isLoading = true;
+
+            try {
+                this.selectedBranches = { ...(this.selectedBranches || {}), [env]: branchValue || '' };
+
+                const baseRef =
+                    this.getCurrentEnvConfig(env).baseProjectRef ||
+                    this.getCurrentEnvConfig(env).projectUrl?.replace('https://', '').replace('.supabase.co', '');
+                if (!baseRef) return;
+
+                let targetRef = baseRef;
+                let branchSlug = '';
+                if (branchValue) {
+                    const branchList = this.branches?.[env] || [];
+                    const matchedBranch = branchList.find(
+                        it => (it.project_ref || it.ref || it.id || it.name) === branchValue
+                    );
+                    targetRef = matchedBranch?.project_ref || matchedBranch?.ref || branchValue;
+                    branchSlug = matchedBranch?.name || '';
                 }
-            });
 
-            await this.loadBranches(env, baseRef);
+                const effectiveBranchSlug = branchValue
+                    ? branchSlug || this.getCurrentEnvConfig(env)?.branchSlug || ''
+                    : '';
+                const projectData = await this.fetchProject(baseRef, {
+                    branchSlug: effectiveBranchSlug,
+                    branchRef: branchValue ? targetRef : '',
+                    signal, // Pass AbortController signal
+                });
+
+                const apiKey = projectData?.apiKeys?.find(key => key.name === 'anon')?.api_key;
+                const privateApiKey = projectData?.apiKeys?.find(key => key.name === 'service_role')?.api_key;
+                const connectionString = projectData?.pgbouncer?.connection_string;
+                const resolvedBranchRef = branchValue
+                    ? projectData?.branchRef ||
+                      projectData?.project?.project_ref ||
+                      projectData?.project?.ref ||
+                      targetRef
+                    : '';
+                const runtimeRef = resolvedBranchRef || baseRef;
+                const projectUrl = `https://${runtimeRef}.supabase.co`;
+                const displayAnonKey = apiKey || this.getCurrentEnvConfig(env).apiKey;
+                const displayServiceKey = privateApiKey || this.getCurrentEnvPrivateConfig(env).apiKey;
+
+                this.updateEnvironmentConfig(env, {
+                    publicData: {
+                        projectUrl,
+                        apiKey: displayAnonKey,
+                        branch: resolvedBranchRef || null,
+                        branchSlug: effectiveBranchSlug || null,
+                        baseProjectRef: baseRef,
+                    },
+                    privateData: {
+                        apiKey: displayServiceKey,
+                        connectionString: connectionString || this.getCurrentEnvPrivateConfig(env).connectionString,
+                    },
+                });
+
+                await this.loadBranches(env, baseRef);
+            } catch (error) {
+                // Ignore abort errors silently
+                if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+                    return;
+                }
+                throw error;
+            } finally {
+                // Clear loading flag when complete (success or abort)
+                this.setLoadingFlag(false);
+                this.isLoading = false;
+
+                // Clear abort controller if this request completed
+                if (this.branchChangeAbortController?.signal === signal) {
+                    this.branchChangeAbortController = null;
+                }
+            }
         },
-        
+
+        setLoadingFlag(isLoading) {
+            // Emit settings update with loading flag
+            const newSettings = {
+                ...this.settings,
+                privateData: {
+                    ...this.settings.privateData,
+                    _isBranchChanging: isLoading || undefined, // undefined removes the key when false
+                },
+            };
+            this.$emit('update:settings', newSettings);
+        },
+
         changeApiKey(apiKey, env) {
             this.updateEnvironmentConfig(env, {
-                publicData: { apiKey }
+                publicData: { apiKey },
             });
         },
-        
+
+        changeApiKey(apiKey, env) {
+            this.updateEnvironmentConfig(env, {
+                publicData: { apiKey },
+            });
+        },
+
         changeCustomDomain(customDomain, env) {
             this.updateEnvironmentConfig(env, {
-                publicData: { customDomain }
+                publicData: { customDomain },
             });
         },
-        
+
         changePrivateApiKey(apiKey, env) {
             this.updateEnvironmentConfig(env, {
-                privateData: { apiKey }
+                privateData: { apiKey },
             });
         },
-        
+
         updateEnvironmentConfig(env, updates = {}) {
             const currentPrivateConfig = this.getCurrentEnvPrivateConfig(env) || {};
             const currentPublicConfig = this.getCurrentEnvConfig(env);
@@ -814,15 +896,15 @@ export default {
             const previousGlobalRefresh = this.settings.privateData?.refreshToken;
 
             const privateUpdates = { ...(updates.privateData || {}) };
-            const updateAccessToken = Object.prototype.hasOwnProperty.call(privateUpdates, 'accessToken')
+            const updateAccessToken = Object.hasOwn(privateUpdates, 'accessToken')
                 ? privateUpdates.accessToken
                 : undefined;
-            const updateRefreshToken = Object.prototype.hasOwnProperty.call(privateUpdates, 'refreshToken')
+            const updateRefreshToken = Object.hasOwn(privateUpdates, 'refreshToken')
                 ? privateUpdates.refreshToken
                 : undefined;
 
-            if (Object.prototype.hasOwnProperty.call(privateUpdates, 'accessToken')) delete privateUpdates.accessToken;
-            if (Object.prototype.hasOwnProperty.call(privateUpdates, 'refreshToken')) delete privateUpdates.refreshToken;
+            if (Object.hasOwn(privateUpdates, 'accessToken')) delete privateUpdates.accessToken;
+            if (Object.hasOwn(privateUpdates, 'refreshToken')) delete privateUpdates.refreshToken;
 
             const sanitizedCurrentPrivate = { ...currentPrivateConfig };
             delete sanitizedCurrentPrivate.accessToken;
@@ -836,9 +918,9 @@ export default {
                         ...this.settings.publicData?.environments,
                         [env]: {
                             ...currentPublicConfig,
-                            ...(updates.publicData || {})
-                        }
-                    }
+                            ...(updates.publicData || {}),
+                        },
+                    },
                 },
                 privateData: {
                     ...this.settings.privateData,
@@ -847,11 +929,11 @@ export default {
                         [env]: {
                             ...sanitizedCurrentPrivate,
                             ...privateUpdates,
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             };
-            
+
             if (env === 'production') {
                 const productionPublic = newSettings.publicData.environments.production || {};
                 const productionPrivate = newSettings.privateData.environments.production || {};
@@ -882,13 +964,17 @@ export default {
 
             this.$emit('update:settings', newSettings);
         },
-        
+
         clearEnvironment(env) {
             if (env === 'production') {
                 return;
             }
 
-            if (!confirm(`Are you sure you want to clear the ${env} environment configuration? This will remove all settings for this environment.`)) {
+            if (
+                !confirm(
+                    `Are you sure you want to clear the ${env} environment configuration? This will remove all settings for this environment.`
+                )
+            ) {
                 return;
             }
 
@@ -901,9 +987,9 @@ export default {
                         [env]: {
                             projectUrl: '',
                             apiKey: '',
-                            customDomain: ''
-                        }
-                    }
+                            customDomain: '',
+                        },
+                    },
                 },
                 privateData: {
                     ...this.settings.privateData,
@@ -913,10 +999,10 @@ export default {
                             connectionMode: 'custom',
                             apiKey: '',
                             databasePassword: '',
-                            connectionString: ''
-                        }
-                    }
-                }
+                            connectionString: '',
+                        },
+                    },
+                },
             };
 
             this.selectModes[env] = 'select';
@@ -932,15 +1018,15 @@ export default {
                 console.warn('Failed to sync from other plugin:', error);
             }
         },
-        
+
         async refreshProjects() {
             // Use OAuth token (shared across environments)
             const accessToken = this.settings.privateData?.accessToken;
-                
+
             if (!accessToken) {
                 return;
             }
-            
+
             this.isLoading = true;
             try {
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
@@ -955,8 +1041,8 @@ export default {
                 console.warn('Failed to refresh projects:', error);
             }
         },
-        
-        async fetchProject(projectId, { branchSlug = '', branchRef = '' } = {}) {
+
+        async fetchProject(projectId, { branchSlug = '', branchRef = '', signal = null } = {}) {
             if (!projectId) {
                 return null;
             }
@@ -972,14 +1058,18 @@ export default {
                                   ...(branchRef ? { branchRef } : {}),
                               }
                             : undefined,
+                    signal, // Pass AbortController signal to requestAPI
                 });
                 return data?.data;
             } catch (error) {
-                console.warn(`Failed to fetch project ${projectId}:`, error);
+                // Don't log abort errors
+                if (error.name !== 'AbortError' && error.code !== 'ERR_CANCELED') {
+                    console.warn(`Failed to fetch project ${projectId}:`, error);
+                }
                 return null;
             }
         },
-        
+
         async fetchOrganizations() {
             this.isLoading = true;
             try {
@@ -1002,21 +1092,21 @@ export default {
                 throw error;
             }
         },
-        
+
         async createProject(env) {
             this.isLoading = true;
             try {
                 const newProject = this.newProjects[env];
-                
+
                 this.updateEnvironmentConfig(env, {
                     publicData: { projectUrl: '', apiKey: '' },
                     privateData: {
                         apiKey: '',
                         connectionString: '',
                         databasePassword: '',
-                    }
+                    },
                 });
-                
+
                 const { data } = await wwLib.wwPlugins.supabase.requestAPI({
                     method: 'POST',
                     path: '/projects',
@@ -1027,7 +1117,7 @@ export default {
                         db_pass: newProject.dbPass,
                     },
                 });
-                
+
                 this.isLoading = false;
                 this.isComingUp = true;
                 const projectId = data?.data.id;
@@ -1041,19 +1131,21 @@ export default {
                         const projectData = await this.fetchProject(projectId);
                         if (projectData) {
                             const apiKey = projectData.apiKeys?.find(key => key.name === 'anon')?.api_key;
-                            const privateApiKey = projectData.apiKeys?.find(key => key.name === 'service_role')?.api_key;
+                            const privateApiKey = projectData.apiKeys?.find(
+                                key => key.name === 'service_role'
+                            )?.api_key;
                             const connectionString = projectData.pgbouncer?.connection_string;
                             const databasePassword = newProject.dbPass;
-                            
+
                             this.updateEnvironmentConfig(env, {
                                 publicData: { projectUrl, apiKey },
                                 privateData: {
                                     apiKey: privateApiKey,
                                     connectionString: connectionString,
                                     databasePassword,
-                                }
+                                },
                             });
-                            
+
                             this.isComingUp = false;
                             this.selectModes[env] = 'select';
                         }
