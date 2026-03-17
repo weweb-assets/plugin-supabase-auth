@@ -42,7 +42,7 @@ export default {
     \================================================================================================*/
     async _onLoad(settings) {
         const config = getCurrentSupabaseSettings('supabaseAuth');
-        
+
         /* wwFront:start */
         await this.load(config.projectUrl, config.publicApiKey);
         /* wwFront:end */
@@ -55,7 +55,8 @@ export default {
         if (isConnecting && code) {
             window.localStorage.removeItem('supabaseAuth_oauth');
             await wwAxios.post(
-                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
+                `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
+                    wwLib.$store.getters['websiteData/getDesignInfo'].id
                 }/supabase/connect`,
                 { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
@@ -132,7 +133,7 @@ export default {
         await this.requestAPI({
             method: 'POST',
             path: '/sync',
-            data: { source: 'supabaseAuth', settings }
+            data: { source: 'supabaseAuth', settings },
         });
     },
     // driver: core, roles
@@ -140,7 +141,7 @@ export default {
         await this.requestAPI({
             method: 'POST',
             path: '/install',
-            data: { driver }
+            data: { driver },
         });
     },
     getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
@@ -463,11 +464,11 @@ export default {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
-                await this.publicInstance
-                    .from(this.settings.publicData.userRoleTable)
-                    .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
-                    .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
-            ).data.map(({ role }) => role)
+                  await this.publicInstance
+                      .from(this.settings.publicData.userRoleTable)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
+              ).data.map(({ role }) => role)
             : [];
         return roles;
     },
@@ -554,6 +555,9 @@ export default {
             apiKeyPreview: maskForLog(config.privateApiKey),
         };
         if (!runtimeProjectUrl || !config.privateApiKey) {
+            if (config.publicApiKey && !config.privateApiKey) {
+                console.log('[Supabase] Breaking change detected: the Service Role Key is now required.');
+            }
             console.warn('[Supabase auth plugin] fetchDoc skipped', {
                 reason: 'Missing projectUrl or privateApiKey',
                 ...logContext,
@@ -642,11 +646,11 @@ const adminFunctions = {
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
-                await this.privateInstance
-                    .from(this.settings.publicData.userRoleTable)
-                    .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
-                    .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
-            ).data.map(({ role }) => role)
+                  await this.privateInstance
+                      .from(this.settings.publicData.userRoleTable)
+                      .select(`role:${this.settings.publicData.userRoleTableRoleColumn || 'roleId'}(*)`)
+                      .eq(this.settings.publicData.userRoleTableUserColumn || 'userId', userId)
+              ).data.map(({ role }) => role)
             : [];
         return roles;
     },
