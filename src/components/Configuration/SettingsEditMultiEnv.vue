@@ -154,9 +154,10 @@
                             @update:modelValue="val => changeApiKey(val, env)"
                         />
 
-                        <wwEditorFormRow label="Service role key">
+                        <wwEditorFormRow label="Service role key" :required="env === 'production'">
                             <div class="flex items-center">
                                 <wwEditorInputText
+                                    :required="env === 'production'"
                                     type="password"
                                     placeholder="Enter your service role key"
                                     large
@@ -280,9 +281,10 @@
                 @update:modelValue="val => changeApiKey(val, env)"
             />
 
-            <wwEditorFormRow label="Service role key">
+            <wwEditorFormRow label="Service role key" :required="env === 'production'">
                 <div class="flex items-center">
                     <wwEditorInputText
+                        :required="env === 'production'"
                         type="password"
                         placeholder="Enter your service role key"
                         large

@@ -550,19 +550,19 @@ export default {
             baseProjectRef: config.baseProjectRef,
             branch: config.branch,
             branchSlug: config.branchSlug,
-            hasApiKey: !!config.publicApiKey,
-            apiKeyPreview: maskForLog(config.publicApiKey),
+            hasPrivateApiKey: !!config.privateApiKey,
+            apiKeyPreview: maskForLog(config.privateApiKey),
         };
-        if (!runtimeProjectUrl || !config.publicApiKey) {
+        if (!runtimeProjectUrl || !config.privateApiKey) {
             console.warn('[Supabase auth plugin] fetchDoc skipped', {
-                reason: 'Missing projectUrl or publicApiKey',
+                reason: 'Missing projectUrl or privateApiKey',
                 ...logContext,
             });
             return;
         }
 
         try {
-            const doc = await getDoc(runtimeProjectUrl, config.publicApiKey, {
+            const doc = await getDoc(runtimeProjectUrl, config.privateApiKey, {
                 branchSlug: config.branchSlug,
             });
             this.doc = doc;

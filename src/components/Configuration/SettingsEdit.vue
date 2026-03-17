@@ -43,9 +43,9 @@
                 :model-value="settings.publicData.apiKey"
                 @update:modelValue="changeApiKey"
             />
-            <wwEditorFormRow label="Service role key">
+            <wwEditorFormRow label="Service role key" required>
                 <div class="flex items-center">
-                    <wwEditorInputText type="password" placeholder="ey********" large class="w-full"
+                    <wwEditorInputText required type="password" placeholder="ey********" large class="w-full"
                         :style="{ '-webkit-text-security': 'disc' }" :model-value="settings.privateData.apiKey"
                         @update:modelValue="changePrivateApiKey" />
                     <wwEditorQuestionMark tooltip-position="top-left"
