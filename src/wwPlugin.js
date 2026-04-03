@@ -566,11 +566,21 @@ export default {
         }
 
         try {
-            const doc = await getDoc(runtimeProjectUrl, config.privateApiKey, {
-                branchSlug: config.branchSlug,
-            });
-            this.doc = doc;
-            const rowCount = Array.isArray(doc) ? doc.length : undefined;
+            try {
+                const doc = await getDoc(runtimeProjectUrl, config.privateApiKey, {
+                    branchSlug: config.branchSlug,
+                });
+                this.doc = doc;
+            } catch (error) {
+                if (config.publicApiKey) {
+                    const doc = await getDoc(runtimeProjectUrl, config.publicApiKey, {
+                        branchSlug: config.branchSlug,
+                    });
+                    this.doc = doc;
+                } else {
+                    throw error;
+                }
+            }
         } catch (error) {
             console.warn('[Supabase auth plugin] fetchDoc failed', {
                 projectUrl: runtimeProjectUrl,
