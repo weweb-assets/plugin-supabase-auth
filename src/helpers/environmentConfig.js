@@ -10,6 +10,13 @@
  * @param {string} [pluginName='supabaseAuth'] - The plugin to get settings for ('supabase' or 'supabaseAuth')
  * @returns {Object} - Object with projectUrl, publicApiKey, privateApiKey, and other settings
  */
+function extractProjectRef(url) {
+    if (!url) return null;
+    const hostname = url.replace(/^https?:\/\//, '');
+    if (!hostname.endsWith('.supabase.co')) return null;
+    return hostname.replace('.supabase.co', '');
+}
+
 export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
     // Get the plugin settings
     const plugin = wwLib.wwPlugins[pluginName];
@@ -61,7 +68,7 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
             const connectionMode = settings.privateData?.connectionMode || privateEnvConfig?.connectionMode || null;
             
             const inferredProjectRef =
-                envConfig.projectUrl?.replace('https://', '').replace('.supabase.co', '') || envConfig.baseProjectRef || null;
+                extractProjectRef(envConfig.projectUrl) || envConfig.baseProjectRef || null;
 
             return {
                 projectUrl: envConfig.customDomain || envConfig.projectUrl,
@@ -69,7 +76,7 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
                 baseProjectRef:
                     envConfig.baseProjectRef ||
                     inferredProjectRef ||
-                    settings?.publicData?.projectUrl?.replace('https://', '').replace('.supabase.co', '') ||
+                    extractProjectRef(settings?.publicData?.projectUrl) ||
                     null,
                 branch: envConfig.branch || null,
                 branchSlug: envConfig.branchSlug || null,
@@ -90,7 +97,7 @@ export function getCurrentSupabaseSettings(pluginName = 'supabaseAuth') {
     // Fallback to legacy format (acts as production for all environments)
     if (settings?.publicData?.projectUrl && settings?.publicData?.apiKey) {
         const url = settings.publicData.projectUrl;
-        const projectRef = url?.replace('https://', '').replace('.supabase.co', '') || null;
+        const projectRef = extractProjectRef(url);
         return {
             projectUrl: settings.publicData.customDomain || url,
             projectRef,
