@@ -491,7 +491,10 @@ export default {
         });
         if (signInError) throw new Error(signInError.message, { cause: signInError });
 
-        const { data: result, error } = await this.publicInstance.auth.updateUser({ password: newPassword });
+        const { data: result, error } = await this.publicInstance.auth.updateUser({
+            password: newPassword,
+            current_password: oldPassword,
+        });
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
