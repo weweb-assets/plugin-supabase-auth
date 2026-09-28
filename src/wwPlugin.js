@@ -56,7 +56,7 @@ export default {
             window.localStorage.removeItem('supabaseAuth_oauth');
             await wwAxios.post(
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                    (wwLib.wwWebsiteData.getInfo() || {}).id
                 }/supabase/connect`,
                 { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
@@ -119,7 +119,7 @@ export default {
         return await wwAxios({
             method,
             url: `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                wwLib.$store.getters['websiteData/getDesignInfo'].id
+                (wwLib.wwWebsiteData.getInfo() || {}).id
             }/supabase${path}`,
             data,
             params: {

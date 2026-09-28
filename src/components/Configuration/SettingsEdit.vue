@@ -153,7 +153,7 @@ export default {
             if (mode === 'create') {
                 this.organizations = await this.fetchOrganizations();
                 this.newProject = {
-                    name: 'WeWeb - ' + wwLib.$store.getters['websiteData/getDesignInfo'].name,
+                    name: 'WeWeb - ' + (wwLib.wwWebsiteData.getInfo() || {}).name,
                     region: 'us-east-1',
                     organizationId: this.organizations[0]?.id,
                     dbPass: wwLib.wwUtils.getUid(),
@@ -261,7 +261,7 @@ export default {
             this.isLoading = true;
             try {
                 const { data } = await wwAxios.post(
-                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${this.$store.getters['websiteData/getDesignInfo'].id
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${(wwLib.wwWebsiteData.getInfo() || {}).id
                     }/supabase/projects/list`,
                     { accessToken: this.settings.privateData.accessToken }
                 );
@@ -276,7 +276,7 @@ export default {
             this.isLoading = true;
             try {
                 const { data } = await wwAxios.get(
-                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${this.$store.getters['websiteData/getDesignInfo'].id
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${(wwLib.wwWebsiteData.getInfo() || {}).id
                     }/supabase/projects/${projectId}`
                 );
                 this.isLoading = false;
@@ -290,7 +290,7 @@ export default {
             this.isLoading = true;
             try {
                 const { data } = await wwAxios.get(
-                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${(wwLib.wwWebsiteData.getInfo() || {}).id
                     }/supabase/organizations`
                 );
                 this.isLoading = false;
@@ -314,7 +314,7 @@ export default {
                     },
                 });
                 const { data } = await wwAxios.post(
-                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${wwLib.$store.getters['websiteData/getDesignInfo'].id
+                    `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${(wwLib.wwWebsiteData.getInfo() || {}).id
                     }/supabase/projects`,
                     {
                         name: this.newProject.name,
