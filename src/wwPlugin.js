@@ -56,7 +56,7 @@ export default {
             window.localStorage.removeItem('supabaseAuth_oauth');
             await wwAxios.post(
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    wwLib.$store.getters['websiteData/getDesignInfo'].id
+                    (wwLib.wwWebsiteData.info || {}).id
                 }/supabase/connect`,
                 { code, redirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
@@ -119,7 +119,7 @@ export default {
         return await wwAxios({
             method,
             url: `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                wwLib.$store.getters['websiteData/getDesignInfo'].id
+                (wwLib.wwWebsiteData.info || {}).id
             }/supabase${path}`,
             data,
             params: {
@@ -175,7 +175,7 @@ export default {
 
             this.publicInstance = createClient(runtimeProjectUrl, effectivePublicKey, {
                 auth: {
-                    storageKey: wwLib.wwWebsiteData.getInfo().id,
+                    storageKey: wwLib.wwWebsiteData.info.id,
                 },
             });
 
@@ -407,7 +407,7 @@ export default {
 
         this.user = null;
         this.isAuthenticated = false;
-        const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
+        const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.info.id : '/';
         window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
             path,
             domain: window.location.hostname,
@@ -614,7 +614,7 @@ const getDoc = async (url, apiKey, { branchSlug } = {}) => {
 /* wwEditor:end */
 
 const setCookies = session => {
-    const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.getInfo().id : '/';
+    const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.info.id : '/';
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
         expire: session.expires_in,
         path,
