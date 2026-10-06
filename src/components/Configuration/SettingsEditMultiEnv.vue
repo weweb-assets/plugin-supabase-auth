@@ -383,7 +383,7 @@ export default {
                         await this.fetchOrganizations();
                         // Initialize new project data for this environment
                         this.newProjects[env] = {
-                            name: `WeWeb - ${(wwLib.wwWebsiteData.getInfo() || {}).name} (${this.capitalize(
+                            name: `WeWeb - ${(wwLib.wwWebsiteData.info || {}).name} (${this.capitalize(
                                 env
                             )})`,
                             region: 'us-east-1',
@@ -609,7 +609,7 @@ export default {
             window.localStorage.setItem('supabase_oauth', true);
             const { data } = await wwAxios.post(
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    (wwLib.wwWebsiteData.getInfo() || {}).id
+                    (wwLib.wwWebsiteData.info || {}).id
                 }/supabase/authorize`,
                 { redirectUri, oauthRedirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );

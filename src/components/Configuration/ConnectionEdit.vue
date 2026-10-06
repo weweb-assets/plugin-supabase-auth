@@ -102,7 +102,7 @@ export default {
             window.localStorage.setItem('supabase_oauth', true);
             const { data } = await wwAxios.post(
                 `${wwLib.wwApiRequests._getPluginsUrl()}/designs/${
-                    (wwLib.wwWebsiteData.getInfo() || {}).id
+                    (wwLib.wwWebsiteData.info || {}).id
                 }/supabase/authorize`,
                 { redirectUri, oauthRedirectUri: wwLib.wwApiRequests._getPluginsUrl() + '/supabase/redirect' }
             );
