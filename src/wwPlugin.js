@@ -111,7 +111,7 @@ export default {
                 'Please add your service role key in the supabase auth plugin configuration to manage roles here.';
         }
     },
-    async requestAPI({ method, path, data, params, signal }) {
+    async requestAPI({ method, path, data, params, signal, headers }) {
         // Get current environment and send it explicitly
         const config = getCurrentSupabaseSettings('supabaseAuth');
         const currentEnv = config.environment; // 'editor', 'staging', or 'production'
@@ -126,8 +126,28 @@ export default {
                 ...params,
                 wwEnv: currentEnv, // Send environment explicitly
             },
+            headers,
             signal, // Support AbortController signal
         });
+    },
+    async requestLegacyAdmin(operation, input = {}) {
+        try {
+            const { data } = await this.requestAPI({
+                method: 'POST',
+                path: `/legacy/auth/admin/${operation}`,
+                data: input,
+                headers: { 'X-WeWeb-Editor-Request': '1' },
+            });
+            return data.data;
+        } catch (error) {
+            const message = error.response?.data?.message;
+            if (typeof message === 'string' && message) {
+                // Admin callers pass Error.message to notifications that render HTML. Provider explanations are text.
+                const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                throw new Error(message.replace(/[&<>"']/g, character => entities[character]));
+            }
+            throw error;
+        }
     },
     async syncSettings(settings) {
         await this.requestAPI({
@@ -169,7 +189,10 @@ export default {
             if (!runtimeProjectUrl || !effectivePublicKey) return;
 
             /* wwEditor:start */
-            if (effectivePrivateKey) this.privateInstance = createClient(runtimeProjectUrl, effectivePrivateKey);
+            this.privateInstance =
+                effectivePrivateKey && !effectivePrivateKey.startsWith('sb_secret_')
+                    ? createClient(runtimeProjectUrl, effectivePrivateKey)
+                    : null;
             this.switchAdmin(!!effectivePrivateKey);
             /* wwEditor:end */
 
@@ -563,6 +586,12 @@ export default {
             return;
         }
 
+        if (config.privateApiKey.startsWith('sb_secret_')) {
+            const { data } = await this.requestAPI({ method: 'GET', path: '/legacy/supabaseAuth/schema' });
+            this.doc = data.data;
+            return;
+        }
+
         try {
             try {
                 const doc = await getDoc(runtimeProjectUrl, config.privateApiKey, {
@@ -633,6 +662,24 @@ const setCookies = session => {
 
 const adminFunctions = {
     async _adminGetUsers() {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_')) {
+            const users = await this.requestLegacyAdmin('listUsers');
+            if (!this.settings.publicData.userRoleTable) return users.map(user => ({ ...user, roles: [] }));
+            // Keep each user's existing role-query semantics without sending thousands of concurrent
+            // authenticated requests to the shared backend. Batching would need a separate paginated contract.
+            const result = new Array(users.length);
+            let next = 0;
+            await Promise.all(
+                Array.from({ length: Math.min(4, users.length) }, async () => {
+                    while (next < users.length) {
+                        const index = next++;
+                        const user = users[index];
+                        result[index] = { ...user, roles: await this._adminGetUserRoles(user.id) };
+                    }
+                })
+            );
+            return result;
+        }
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const response = await this.privateInstance.auth.admin.listUsers({
             page: 1,
@@ -641,8 +688,8 @@ const adminFunctions = {
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
             response.data.users.map(async user => ({
-                ...user,
                 ...user.user_metadata,
+                ...user,
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
@@ -651,6 +698,8 @@ const adminFunctions = {
         );
     },
     async _adminGetUserRoles(userId) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('getUserRoles', { userId });
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const roles = this.settings.publicData.userRoleTable
             ? (
@@ -663,6 +712,8 @@ const adminFunctions = {
         return roles;
     },
     async _adminCreateUser(data) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('createUser', data);
         const attributes = data.attributes.reduce(
             (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
             {}
@@ -676,8 +727,8 @@ const adminFunctions = {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return {
-            ...response.data?.user,
             ...response.data?.user?.user_metadata,
+            ...response.data?.user,
             enabled: true,
             createdAt: response.data.created_at,
             updatedAt: response.data.updated_at,
@@ -685,6 +736,8 @@ const adminFunctions = {
         };
     },
     async _adminUpdateUser(user, data) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('updateUser', { ...data, userId: user.id });
         const attributes = data.attributes.reduce(
             (obj, attribute) => ({ ...obj, [attribute.key]: attribute.value }),
             {}
@@ -697,20 +750,24 @@ const adminFunctions = {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return {
-            ...response.data.user,
             ...response.data.user.user_metadata,
+            ...response.data.user,
             enabled: true,
             createdAt: response.data.user.created_at,
             updatedAt: response.data.user.updated_at,
         };
     },
     async _adminUpdateUserPassword(user, password) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('updatePassword', { userId: user.id, password });
         const { error } = await this.privateInstance.auth.admin.updateUserById(user.id, {
             password: password,
         });
         if (error) throw new Error(error.message, { cause: error });
     },
     async _adminUpdateUserRoles(user, roles) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('updateUserRoles', { userId: user.id, roles });
         if (!this.settings.publicData.roleTable) {
             const text = 'No valid User Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
@@ -730,11 +787,15 @@ const adminFunctions = {
         }
     },
     async _adminDeleteUser(user) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('deleteUser', { userId: user.id });
         const { error } = await this.privateInstance.auth.admin.deleteUser(user.id);
         if (error) throw new Error(error.message, { cause: error });
     },
     /* Roles */
     async _adminGetRoles() {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('listRoles');
         if (!this.settings.publicData.roleTable) return [];
         const { data: roles, error } = await this.privateInstance.from(this.settings.publicData.roleTable).select();
         if (error) throw new Error(error.message, { cause: error });
@@ -745,6 +806,8 @@ const adminFunctions = {
         }));
     },
     async _adminCreateRole(name) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('createRole', { name });
         if (!this.settings.publicData.roleTable) {
             const text = 'No valid Role table defined in Supabase Auth plugin configuration.';
             wwLib.wwNotification.open({ text, color: 'red' });
@@ -762,6 +825,8 @@ const adminFunctions = {
         };
     },
     async _adminUpdateRole(roleId, name) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('updateRole', { roleId, name });
         const { data: roles, error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .update({ name })
@@ -775,6 +840,8 @@ const adminFunctions = {
         };
     },
     async _adminDeleteRole(roleId) {
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('deleteRole', { roleId });
         const { error } = await this.privateInstance
             .from(this.settings.publicData.roleTable)
             .delete()
