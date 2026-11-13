@@ -37,6 +37,7 @@ function fixture(privateApiKey = 'sb_secret_fixture') {
             },
         },
     });
+    plugin.settings = { publicData: { userRoleTable: 'user_roles' } };
     plugin.requestAPI = async request => {
         requests.push(request);
         const data = request.path.endsWith('/schema')
@@ -100,4 +101,64 @@ test('removes server proxy helpers and secret SDK initialization from the publis
     assert.equal(published.includes("path: '/legacy/supabaseAuth/schema'"), false);
     assert.equal(published.includes('createClient(runtimeProjectUrl, effectivePrivateKey)'), false);
     assert.equal(published.includes('this.publicInstance = createClient'), true);
+});
+
+test('shows the sanitized backend explanation rather than the Axios transport error', async () => {
+    const { plugin } = fixture();
+    plugin.requestAPI = async () => { throw { response: { data: { message: 'A user with this email address has already been registered' } } }; };
+    await assert.rejects(plugin.requestLegacyAdmin('createUser'), /already been registered/);
+});
+
+test('keeps a provider explanation literal when admin notifications render HTML', async () => {
+    const { plugin } = fixture();
+    plugin.requestAPI = async () => { throw { response: { data: { message: '<img src=x onerror="alert(1)"> & \'text\'' } } }; };
+    await assert.rejects(plugin.requestLegacyAdmin('createUser'), error => {
+        assert.equal(error.message, '&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; &#39;text&#39;');
+        assert.equal(error.message.includes('<'), false);
+        return true;
+    });
+});
+
+test('bounds concurrent role reads, preserves order and skips them without a role table', async () => {
+    const { plugin } = fixture();
+    plugin.switchAdmin(true);
+    const users = Array.from({ length: 50 }, (_, id) => ({ id }));
+    plugin.requestLegacyAdmin = async operation => { assert.equal(operation, 'listUsers'); return users; };
+    let active = 0, peak = 0, reads = 0;
+    plugin._adminGetUserRoles = async id => {
+        active++; reads++; peak = Math.max(peak, active);
+        await new Promise(resolve => setTimeout(resolve, (id % 3) + 1));
+        active--; return [{ id }];
+    };
+    const result = await plugin._adminGetUsers();
+    assert.equal(peak, 4);
+    assert.equal(reads, 50);
+    assert.deepEqual(Array.from(result, user => user.id), users.map(user => user.id));
+    for (const user of result) assert.equal(user.roles[0].id, user.id);
+    delete plugin.settings.publicData.userRoleTable;
+    reads = 0;
+    const withoutRoles = await plugin._adminGetUsers();
+    assert.equal(reads, 0);
+    assert.equal(withoutRoles.every(user => user.roles.length === 0), true);
+});
+
+test('legacy admin results preserve the real account identity over end-user metadata', async () => {
+    const { plugin } = fixture('legacy-jwt');
+    plugin.switchAdmin(true);
+    const user = { id: USER, email: 'real@example.test', created_at: 'real-date', user_metadata: { id: 'forged', email: 'forged@example.test', createdAt: 'forged-date', name: 'QA' } };
+    plugin.privateInstance = { auth: { admin: {
+        listUsers: async () => ({ data: { users: [user] } }),
+        createUser: async () => ({ data: { user } }),
+        updateUserById: async () => ({ data: { user } }),
+    } } };
+    plugin._adminGetUserRoles = async () => [];
+    for (const mapped of [
+        ...(await plugin._adminGetUsers()),
+        await plugin._adminCreateUser({ email: user.email, name: 'QA', attributes: [], password: 'fixture' }),
+        await plugin._adminUpdateUser(user, { email: user.email, name: 'QA', attributes: [] }),
+    ]) {
+        assert.equal(mapped.id, USER);
+        assert.equal(mapped.email, user.email);
+        assert.equal(mapped.name, 'QA');
+    }
 });

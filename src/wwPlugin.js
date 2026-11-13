@@ -131,13 +131,23 @@ export default {
         });
     },
     async requestLegacyAdmin(operation, input = {}) {
-        const { data } = await this.requestAPI({
-            method: 'POST',
-            path: `/legacy/auth/admin/${operation}`,
-            data: input,
-            headers: { 'X-WeWeb-Editor-Request': '1' },
-        });
-        return data.data;
+        try {
+            const { data } = await this.requestAPI({
+                method: 'POST',
+                path: `/legacy/auth/admin/${operation}`,
+                data: input,
+                headers: { 'X-WeWeb-Editor-Request': '1' },
+            });
+            return data.data;
+        } catch (error) {
+            const message = error.response?.data?.message;
+            if (typeof message === 'string' && message) {
+                // Admin callers pass Error.message to notifications that render HTML. Provider explanations are text.
+                const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                throw new Error(message.replace(/[&<>"']/g, character => entities[character]));
+            }
+            throw error;
+        }
     },
     async syncSettings(settings) {
         await this.requestAPI({
@@ -654,7 +664,21 @@ const adminFunctions = {
     async _adminGetUsers() {
         if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_')) {
             const users = await this.requestLegacyAdmin('listUsers');
-            return Promise.all(users.map(async user => ({ ...user, roles: await this._adminGetUserRoles(user.id) })));
+            if (!this.settings.publicData.userRoleTable) return users.map(user => ({ ...user, roles: [] }));
+            // Keep each user's existing role-query semantics without sending thousands of concurrent
+            // authenticated requests to the shared backend. Batching would need a separate paginated contract.
+            const result = new Array(users.length);
+            let next = 0;
+            await Promise.all(
+                Array.from({ length: Math.min(4, users.length) }, async () => {
+                    while (next < users.length) {
+                        const index = next++;
+                        const user = users[index];
+                        result[index] = { ...user, roles: await this._adminGetUserRoles(user.id) };
+                    }
+                })
+            );
+            return result;
         }
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const response = await this.privateInstance.auth.admin.listUsers({
@@ -664,8 +688,8 @@ const adminFunctions = {
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return await Promise.all(
             response.data.users.map(async user => ({
-                ...user,
                 ...user.user_metadata,
+                ...user,
                 enabled: true,
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
@@ -703,8 +727,8 @@ const adminFunctions = {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return {
-            ...response.data?.user,
             ...response.data?.user?.user_metadata,
+            ...response.data?.user,
             enabled: true,
             createdAt: response.data.created_at,
             updatedAt: response.data.updated_at,
@@ -726,8 +750,8 @@ const adminFunctions = {
         });
         if (response.error) throw new Error(response.error.message, { cause: response.error });
         return {
-            ...response.data.user,
             ...response.data.user.user_metadata,
+            ...response.data.user,
             enabled: true,
             createdAt: response.data.user.created_at,
             updatedAt: response.data.user.updated_at,
