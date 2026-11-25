@@ -42,8 +42,8 @@ function fixture(privateApiKey = 'sb_secret_fixture') {
         requests.push(request);
         const data = request.path.endsWith('/schema')
             ? { paths: {} }
-            : request.path.endsWith('/listUsers')
-              ? [{ id: USER }]
+            : request.path.endsWith('/listUsersWithRoles')
+              ? [{ id: USER, roles: [{ id: 2 }] }]
               : [];
         return { data: { data } };
     };
@@ -71,7 +71,7 @@ test('preserves the private SDK and direct schema request for a legacy key', asy
 });
 
 const cases = [
-    ['_adminGetUsers', [], 'listUsers'],
+    ['_adminGetUsers', [], 'listUsersWithRoles'],
     ['_adminGetUserRoles', [USER], 'getUserRoles'],
     ['_adminCreateUser', [{ email: 'qa@example.test', name: 'QA', attributes: [], password: 'fixture' }], 'createUser'],
     ['_adminUpdateUser', [{ id: USER }, { email: 'qa@example.test', name: 'QA', attributes: [] }], 'updateUser'],
@@ -92,7 +92,7 @@ for (const [method, args, operation] of cases)
         assert.equal(requests[0].method, 'POST');
         assert.equal(requests[0].headers['X-WeWeb-Editor-Request'], '1');
         assert.equal(JSON.stringify(requests).includes('sb_secret_'), false);
-        if (method === '_adminGetUsers') assert.equal(requests[1].path, '/legacy/auth/admin/getUserRoles');
+        assert.equal(requests.length, 1);
     });
 
 test('removes server proxy helpers and secret SDK initialization from the published plugin', () => {
@@ -119,27 +119,12 @@ test('keeps a provider explanation literal when admin notifications render HTML'
     });
 });
 
-test('bounds concurrent role reads, preserves order and skips them without a role table', async () => {
-    const { plugin } = fixture();
+test('returns roles for the entire list without a request per user', async () => {
+    const { plugin, requests } = fixture();
     plugin.switchAdmin(true);
-    const users = Array.from({ length: 50 }, (_, id) => ({ id }));
-    plugin.requestLegacyAdmin = async operation => { assert.equal(operation, 'listUsers'); return users; };
-    let active = 0, peak = 0, reads = 0;
-    plugin._adminGetUserRoles = async id => {
-        active++; reads++; peak = Math.max(peak, active);
-        await new Promise(resolve => setTimeout(resolve, (id % 3) + 1));
-        active--; return [{ id }];
-    };
     const result = await plugin._adminGetUsers();
-    assert.equal(peak, 4);
-    assert.equal(reads, 50);
-    assert.deepEqual(Array.from(result, user => user.id), users.map(user => user.id));
-    for (const user of result) assert.equal(user.roles[0].id, user.id);
-    delete plugin.settings.publicData.userRoleTable;
-    reads = 0;
-    const withoutRoles = await plugin._adminGetUsers();
-    assert.equal(reads, 0);
-    assert.equal(withoutRoles.every(user => user.roles.length === 0), true);
+    assert.deepEqual(result, [{ id: USER, roles: [{ id: 2 }] }]);
+    assert.equal(requests.length, 1);
 });
 
 test('legacy admin results preserve the real account identity over end-user metadata', async () => {

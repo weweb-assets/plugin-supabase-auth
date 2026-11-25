@@ -662,24 +662,8 @@ const setCookies = session => {
 
 const adminFunctions = {
     async _adminGetUsers() {
-        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_')) {
-            const users = await this.requestLegacyAdmin('listUsers');
-            if (!this.settings.publicData.userRoleTable) return users.map(user => ({ ...user, roles: [] }));
-            // Keep each user's existing role-query semantics without sending thousands of concurrent
-            // authenticated requests to the shared backend. Batching would need a separate paginated contract.
-            const result = new Array(users.length);
-            let next = 0;
-            await Promise.all(
-                Array.from({ length: Math.min(4, users.length) }, async () => {
-                    while (next < users.length) {
-                        const index = next++;
-                        const user = users[index];
-                        result[index] = { ...user, roles: await this._adminGetUserRoles(user.id) };
-                    }
-                })
-            );
-            return result;
-        }
+        if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
+            return this.requestLegacyAdmin('listUsersWithRoles');
         if (!this.privateInstance) throw new Error('Invalid Supabase Auth configuration.');
         const response = await this.privateInstance.auth.admin.listUsers({
             page: 1,
