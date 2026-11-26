@@ -47,6 +47,10 @@ export default {
         await this.load(config.projectUrl, config.publicApiKey);
         /* wwFront:end */
         /* wwEditor:start */
+        if (wwLib.editor?.isolatedCanvas) {
+            await this.load(config.projectUrl, config.publicApiKey);
+            return;
+        }
         // check oauth in local storage
         const isConnecting = window.localStorage.getItem('supabaseAuth_oauth');
         // get code params from url
@@ -80,6 +84,9 @@ export default {
         Auth API
     \================================================================================================*/
     /* wwEditor:start */
+    onPreviewSettingsChanged() {
+        window.location.reload();
+    },
     /* Users */
     userAttributes: [
         { label: 'Name', key: 'name' },
@@ -185,15 +192,18 @@ export default {
             const config = getCurrentSupabaseSettings('supabaseAuth');
             const runtimeProjectUrl = resolveRuntimeProjectUrl(config) || projectUrl;
             const effectivePublicKey = config?.publicApiKey || publicApiKey;
-            const effectivePrivateKey = config?.privateApiKey || privateApiKey;
             if (!runtimeProjectUrl || !effectivePublicKey) return;
 
             /* wwEditor:start */
-            this.privateInstance =
-                effectivePrivateKey && !effectivePrivateKey.startsWith('sb_secret_')
-                    ? createClient(runtimeProjectUrl, effectivePrivateKey)
-                    : null;
-            this.switchAdmin(!!effectivePrivateKey);
+            // Projects still using the previous editor configure their administrator client here.
+            if (!wwLib.editor?.isolatedCanvas) {
+                const effectivePrivateKey = config?.privateApiKey || privateApiKey;
+                this.privateInstance =
+                    effectivePrivateKey && !effectivePrivateKey.startsWith('sb_secret_')
+                        ? createClient(runtimeProjectUrl, effectivePrivateKey)
+                        : null;
+                this.switchAdmin(!!effectivePrivateKey);
+            }
             /* wwEditor:end */
 
             this.publicInstance = createClient(runtimeProjectUrl, effectivePublicKey, {
@@ -205,12 +215,11 @@ export default {
             // The same public instance must be shared between supabase and supabase auth
             if (wwLib.wwPlugins.supabase) wwLib.wwPlugins.supabase.syncInstance();
             /* wwEditor:start */
-            await this.fetchDoc();
+            if (!wwLib.editor?.isolatedCanvas) await this.fetchDoc();
             /* wwEditor:end */
             if (!this.privateInstance && !this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
             this.publicInstance.auth.onAuthStateChange(async (event, session) => {
-                if (event === 'SIGNED_OUT') return;
-                if (event == 'USER_DELETED') return this.signOut();
+                if (event === 'SIGNED_OUT' || event === 'USER_DELETED') return clearLocalUser(this);
                 if (event == 'USER_UPDATED') {
                     this.refreshAuthUser(session);
                 }
@@ -237,11 +246,7 @@ export default {
             const user_metadata = Array.isArray(metadata)
                 ? metadata.reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {})
                 : metadata;
-            const emailRedirectTo =
-                redirectPage &&
-                (wwLib.manager
-                    ? `${window.location.origin}/${redirectPage}`
-                    : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`);
+            const emailRedirectTo = redirectPage && appReturnUrl(redirectPage);
 
             const { data, error } = await this.publicInstance.auth.signUp(
                 type === 'email'
@@ -288,14 +293,14 @@ export default {
             throw err;
         }
     },
-    async signInOIDC({ token, provider, access_token, nonce, captchaToken }) {
+    async signInOIDC({ token, provider, access_token, accessToken, nonce, captchaToken }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!token || !provider) throw new Error('Token and Provider are required.');
         try {
             const { data, error } = await this.publicInstance.auth.signInWithIdToken({
                 token,
                 provider,
-                access_token,
+                access_token: access_token ?? accessToken,
                 nonce,
                 options: { captchaToken },
             });
@@ -309,9 +314,7 @@ export default {
     async signInMagicLink({ email, redirectPage, captchaToken }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!email) throw new Error('Email is required.');
-        const emailRedirectTo = wwLib.manager
-            ? `${window.location.origin}/${redirectPage}`
-            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const emailRedirectTo = appReturnUrl(redirectPage);
 
         const { data, error } = await this.publicInstance.auth.signInWithOtp({
             email,
@@ -341,9 +344,7 @@ export default {
     async signInProvider({ provider, redirectPage, queryParams, scopes, skipBrowserRedirect }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
         if (!provider) throw new Error('Provider is required.');
-        const redirectTo = wwLib.manager
-            ? `${window.location.origin}/${redirectPage}`
-            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const redirectTo = appReturnUrl(redirectPage);
         try {
             const { data, error } = await this.publicInstance.auth.signInWithOAuth({
                 provider,
@@ -351,7 +352,7 @@ export default {
                     redirectTo,
                     scopes,
                     queryParams: Array.isArray(queryParams)
-                        ? queryParams.reduce((result, param) => ({ ...result, [param.key]: param.value }))
+                        ? Object.fromEntries(queryParams.map(param => [param.key, param.value]))
                         : queryParams,
                     skipBrowserRedirect,
                 },
@@ -410,9 +411,7 @@ export default {
         const isPhone = ['sms', 'phone_change'].includes(type);
         if (isEmail && !email) throw new Error('Email is required.');
         else if (isPhone && !phone) throw new Error('Phone is required.');
-        const redirectTo = wwLib.manager
-            ? `${window.location.origin}/${redirectPage}`
-            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const redirectTo = appReturnUrl(redirectPage);
         const { data, error } = await this.publicInstance.auth.resend({
             type,
             ...(isEmail ? { email } : null),
@@ -425,30 +424,12 @@ export default {
         return data;
     },
 
-    signOut() {
+    async signOut() {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
 
-        this.user = null;
-        this.isAuthenticated = false;
-        const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.info.id : '/';
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-            path,
-            domain: window.location.hostname,
-        });
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-            path,
-            domain: window.location.hostname,
-        });
-        // For safari
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-access-token', {
-            path,
-            domain: '.' + window.location.hostname,
-        });
-        window.vm.config.globalProperties.$cookie.removeCookie('sb-refresh-token', {
-            path,
-            domain: '.' + window.location.hostname,
-        });
-        this.publicInstance.auth.signOut();
+        const { error } = await this.publicInstance.auth.signOut();
+        if (error) throw new Error(error.message, { cause: error });
+        clearLocalUser(this);
     },
     // Ensure Retro compatibility for the workflow action fetchUser
     fetchUser() {
@@ -462,7 +443,7 @@ export default {
         const user = session ? session.user : data.user;
         const currentUser = wwLib.wwVariable.getValue(`${this.id}-user`);
         if (!user) {
-            this.signOut();
+            clearLocalUser(this);
             return false;
         }
         user.roles = await this.getUserRoles(user.id);
@@ -523,9 +504,7 @@ export default {
     },
     async resetPasswordForEmail({ email, redirectPage }) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
-        const redirectTo = wwLib.manager
-            ? `${window.location.origin}/${redirectPage}`
-            : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(redirectPage)}`;
+        const redirectTo = appReturnUrl(redirectPage);
         const { error } = await this.publicInstance.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw new Error(error.message, { cause: error });
     },
@@ -642,6 +621,27 @@ const getDoc = async (url, apiKey, { branchSlug } = {}) => {
 };
 /* wwEditor:end */
 
+function appReturnUrl(page) {
+    /* wwEditor:start */
+    if (wwLib.editor?.isolatedCanvas) return wwLib.editor.previewPageUrl(page || wwLib.store.websiteData.page.id);
+    /* wwEditor:end */
+    return wwLib.manager
+        ? `${window.location.origin}/${page}`
+        : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(page)}`;
+}
+
+function clearLocalUser(plugin) {
+    plugin.user = null;
+    plugin.isAuthenticated = false;
+    const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.info.id : '/';
+    // Older Safari versions stored the cookies with a leading dot.
+    for (const domain of [window.location.hostname, '.' + window.location.hostname]) {
+        for (const name of ['sb-access-token', 'sb-refresh-token']) {
+            window.vm.config.globalProperties.$cookie.removeCookie(name, { path, domain });
+        }
+    }
+}
+
 const setCookies = session => {
     const path = wwLib.manager ? '/' + wwLib.wwWebsiteData.info.id : '/';
     window.vm.config.globalProperties.$cookie.setCookie('sb-access-token', session.access_token, {
@@ -660,6 +660,7 @@ const setCookies = session => {
     });
 };
 
+/* wwEditor:start */
 const adminFunctions = {
     async _adminGetUsers() {
         if (getCurrentSupabaseSettings('supabaseAuth').privateApiKey?.startsWith('sb_secret_'))
@@ -833,3 +834,4 @@ const adminFunctions = {
         if (error) throw new Error(error.message, { cause: error });
     },
 };
+/* wwEditor:end */

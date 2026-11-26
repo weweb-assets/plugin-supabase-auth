@@ -1,0 +1,1142 @@
+{
+    "schemaVersion": 1,
+    "designSystemId": "290de5c1-a7fb-49a7-88bb-6acd08576c07",
+    "features": {
+        "auth": true
+    },
+    "variables": [
+        {
+            "name": "user",
+            "type": "object"
+        },
+        {
+            "name": "isAuthenticated",
+            "type": "boolean"
+        }
+    ],
+    "actions": [
+        {
+            "name": "Sign Up",
+            "code": "signUp",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "type",
+                        "label": "Type",
+                        "type": "choice",
+                        "choices": [
+                            {
+                                "label": "Email",
+                                "value": "email"
+                            },
+                            {
+                                "label": "Phone",
+                                "value": "phone"
+                            }
+                        ],
+                        "displayDefault": "email"
+                    },
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter an email",
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "email"
+                        }
+                    },
+                    {
+                        "key": "phone",
+                        "label": "Phone",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a phone number",
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "phone"
+                        }
+                    },
+                    {
+                        "key": "password",
+                        "label": "Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a password"
+                    },
+                    {
+                        "key": "redirectPage",
+                        "label": "Email redirect to",
+                        "type": "choice",
+                        "bindable": true,
+                        "placeholder": "Select a page",
+                        "operation": "project.pages",
+                        "pageFilter": "static",
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "email"
+                        }
+                    },
+                    {
+                        "key": "channel",
+                        "label": "Channel",
+                        "type": "choice",
+                        "bindable": true,
+                        "placeholder": "Select a channel",
+                        "choices": [
+                            {
+                                "label": "Whatsapp",
+                                "value": "whatsapp"
+                            },
+                            {
+                                "label": "SMS",
+                                "value": "sms"
+                            }
+                        ],
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "phone"
+                        },
+                        "help": {
+                            "text": "WhatsApp sign-in requires WhatsApp configuration with your Supabase SMS provider."
+                        }
+                    },
+                    {
+                        "key": "metadata",
+                        "label": "Metadata",
+                        "type": "list",
+                        "bindable": true,
+                        "item": {
+                            "type": "record",
+                            "fields": [
+                                {
+                                    "key": "key",
+                                    "label": "Key",
+                                    "type": "choice",
+                                    "choices": [
+                                        {
+                                            "label": "Name",
+                                            "value": "name"
+                                        },
+                                        {
+                                            "label": "Picture",
+                                            "value": "picture"
+                                        },
+                                        {
+                                            "label": "Given name",
+                                            "value": "given_name"
+                                        },
+                                        {
+                                            "label": "Family name",
+                                            "value": "family_name"
+                                        },
+                                        {
+                                            "label": "Middle name",
+                                            "value": "middle_name"
+                                        },
+                                        {
+                                            "label": "Nickname",
+                                            "value": "nickname"
+                                        },
+                                        {
+                                            "label": "Profile URL",
+                                            "value": "profile"
+                                        },
+                                        {
+                                            "label": "Website URL",
+                                            "value": "website"
+                                        },
+                                        {
+                                            "label": "Gender",
+                                            "value": "gender"
+                                        },
+                                        {
+                                            "label": "Birthdate",
+                                            "value": "birthdate"
+                                        },
+                                        {
+                                            "label": "Zoneinfo",
+                                            "value": "zoneinfo"
+                                        },
+                                        {
+                                            "label": "Locale",
+                                            "value": "locale"
+                                        },
+                                        {
+                                            "label": "Address",
+                                            "value": "address"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "key": "value",
+                                    "label": "Value",
+                                    "type": "text",
+                                    "bindable": true
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "email",
+                        "phone"
+                    ],
+                    [
+                        "password"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign Out",
+            "code": "signOut",
+            "isAsync": true
+        },
+        {
+            "name": "Sign In | Email and Password",
+            "code": "signInEmail",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter an email"
+                    },
+                    {
+                        "key": "password",
+                        "label": "Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a password"
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "email"
+                    ],
+                    [
+                        "password"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | Phone and Password",
+            "code": "signInPhone",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "phone",
+                        "label": "Phone",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a phone number"
+                    },
+                    {
+                        "key": "password",
+                        "label": "Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a password"
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "phone"
+                    ],
+                    [
+                        "password"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | OAuth Provider",
+            "code": "signInProvider",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "provider",
+                        "label": "Provider",
+                        "type": "choice",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Select a provider",
+                        "choices": [
+                            {
+                                "label": "Apple",
+                                "value": "apple"
+                            },
+                            {
+                                "label": "Azure",
+                                "value": "azure"
+                            },
+                            {
+                                "label": "Bitbucket",
+                                "value": "bitbucket"
+                            },
+                            {
+                                "label": "Discord",
+                                "value": "discord"
+                            },
+                            {
+                                "label": "Facebook",
+                                "value": "facebook"
+                            },
+                            {
+                                "label": "Figma",
+                                "value": "figma"
+                            },
+                            {
+                                "label": "GitHub",
+                                "value": "gitHub"
+                            },
+                            {
+                                "label": "GitLab",
+                                "value": "gitLab"
+                            },
+                            {
+                                "label": "Google",
+                                "value": "google"
+                            },
+                            {
+                                "label": "Kakao",
+                                "value": "kakao"
+                            },
+                            {
+                                "label": "Keycloak",
+                                "value": "keycloak"
+                            },
+                            {
+                                "label": "Linkedin",
+                                "value": "linkedin_oidc"
+                            },
+                            {
+                                "label": "Notion",
+                                "value": "notion"
+                            },
+                            {
+                                "label": "Twitch",
+                                "value": "twitch"
+                            },
+                            {
+                                "label": "Twitter",
+                                "value": "twitter"
+                            },
+                            {
+                                "label": "Slack",
+                                "value": "slack_oidc"
+                            },
+                            {
+                                "label": "Spotify",
+                                "value": "spotify"
+                            },
+                            {
+                                "label": "WorkOS",
+                                "value": "workos"
+                            },
+                            {
+                                "label": "Zoom",
+                                "value": "zoom"
+                            }
+                        ]
+                    },
+                    {
+                        "key": "redirectPage",
+                        "label": "Redirect to",
+                        "type": "choice",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Select a page",
+                        "operation": "project.pages",
+                        "pageFilter": "publicStatic"
+                    },
+                    {
+                        "key": "queryParams",
+                        "label": "Query Parameters",
+                        "type": "list",
+                        "bindable": true,
+                        "item": {
+                            "type": "record",
+                            "fields": [
+                                {
+                                    "key": "key",
+                                    "label": "Key",
+                                    "type": "text",
+                                    "bindable": true
+                                },
+                                {
+                                    "key": "value",
+                                    "label": "Value",
+                                    "type": "text",
+                                    "bindable": true
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "key": "scopes",
+                        "label": "Scopes",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter scopes",
+                        "help": {
+                            "text": "Separate the OAuth scopes with spaces."
+                        }
+                    },
+                    {
+                        "key": "skipBrowserRedirect",
+                        "label": "skipBrowserRedirect",
+                        "type": "boolean",
+                        "bindable": true,
+                        "help": {
+                            "text": "Return the authorization URL so the workflow can open it."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "provider"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | One-Time Password",
+            "code": "signInOTP",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "type",
+                        "label": "Type",
+                        "type": "choice",
+                        "choices": [
+                            {
+                                "label": "Email",
+                                "value": "email"
+                            },
+                            {
+                                "label": "Phone",
+                                "value": "phone"
+                            }
+                        ],
+                        "displayDefault": "phone"
+                    },
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter an email",
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "email"
+                        },
+                        "help": {
+                            "text": "To email a one-time code, include {{ .Token }} in the Supabase magic link email template."
+                        }
+                    },
+                    {
+                        "key": "phone",
+                        "label": "Phone",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a phone number",
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "phone"
+                        }
+                    },
+                    {
+                        "key": "channel",
+                        "label": "Channel",
+                        "type": "choice",
+                        "bindable": true,
+                        "placeholder": "Select a channel",
+                        "choices": [
+                            {
+                                "label": "Whatsapp",
+                                "value": "whatsapp"
+                            },
+                            {
+                                "label": "SMS",
+                                "value": "sms"
+                            }
+                        ],
+                        "visibleWhen": {
+                            "field": "type",
+                            "equals": "phone"
+                        },
+                        "help": {
+                            "text": "WhatsApp sign-in requires WhatsApp configuration with your Supabase SMS provider."
+                        }
+                    },
+                    {
+                        "key": "shouldCreateUser",
+                        "label": "Should create user",
+                        "type": "boolean",
+                        "bindable": true,
+                        "displayDefault": true,
+                        "help": {
+                            "text": "Allow sign-up when the user does not yet have an account."
+                        }
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "email",
+                        "phone"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | Magic Link",
+            "code": "signInMagicLink",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter an email"
+                    },
+                    {
+                        "key": "redirectPage",
+                        "label": "Email redirect to",
+                        "type": "choice",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Select a page",
+                        "operation": "project.pages",
+                        "pageFilter": "static"
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "email"
+                    ],
+                    [
+                        "redirectPage"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | OIDC Token",
+            "code": "signInOIDC",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "token",
+                        "label": "OIDC ID Token",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter a token",
+                        "help": {
+                            "text": "Use the ID token issued by the selected provider. Its iss claim must match the provider."
+                        }
+                    },
+                    {
+                        "key": "provider",
+                        "label": "Provider",
+                        "type": "choice",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Select a provider",
+                        "choices": [
+                            {
+                                "label": "Apple",
+                                "value": "apple"
+                            },
+                            {
+                                "label": "Azure",
+                                "value": "azure"
+                            },
+                            {
+                                "label": "Facebook",
+                                "value": "facebook"
+                            },
+                            {
+                                "label": "Google",
+                                "value": "google"
+                            },
+                            {
+                                "label": "Keycloak (deprecated)",
+                                "value": "keycloak"
+                            }
+                        ],
+                        "help": {
+                            "text": "Use the provider name or the issuer that Supabase uses to verify the ID token."
+                        }
+                    },
+                    {
+                        "key": "accessToken",
+                        "label": "Access Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter an access_token",
+                        "legacyKey": "access_token",
+                        "help": {
+                            "text": "When the ID token contains an at_hash claim, supply the access token received with it."
+                        }
+                    },
+                    {
+                        "key": "nonce",
+                        "label": "Nonce",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a nonce",
+                        "help": {
+                            "text": "When the ID token contains a nonce claim, supply the nonce used to obtain the token."
+                        }
+                    },
+                    {
+                        "key": "captchaToken",
+                        "label": "Captcha Token",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a captcha token",
+                        "help": {
+                            "text": "Use the verification token returned when the user completes the captcha."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "provider"
+                    ],
+                    [
+                        "token"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Sign In | SAML 2.0 SSO",
+            "code": "signInSSO",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "domain",
+                        "label": "Domain",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a domain",
+                        "help": {
+                            "text": "Use an email domain associated with the identity provider."
+                        }
+                    },
+                    {
+                        "key": "providerId",
+                        "label": "Provider UUID",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a provider uuid",
+                        "help": {
+                            "text": "Use the identity provider ID from the Supabase SSO configuration."
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "domain",
+                        "providerId"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Verify OTP",
+            "code": "verifyOTP",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "type",
+                        "label": "Origin",
+                        "type": "choice",
+                        "required": true,
+                        "placeholder": "Select the otp origin",
+                        "choices": [
+                            {
+                                "label": "Email Sign Up | Sign In",
+                                "value": "email"
+                            },
+                            {
+                                "label": "Email change",
+                                "value": "email_change"
+                            },
+                            {
+                                "label": "Recovery",
+                                "value": "recovery"
+                            },
+                            {
+                                "label": "Invite",
+                                "value": "invite"
+                            },
+                            {
+                                "label": "Phone Sign Up | Sign In",
+                                "value": "sms"
+                            },
+                            {
+                                "label": "Phone change",
+                                "value": "phone_change"
+                            }
+                        ]
+                    },
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter used email",
+                        "visibleWhen": {
+                            "field": "type",
+                            "oneOf": [
+                                "email",
+                                "invite",
+                                "recovery",
+                                "email_change"
+                            ]
+                        }
+                    },
+                    {
+                        "key": "phone",
+                        "label": "Phone",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter used phone number",
+                        "visibleWhen": {
+                            "field": "type",
+                            "oneOf": [
+                                "sms",
+                                "phone_change"
+                            ]
+                        }
+                    },
+                    {
+                        "key": "token",
+                        "label": "Token (OTP)",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter token",
+                        "help": {
+                            "text": "Enter the one-time password or the token hash."
+                        }
+                    },
+                    {
+                        "key": "tokenHash",
+                        "label": "Token hash",
+                        "type": "text",
+                        "bindable": true
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "type"
+                    ],
+                    [
+                        "email",
+                        "phone"
+                    ],
+                    [
+                        "token",
+                        "tokenHash"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Resend OTP",
+            "code": "resendOTP",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "type",
+                        "label": "Origin",
+                        "type": "choice",
+                        "required": true,
+                        "placeholder": "Select the otp origin",
+                        "choices": [
+                            {
+                                "label": "Email Sign Up",
+                                "value": "signup"
+                            },
+                            {
+                                "label": "Email change",
+                                "value": "email_change"
+                            },
+                            {
+                                "label": "Phone Sign Up",
+                                "value": "sms"
+                            },
+                            {
+                                "label": "Phone change",
+                                "value": "phone_change"
+                            }
+                        ]
+                    },
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter used email",
+                        "visibleWhen": {
+                            "field": "type",
+                            "oneOf": [
+                                "signup",
+                                "email_change"
+                            ]
+                        }
+                    },
+                    {
+                        "key": "phone",
+                        "label": "Phone",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter used phone number",
+                        "visibleWhen": {
+                            "field": "type",
+                            "oneOf": [
+                                "sms",
+                                "phone_change"
+                            ]
+                        }
+                    },
+                    {
+                        "key": "redirectPage",
+                        "label": "Email redirect to",
+                        "type": "choice",
+                        "bindable": true,
+                        "placeholder": "Select a page",
+                        "operation": "project.pages",
+                        "pageFilter": "static",
+                        "visibleWhen": {
+                            "field": "type",
+                            "oneOf": [
+                                "signup"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "type"
+                    ],
+                    [
+                        "email",
+                        "phone"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Fetch User",
+            "code": "fetchUser"
+        },
+        {
+            "name": "Update User",
+            "code": "updateUserMeta",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "email",
+                        "label": "New email",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter an email"
+                    },
+                    {
+                        "key": "phone",
+                        "label": "New phone",
+                        "type": "text",
+                        "bindable": true,
+                        "placeholder": "Enter a phone number"
+                    },
+                    {
+                        "key": "metadata",
+                        "label": "Metadata",
+                        "type": "list",
+                        "bindable": true,
+                        "item": {
+                            "type": "record",
+                            "fields": [
+                                {
+                                    "key": "key",
+                                    "label": "Key",
+                                    "type": "text",
+                                    "bindable": true
+                                },
+                                {
+                                    "key": "value",
+                                    "label": "Value",
+                                    "type": "text",
+                                    "bindable": true
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Change Password",
+            "code": "updateUserPassword",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "oldPassword",
+                        "label": "Old Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter the old password"
+                    },
+                    {
+                        "key": "newPassword",
+                        "label": "New Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter the new password"
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "oldPassword"
+                    ],
+                    [
+                        "newPassword"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Forgot Password",
+            "code": "resetPasswordForEmail",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "email",
+                        "label": "Email",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter an email"
+                    },
+                    {
+                        "key": "redirectPage",
+                        "label": "Redirect to",
+                        "type": "choice",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Select a page",
+                        "operation": "project.pages",
+                        "pageFilter": "static"
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "email"
+                    ],
+                    [
+                        "redirectPage"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Confirm Password",
+            "code": "confirmPassword",
+            "isAsync": true,
+            "form": {
+                "fields": [
+                    {
+                        "key": "newPassword",
+                        "label": "New Password",
+                        "type": "text",
+                        "bindable": true,
+                        "required": true,
+                        "placeholder": "Enter the new password"
+                    }
+                ]
+            },
+            "validation": {
+                "requireAny": [
+                    [
+                        "newPassword"
+                    ]
+                ]
+            }
+        },
+        {
+            "name": "Refresh session",
+            "code": "refreshSession",
+            "isAsync": true
+        }
+    ],
+    "settings": {
+        "fields": [
+            {
+                "key": "connection",
+                "label": "Supabase connection",
+                "type": "connection",
+                "operation": "supabase.connection",
+                "required": true
+            },
+            {
+                "key": "generateRoles",
+                "label": "Create role tables",
+                "type": "resource",
+                "operation": "supabase.roles"
+            },
+            {
+                "key": "roleTable",
+                "label": "Roles table",
+                "type": "choice",
+                "storage": "publicData",
+                "operation": "supabase.schema"
+            },
+            {
+                "key": "roleTableNameColumn",
+                "label": "Name column",
+                "type": "choice",
+                "storage": "publicData",
+                "operation": "supabase.schema",
+                "tableField": "roleTable"
+            },
+            {
+                "key": "userRoleTable",
+                "label": "Users-Roles table",
+                "type": "choice",
+                "storage": "publicData",
+                "operation": "supabase.schema"
+            },
+            {
+                "key": "userRoleTableRoleColumn",
+                "label": "Role ID column",
+                "type": "choice",
+                "storage": "publicData",
+                "operation": "supabase.schema",
+                "tableField": "userRoleTable"
+            },
+            {
+                "key": "userRoleTableUserColumn",
+                "label": "User ID column",
+                "type": "choice",
+                "storage": "publicData",
+                "operation": "supabase.schema",
+                "tableField": "userRoleTable"
+            }
+        ]
+    }
+}
