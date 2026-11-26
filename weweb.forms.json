@@ -47,6 +47,9 @@
                         "visibleWhen": {
                             "field": "type",
                             "equals": "email"
+                        },
+                        "help": {
+                            "text": "Open the isolated preview in a separate tab to test an email confirmation or sign-in link."
                         }
                     },
                     {
@@ -571,7 +574,10 @@
                         "type": "text",
                         "bindable": true,
                         "required": true,
-                        "placeholder": "Enter an email"
+                        "placeholder": "Enter an email",
+                        "help": {
+                            "text": "Open the isolated preview in a separate tab to test an email confirmation or sign-in link."
+                        }
                     },
                     {
                         "key": "redirectPage",
@@ -886,6 +892,9 @@
                                 "signup",
                                 "email_change"
                             ]
+                        },
+                        "help": {
+                            "text": "Open the isolated preview in a separate tab to test an email confirmation or sign-in link."
                         }
                     },
                     {
@@ -1029,7 +1038,10 @@
                         "type": "text",
                         "bindable": true,
                         "required": true,
-                        "placeholder": "Enter an email"
+                        "placeholder": "Enter an email",
+                        "help": {
+                            "text": "Open the isolated preview in a separate tab to test an email confirmation or sign-in link."
+                        }
                     },
                     {
                         "key": "redirectPage",
