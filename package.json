@@ -11,7 +11,8 @@
     "license": "MIT",
     "scripts": {
         "build": "weweb build",
-        "serve": "weweb serve"
+        "serve": "weweb serve",
+        "test": "node --test test/*.test.mjs"
     },
     "dependencies": {
         "@supabase/supabase-js": "2.116.0"
