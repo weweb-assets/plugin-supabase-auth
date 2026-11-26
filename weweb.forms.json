@@ -492,7 +492,7 @@
                             "equals": "email"
                         },
                         "help": {
-                            "text": "To email a one-time code, include {{ .Token }} in the Supabase magic link email template."
+                            "text": "To email a one-time code, include {{ .Token }} in the Supabase magic link email template. If the template sends a link, test it in a separate preview tab."
                         }
                     },
                     {
@@ -954,6 +954,9 @@
                     {
                         "key": "email",
                         "label": "New email",
+                        "help": {
+                            "text": "Open the isolated preview in a separate tab to confirm an email address change."
+                        },
                         "type": "text",
                         "bindable": true,
                         "placeholder": "Enter an email"

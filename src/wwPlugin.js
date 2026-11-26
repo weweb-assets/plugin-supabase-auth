@@ -24,7 +24,6 @@ import './components/Functions/ForgotPassword.vue';
 import { createClient } from '@supabase/supabase-js';
 import { getCurrentSupabaseSettings, resolveRuntimeProjectUrl } from './helpers/environmentConfig';
 
-
 export default {
     privateInstance: null,
     publicInstance: null,
@@ -336,9 +335,19 @@ export default {
         else if (type === 'phone' && !phone) throw new Error('Phone is required.');
 
         try {
+            let emailRedirectTo;
+            /* wwEditor:start */
+            // A numeric code can be verified inside the embedded canvas. Email links
+            // can return only to the top-level preview that owns the PKCE verifier.
+            if (type === 'email' && wwLib.editor?.isolatedCanvas) {
+                emailRedirectTo = window.parent === window
+                    ? previewEmailReturn()
+                    : new URL('/auth/preview/signin', window.location.origin).href;
+            }
+            /* wwEditor:end */
             const { data, error } = await this.publicInstance.auth.signInWithOtp(
                 type === 'email'
-                    ? { email, options: { captchaToken, shouldCreateUser } }
+                    ? { email, options: { captchaToken, shouldCreateUser, emailRedirectTo } }
                     : { phone, options: { channel, captchaToken, shouldCreateUser } }
             );
             if (error) throw new Error(error.message, { cause: error });
@@ -469,22 +478,7 @@ export default {
         const { data: current } = await client.auth.getSession();
         if (client !== this.publicInstance || revision !== this.authRevision || current.session?.user?.id !== user.id) return false;
         const latest = current.session;
-        const authUser = {
-            ...user,
-            roles,
-            _session: {
-                access_token: latest.access_token,
-                expires_in: latest.expires_in,
-                expires_at: latest.expires_at,
-                provider_token: latest.provider_token || (currentUser?.id === user.id ? currentUser?._session?.provider_token : undefined),
-                refresh_token: latest.refresh_token,
-                token_type: latest.token_type,
-            },
-        };
-        this.user = authUser;
-        this.isAuthenticated = true;
-        setCookies(latest);
-        return authUser;
+        return publishSession(this, latest, currentUser, roles);
     },
     async getUserRoles(userId) {
         if (!this.publicInstance) throw new Error('Invalid Supabase Auth configuration.');
@@ -503,11 +497,14 @@ export default {
 
         const user_metadata = (metadata || []).reduce((obj, item) => ({ ...obj, [item.key]: item.value }), {});
 
-        const { data: result, error } = await this.publicInstance.auth.updateUser({
-            email,
-            phone,
-            data: user_metadata,
-        });
+        let options;
+        /* wwEditor:start */
+        if (email && wwLib.editor?.isolatedCanvas) options = { emailRedirectTo: previewEmailReturn() };
+        /* wwEditor:end */
+        const { data: result, error } = await this.publicInstance.auth.updateUser(
+            { email, phone, data: user_metadata },
+            options
+        );
         if (error) throw new Error(error.message, { cause: error });
         return result;
     },
@@ -548,7 +545,13 @@ export default {
         const revision = this.authRevision;
         const { data, error } = await client.auth.refreshSession();
         if (error) throw new Error(error.message, { cause: error });
-        if (client === this.publicInstance && revision === this.authRevision && data.session) await this.refreshAuthUser(data.session);
+        if (client !== this.publicInstance || revision !== this.authRevision || !data.session?.user) return;
+        const currentUser = wwLib.wwVariable.getValue(`${this.id}-user`);
+        if (currentUser?.id === data.session.user.id) {
+            publishSession(this, data.session, currentUser, currentUser.roles);
+        } else {
+            await this.refreshAuthUser(data.session);
+        }
     },
     /* wwEditor:start */
     async fetchDoc() {
@@ -648,6 +651,26 @@ function appReturnUrl(page, email = false) {
     return wwLib.manager
         ? `${window.location.origin}/${page}`
         : `${window.location.origin}${wwLib.wwPageHelper.getPagePath(page)}`;
+}
+
+function publishSession(plugin, session, previous, roles) {
+    const sameUser = previous?.id === session.user.id ? previous : undefined;
+    const user = {
+        ...session.user,
+        roles,
+        _session: {
+            access_token: session.access_token,
+            expires_in: session.expires_in,
+            expires_at: session.expires_at,
+            provider_token: session.provider_token || sameUser?._session?.provider_token,
+            refresh_token: session.refresh_token,
+            token_type: session.token_type,
+        },
+    };
+    plugin.user = user;
+    plugin.isAuthenticated = true;
+    setCookies(session);
+    return user;
 }
 
 function clearLocalUser(plugin) {
