@@ -202,7 +202,12 @@ export default {
             let auth = { storageKey: wwLib.wwWebsiteData.info.id };
             /* wwEditor:start */
             if (wwLib.editor?.isolatedCanvas) {
-                auth = await wwLib.editor.supabasePreviewAuth(runtimeProjectUrl, effectivePublicKey, config.resolvedEnvironment, true);
+                auth = await wwLib.editor.supabasePreviewAuth(
+                    runtimeProjectUrl,
+                    effectivePublicKey,
+                    config.resolvedEnvironment,
+                    true
+                );
             }
             /* wwEditor:end */
             const client = createClient(runtimeProjectUrl, effectivePublicKey, { auth });
@@ -340,9 +345,10 @@ export default {
             // A numeric code can be verified inside the embedded canvas. Email links
             // can return only to the top-level preview that owns the PKCE verifier.
             if (type === 'email' && wwLib.editor?.isolatedCanvas) {
-                emailRedirectTo = window.parent === window
-                    ? previewEmailReturn()
-                    : new URL('/auth/preview/signin', window.location.origin).href;
+                emailRedirectTo =
+                    window.parent === window
+                        ? previewEmailReturn()
+                        : new URL('/auth/preview/signin', window.location.origin).href;
             }
             /* wwEditor:end */
             const { data, error } = await this.publicInstance.auth.signInWithOtp(
@@ -476,7 +482,8 @@ export default {
         const roles = await this.getUserRoles(user.id);
         if (client !== this.publicInstance || revision !== this.authRevision) return false;
         const { data: current } = await client.auth.getSession();
-        if (client !== this.publicInstance || revision !== this.authRevision || current.session?.user?.id !== user.id) return false;
+        if (client !== this.publicInstance || revision !== this.authRevision || current.session?.user?.id !== user.id)
+            return false;
         const latest = current.session;
         return publishSession(this, latest, currentUser, roles);
     },

@@ -5,12 +5,12 @@ import assert from 'node:assert/strict';
 
 const source = readFileSync(new URL('../src/wwPlugin.js', import.meta.url), 'utf8');
 const USER = '11111111-1111-4111-8111-111111111111';
-function fixture(privateApiKey = 'sb_secret_fixture') {
+function fixture(privateApiKey = 'sb_secret_fixture', pluginSource = source) {
     const clients = [],
         requests = [],
         browserCalls = [];
     const config = { privateApiKey, publicApiKey: 'sb_publishable_fixture', projectUrl: 'https://fixture.supabase.co' };
-    const compiled = source.replace(/^import\s[\s\S]*?;$/gm, '').replace('export default {', 'const plugin = {');
+    const compiled = pluginSource.replace(/^import\s[\s\S]*?;$/gm, '').replace('export default {', 'const plugin = {');
     const { plugin } = vm.runInNewContext(`${compiled}\n;({plugin})`, {
         getCurrentSupabaseSettings: () => config,
         resolveRuntimeProjectUrl: value => value.projectUrl,
@@ -95,12 +95,18 @@ for (const [method, args, operation] of cases)
         assert.equal(requests.length, 1);
     });
 
-test('removes server proxy helpers and secret SDK initialization from the published plugin', () => {
+test('removes server proxy helpers and secret SDK initialization from the published plugin', async () => {
     const published = source.replace(/\/\* wwEditor:start \*\/[\s\S]*?\/\* wwEditor:end \*\//g, '');
     assert.equal(published.includes('async requestLegacyAdmin('), false);
     assert.equal(published.includes("path: '/legacy/supabaseAuth/schema'"), false);
     assert.equal(published.includes('createClient(runtimeProjectUrl, effectivePrivateKey)'), false);
-    assert.equal(published.includes('this.publicInstance = createClient'), true);
+    const { plugin, clients, requests, browserCalls } = fixture('sb_secret_fixture', published);
+    await plugin.load('https://fixture.supabase.co', 'sb_publishable_fixture', 'sb_secret_fixture');
+    assert.deepEqual(clients, ['sb_publishable_fixture']);
+    assert.ok(plugin.publicInstance);
+    assert.equal(plugin.privateInstance, null);
+    assert.equal(requests.length, 0);
+    assert.equal(browserCalls.length, 0);
 });
 
 test('shows the sanitized backend explanation rather than the Axios transport error', async () => {
