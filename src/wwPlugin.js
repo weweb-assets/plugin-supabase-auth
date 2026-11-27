@@ -66,6 +66,9 @@ export default {
     },
     async _initAuth() {
         await this.refreshAuthUser();
+        // A redirect can emit SIGNED_IN while the initial roles request is pending.
+        // The router needs the user from the latest event before it checks a private page.
+        while (this.pendingAuthRefresh) await this.pendingAuthRefresh;
     },
     _getUserRoles() {
         return this.user?.roles || [];
@@ -227,11 +230,14 @@ export default {
                     this.authSubject = session?.user?.id;
                 }
                 if (event === 'SIGNED_OUT' || event === 'USER_DELETED') return clearLocalUser(this);
-                if (event == 'USER_UPDATED') {
-                    this.refreshAuthUser(session);
-                }
-                if (event === 'SIGNED_IN') {
-                    this.refreshAuthUser(session);
+                if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                    const refresh = this.refreshAuthUser(session);
+                    this.pendingAuthRefresh = refresh;
+                    const finished = () => {
+                        if (this.pendingAuthRefresh === refresh) this.pendingAuthRefresh = null;
+                    };
+                    // The SDK releases its internal lock after this callback returns.
+                    refresh.then(finished, finished);
                 }
                 if (event == 'TOKEN_REFRESHED') {
                     setCookies(session);
@@ -457,7 +463,11 @@ export default {
         this.authRevision = (this.authRevision || 0) + 1;
         const revision = this.authRevision;
         const { error } = await client.auth.signOut();
-        if (error) throw new Error(error.message, { cause: error });
+        if (error) {
+            const { data, error: sessionError } = await client.auth.getSession();
+            if (sessionError || data?.session) throw new Error(error.message, { cause: error });
+            // The SDK removed the local session even though global revocation failed.
+        }
         if (client === this.publicInstance && this.authRevision === revision) clearLocalUser(this);
     },
     // Ensure Retro compatibility for the workflow action fetchUser

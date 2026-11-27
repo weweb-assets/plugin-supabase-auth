@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 
 const source = readFileSync(new URL('../src/wwPlugin.js', import.meta.url), 'utf8');
 const USER = '11111111-1111-4111-8111-111111111111';
-function fixture(privateApiKey = 'sb_secret_fixture', pluginSource = source) {
+function fixture(privateApiKey = 'sb_secret_fixture', pluginSource = source, auth = {}) {
     const clients = [],
         requests = [],
         browserCalls = [];
@@ -16,7 +16,9 @@ function fixture(privateApiKey = 'sb_secret_fixture', pluginSource = source) {
         resolveRuntimeProjectUrl: value => value.projectUrl,
         createClient: (_url, key) => {
             clients.push(key);
-            return { auth: { onAuthStateChange() {}, admin: { listUsers: async () => ({ data: { users: [] } }) } } };
+            return {
+                auth: { onAuthStateChange() {}, ...auth, admin: { listUsers: async () => ({ data: { users: [] } }) } },
+            };
         },
         wwLib: {
             wwWebsiteData: { info: { id: 'qa-project' } },
@@ -152,4 +154,47 @@ test('legacy admin results preserve the real account identity over end-user meta
         assert.equal(mapped.email, user.email);
         assert.equal(mapped.name, 'QA');
     }
+});
+
+test('initialization awaits the redirect event that replaces its initial user refresh', async () => {
+    let notify;
+    const { plugin } = fixture(undefined, source, {
+        onAuthStateChange(callback) {
+            notify = callback;
+        },
+    });
+    await plugin.load('http://localhost:54321', 'sb_publishable_fixture');
+    const finishes = [];
+    plugin.refreshAuthUser = () => new Promise(resolve => finishes.push(resolve));
+    let initialized = false;
+    const initial = plugin._initAuth().then(() => {
+        initialized = true;
+    });
+    notify('SIGNED_IN', { user: { id: USER } });
+    assert.equal(finishes.length, 2);
+    finishes[0](false);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(initialized, false);
+    finishes[1]({ id: USER });
+    await initial;
+    assert.equal(plugin.pendingAuthRefresh, null);
+});
+
+test('sign out completes after an offline revocation only when the SDK removed the local session', async () => {
+    const { plugin } = fixture();
+    let session = { user: { id: USER } };
+    plugin.publicInstance = {
+        auth: {
+            signOut: async () => ({ error: new Error('fixture offline') }),
+            getSession: async () => ({ data: { session } }),
+        },
+    };
+    await assert.rejects(plugin.signOut(), /fixture offline/);
+    session = null;
+    // A real SDK emits SIGNED_OUT when local removal completes, advancing the revision.
+    plugin.publicInstance.auth.signOut = async () => {
+        plugin.authRevision++;
+        return { error: new Error('fixture offline') };
+    };
+    await plugin.signOut();
 });
